@@ -1,0 +1,179 @@
+<x-layouts.app>
+    <x-slot name="title">Pantau Live GPS Kurir</x-slot>
+
+    <!-- Leaflet Map Assets -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <div class="space-y-6 sm:space-y-8 animate-fade-up" x-data="{
+        shipmentStatus: '{{ $shipment->status }}',
+        courierName: '{{ $shipment->courier?->user->name ?? 'Kurir Armada' }}',
+        courierVehicle: '{{ $shipment->courier?->vehicle_type ?? 'Motor' }} ({{ $shipment->courier?->vehicle_number ?? '-' }})',
+        courierPhone: '{{ $shipment->courier?->user->phone ?? '-' }}',
+        lastUpdated: 'Baru saja',
+        speed: {{ (float) ($shipment->latestLocation?->speed ?? 0) }},
+        courierLat: {{ $shipment->latestLocation?->latitude ?? -3.328000 }},
+        courierLng: {{ $shipment->latestLocation?->longitude ?? 114.580000 }},
+        destLat: {{ $umkm->latitude ?? -3.298210 }},
+        destLng: {{ $umkm->longitude ?? 114.588230 }},
+        map: null,
+        courierMarker: null,
+        destMarker: null,
+        routeLine: null,
+        pollTimer: null,
+
+        initMap() {
+            this.map = L.map('liveGpsMap', {
+                zoomControl: true,
+                attributionControl: false
+            }).setView([this.courierLat, this.courierLng], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19
+            }).addTo(this.map);
+
+            // Custom Courier Icon
+            const courierIcon = L.divIcon({
+                className: 'custom-courier-pin',
+                html: `<div class='w-10 h-10 rounded-full bg-[#2D6A4F] text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-xs ring-4 ring-[#2D6A4F]/20 animate-bounce'>🛵</div>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+
+            // Custom Destination Icon
+            const destIcon = L.divIcon({
+                className: 'custom-dest-pin',
+                html: `<div class='w-10 h-10 rounded-full bg-[#D4A017] text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-xs ring-4 ring-[#D4A017]/20'>📍</div>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+
+            this.courierMarker = L.marker([this.courierLat, this.courierLng], { icon: courierIcon })
+                .addTo(this.map)
+                .bindPopup(`<strong>Posisi Kurir:</strong><br>${this.courierName}<br>Kecepatan: ${this.speed} km/jam`)
+                .openPopup();
+
+            this.destMarker = L.marker([this.destLat, this.destLng], { icon: destIcon })
+                .addTo(this.map)
+                .bindPopup(`<strong>Tujuan Pengiriman:</strong><br>{{ $umkm->business_name }}<br>{{ $umkm->address }}`);
+
+            // Fit bounds between courier and destination
+            const group = new L.featureGroup([this.courierMarker, this.destMarker]);
+            this.map.fitBounds(group.getBounds().pad(0.2));
+
+            // Start polling location every 4 seconds
+            this.pollTimer = setInterval(() => this.fetchLocation(), 4000);
+        },
+
+        fetchLocation() {
+            axios.get('{{ route('umkm.tracking.location', $shipment) }}').then(res => {
+                const data = res.data;
+                this.shipmentStatus = data.shipment_status;
+                if (data.current_location) {
+                    this.courierLat = data.current_location.lat;
+                    this.courierLng = data.current_location.lng;
+                    this.speed = data.current_location.speed || 0;
+                    this.lastUpdated = data.current_location.updated_at || 'Baru saja';
+
+                    this.courierMarker.setLatLng([this.courierLat, this.courierLng]);
+                    this.courierMarker.setPopupContent(`<strong>Posisi Kurir:</strong><br>${this.courierName}<br>Kecepatan: ${this.speed} km/jam<br><small>Update: ${this.lastUpdated}</small>`);
+                }
+            }).catch(err => console.warn('Polling GPS:', err));
+        }
+    }" x-init="initMap()">
+
+        <!-- Header Bar -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary hover:underline mb-1">
+                    &larr; <span>Kembali ke Dashboard</span>
+                </a>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">Pelacakan Live GPS Kurir Armada</h1>
+                <p class="text-[0.8125rem] text-brand-slate mt-0.5">
+                    Surat Jalan: <span class="font-mono font-bold text-brand-dark">{{ $shipment->shipment_number }}</span> &bull; 
+                    Pesanan: <span class="font-mono text-brand-dark">{{ $shipment->order->order_number }}</span>
+                </p>
+            </div>
+            
+            <div class="flex items-center gap-2.5 px-4 py-2 bg-white rounded-full border border-black/[0.06] shadow-sm">
+                <span class="w-2.5 h-2.5 rounded-full" :class="shipmentStatus === 'IN_TRANSIT' ? 'bg-brand-emerald animate-ping' : (shipmentStatus === 'DELIVERED' ? 'bg-brand-primary' : 'bg-brand-accent')"></span>
+                <span class="text-xs font-bold text-brand-dark" x-text="shipmentStatus === 'IN_TRANSIT' ? 'Kurir Sedang Bergerak (Live GPS)' : (shipmentStatus === 'DELIVERED' ? 'Barang Telah Tiba' : 'Menunggu Pengambilan')"></span>
+            </div>
+        </div>
+
+        <!-- Main Map & Info Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- Map Container (Double-Bezel) -->
+            <div class="lg:col-span-8 card-shell">
+                <div class="card-core p-2 sm:p-3 overflow-hidden">
+                    <div id="liveGpsMap" class="w-full h-[420px] sm:h-[500px] rounded-xl z-10 border border-black/[0.04]"></div>
+                </div>
+            </div>
+
+            <!-- Courier Details & Delivery Summary (Double-Bezel) -->
+            <div class="lg:col-span-4 space-y-5">
+                <div class="card-shell">
+                    <div class="card-core p-6 space-y-5">
+                        <div class="flex items-center justify-between pb-3 border-b border-black/[0.04]">
+                            <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wider">Kurir Ditugaskan</h2>
+                            <span class="badge bg-brand-mint text-brand-primary text-[10px]">Armada Resmi</span>
+                        </div>
+
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-12 h-12 rounded-2xl bg-brand-primary text-white font-extrabold flex items-center justify-center text-lg shadow-md shadow-brand-primary/20">
+                                {{ strtoupper(substr($shipment->courier?->user->name ?? 'K', 0, 1)) }}
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-base text-brand-dark" x-text="courierName"></h3>
+                                <p class="text-xs text-brand-slate" x-text="courierVehicle"></p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-brand-cream/60 rounded-xl text-xs space-y-1.5 border border-black/[0.03]">
+                            <div class="flex justify-between">
+                                <span class="text-brand-slate">Nomor WhatsApp:</span>
+                                <span class="font-bold text-brand-dark" x-text="courierPhone"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-brand-slate">Kecepatan Saat Ini:</span>
+                                <span class="font-bold text-brand-primary"><span x-text="speed"></span> km/jam</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-brand-slate">Update Terakhir:</span>
+                                <span class="font-medium text-brand-dark" x-text="lastUpdated"></span>
+                            </div>
+                        </div>
+
+                        <!-- Product List in this Shipment -->
+                        <div class="pt-3 border-t border-black/[0.04] space-y-2">
+                            <span class="text-[0.6875rem] font-bold text-brand-slate uppercase tracking-wider">Bahan Baku Diantar</span>
+                            @foreach ($shipment->order->items->where('umkm_id', $umkm->id) as $item)
+                                <div class="p-3 bg-brand-mint/40 rounded-xl flex justify-between items-center text-xs">
+                                    <div>
+                                        <p class="font-bold text-brand-dark">{{ $item->product->name }}</p>
+                                        <p class="text-[11px] text-brand-slate">Pengirim: {{ $shipment->order->distributor->company_name }}</p>
+                                    </div>
+                                    <span class="font-extrabold text-brand-primary">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <!-- Destination Info -->
+                        <div class="pt-3 border-t border-black/[0.04] space-y-1 text-xs">
+                            <span class="text-[0.6875rem] font-bold text-brand-slate uppercase tracking-wider">Lokasi Tujuan Anda</span>
+                            <p class="font-bold text-brand-dark">{{ $umkm->business_name }}</p>
+                            <p class="text-brand-slate leading-relaxed">{{ $umkm->address }}, {{ $umkm->district }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-brand-mint/60 rounded-2xl text-xs text-brand-primary border border-brand-primary/15 flex items-start gap-2.5">
+                    <span class="w-2 h-2 rounded-full bg-brand-emerald mt-1 flex-shrink-0"></span>
+                    <p class="leading-relaxed">
+                        Data koordinat kurir dikirimkan langsung oleh perangkat kurir secara realtime untuk transparansi penuh proses pengiriman kolektif.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-layouts.app>
