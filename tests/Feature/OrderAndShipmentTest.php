@@ -3,10 +3,15 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Courier;
 use App\Models\Distributor;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\Shipment;
+use App\Models\Umkm;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -96,5 +101,70 @@ class OrderAndShipmentTest extends TestCase
 
         $this->assertEquals('DELIVERED', $shipment->fresh()->status);
         $this->assertEquals(OrderStatus::COMPLETED, $order->fresh()->status);
+    }
+
+    public function test_umkm_can_submit_distributor_review_and_rating_recalculates(): void
+    {
+        $distUser = User::factory()->create();
+        $distUser->assignRole('distributor');
+        $distributor = Distributor::create([
+            'user_id' => $distUser->id,
+            'company_name' => 'PT Borneo',
+            'address' => 'Jl. Trisakti',
+            'rating' => 4.0,
+        ]);
+
+        $umkmUser = User::factory()->create();
+        $umkmUser->assignRole('umkm');
+        $umkm = Umkm::create([
+            'user_id' => $umkmUser->id,
+            'business_name' => 'Kedai Maju',
+            'address' => 'Jl. Kayu Tangi',
+        ]);
+
+        $order = Order::create([
+            'distributor_id' => $distributor->id,
+            'total_amount' => 65000,
+            'total_quantity' => 10,
+            'status' => OrderStatus::COMPLETED->value,
+        ]);
+
+        $productCategory = ProductCategory::create(['name' => 'Bahan Baku']);
+        $product = Product::create([
+            'category_id' => $productCategory->id,
+            'name' => 'Beras Ramos',
+            'unit' => 'kg',
+            'benchmark_retail_price' => 10000,
+        ]);
+
+        $orderItem = OrderItem::create([
+            'order_id' => $order->id,
+            'umkm_id' => $umkm->id,
+            'product_id' => $product->id,
+            'quantity' => 10,
+            'unit_price' => 6500,
+            'subtotal' => 65000,
+            'benchmark_retail_price' => 10000,
+            'savings_amount' => 35000,
+            'payment_status' => PaymentStatus::PAID->value,
+            'delivery_district' => 'Banjarmasin Utara',
+            'delivery_address' => 'Jl. Kayu Tangi 1',
+        ]);
+
+        $response = $this->actingAs($umkmUser)->post(route('umkm.orders.review', $orderItem), [
+            'rating' => 5,
+            'comment' => 'Pengiriman sangat cepat dan kualitas beras sangat bagus!',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('distributor_reviews', [
+            'order_item_id' => $orderItem->id,
+            'umkm_id' => $umkm->id,
+            'distributor_id' => $distributor->id,
+            'rating' => 5,
+        ]);
+
+        // Distributor rating should recalculate dynamically
+        $this->assertEquals(5.0, (float) $distributor->fresh()->rating);
     }
 }

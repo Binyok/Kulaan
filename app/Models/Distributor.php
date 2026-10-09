@@ -38,4 +38,9 @@ class Distributor extends Model
     {
         return $this->hasMany(Courier::class);
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(DistributorReview::class);
+    }
 }

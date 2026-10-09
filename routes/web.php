@@ -60,6 +60,7 @@ Route::middleware('auth')->group(function () {
         Route::post('requests/{purchaseRequest}/cancel', [PurchaseRequestController::class, 'cancel'])->name('requests.cancel');
 
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('orders/{orderItem}/review', [OrderController::class, 'storeReview'])->name('orders.review');
 
         Route::get('shipments', [TrackingController::class, 'index'])->name('tracking.index');
         Route::get('shipments/{shipment}/tracking', [TrackingController::class, 'show'])->name('tracking.show');
@@ -72,6 +73,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('products', ProductController::class)->except(['create', 'show', 'edit']);
         Route::get('spk', [SpkCriteriaController::class, 'index'])->name('spk.index');
         Route::post('spk/calculate', [SpkCriteriaController::class, 'calculate'])->name('spk.calculate');
+        Route::get('spk/sensitivity', [SpkCriteriaController::class, 'sensitivity'])->name('spk.sensitivity');
+        Route::get('spk/history/{history}/export', [SpkCriteriaController::class, 'exportReport'])->name('spk.export');
     });
 
     // Distributor Catalog & Orders Routes

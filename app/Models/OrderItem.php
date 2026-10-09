@@ -63,4 +63,9 @@ class OrderItem extends Model
     {
         return $this->hasOne(Payment::class);
     }
+
+    public function review(): HasOne
+    {
+        return $this->hasOne(DistributorReview::class);
+    }
 }

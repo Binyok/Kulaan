@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Umkm;
 
 use App\Http\Controllers\Controller;
+use App\Models\DistributorReview;
 use App\Models\OrderItem;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -16,11 +18,43 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $orderItems = OrderItem::with('order.distributor', 'product', 'order.shipments.courier.user')
+        $orderItems = OrderItem::with('order.distributor', 'product', 'order.shipments.courier.user', 'review')
             ->where('umkm_id', $umkm->id)
             ->latest()
             ->paginate(10);
 
         return view('umkm.orders.index', compact('orderItems', 'umkm'));
+    }
+
+    public function storeReview(Request $request, OrderItem $orderItem): RedirectResponse
+    {
+        $umkm = $request->user()->umkm;
+        if (! $umkm || $orderItem->umkm_id !== $umkm->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'comment' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $distributor = $orderItem->order->distributor;
+        if (! $distributor) {
+            return back()->with('error', 'Distributor tidak ditemukan.');
+        }
+
+        DistributorReview::updateOrCreate(
+            [
+                'order_item_id' => $orderItem->id,
+                'umkm_id' => $umkm->id,
+            ],
+            [
+                'distributor_id' => $distributor->id,
+                'rating' => $validated['rating'],
+                'comment' => $validated['comment'] ?? null,
+            ]
+        );
+
+        return back()->with('success', 'Terima kasih! Penilaian distributor berhasil disimpan dan memperbarui reputasi distributor.');
     }
 }

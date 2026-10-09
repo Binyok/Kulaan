@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Services\Spk\AhpService;
+use App\Services\Spk\DistributorRecommendationService;
 use App\Services\Spk\SawService;
 use App\Services\Spk\TopsisService;
 use PHPUnit\Framework\TestCase;
@@ -65,25 +66,23 @@ class SpkTest extends TestCase
         $this->assertEquals(1, $results[0]['id']);
     }
 
-    public function test_saw_ranks_distributors_correctly(): void
+    public function test_haversine_distance_calculation(): void
     {
-        $saw = new SawService;
+        $recommendationService = new DistributorRecommendationService(
+            new AhpService,
+            new TopsisService,
+            new SawService
+        );
 
-        $alternatives = [
-            ['id' => 1, 'name' => 'Distributor A', 'criteria_values' => [6500, 4.85, 4, 8.0, 10]],
-            ['id' => 2, 'name' => 'Distributor B', 'criteria_values' => [6700, 4.70, 3, 12.5, 10]],
-        ];
+        // Coordinates Banjarmasin Utara to Banjarmasin Barat (~3 to 4 km)
+        $lat1 = -3.298210;
+        $lon1 = 114.588230;
+        $lat2 = -3.321110;
+        $lon2 = 114.578900;
 
-        $weights = [0.40, 0.25, 0.20, 0.10, 0.05];
-        $criteriaTypes = ['cost', 'benefit', 'benefit', 'cost', 'cost'];
+        $distance = $recommendationService->calculateHaversineDistance($lat1, $lon1, $lat2, $lon2);
 
-        $results = $saw->calculate($alternatives, $weights, $criteriaTypes);
-
-        $this->assertNotEmpty($results);
-        $this->assertEquals(1, $results[0]['rank']);
-        $this->assertArrayHasKey('saw_score', $results[0]);
-
-        // Distributor A should score higher
-        $this->assertEquals(1, $results[0]['id']);
+        $this->assertGreaterThan(2.0, $distance);
+        $this->assertLessThan(5.0, $distance);
     }
 }

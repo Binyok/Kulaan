@@ -46,6 +46,7 @@ class DistributorRecommendationService
         $alternatives = [];
         foreach ($supplierProducts as $sp) {
             $unitPrice = $sp->getPriceForQuantity((float) $group->total_quantity);
+            $distanceKm = $this->calculateGroupDistance($sp->distributor, $group);
 
             $alternatives[] = [
                 'id' => $sp->distributor->id,
@@ -55,7 +56,7 @@ class DistributorRecommendationService
                     $unitPrice,                                     // C1: Harga (cost - lower is better)
                     $sp->distributor->rating,                       // C2: Kualitas/Rating (benefit)
                     max(0, 5 - $sp->distributor->delivery_lead_time_days), // C3: Waktu (inverted, benefit)
-                    10.0,                                           // C4: Jarak (km default, cost)
+                    $distanceKm,                                    // C4: Jarak Haversine ke UMKM (km, cost - lower is better)
                     $sp->moq,                                       // C5: MOQ (cost - lower is better)
                 ],
             ];
@@ -103,6 +104,68 @@ class DistributorRecommendationService
             'selected_distributor' => $bestDistributor,
             'history_id' => $history->id,
         ];
+    }
+
+    /**
+     * Calculate average distance (km) between a distributor and all UMKMs in the matching group using Haversine formula.
+     */
+    public function calculateGroupDistance(Distributor $distributor, MatchingGroup $group): float
+    {
+        $group->loadMissing(['members.umkm', 'purchaseRequests.umkm']);
+
+        $umkms = collect();
+        foreach ($group->members as $member) {
+            if ($member->umkm) {
+                $umkms->push($member->umkm);
+            }
+        }
+        if ($umkms->isEmpty()) {
+            foreach ($group->purchaseRequests as $pr) {
+                if ($pr->umkm) {
+                    $umkms->push($pr->umkm);
+                }
+            }
+        }
+
+        $distances = [];
+        if ($distributor->latitude !== null && $distributor->longitude !== null) {
+            foreach ($umkms as $umkm) {
+                if ($umkm->latitude !== null && $umkm->longitude !== null) {
+                    $dist = $this->calculateHaversineDistance(
+                        (float) $distributor->latitude,
+                        (float) $distributor->longitude,
+                        (float) $umkm->latitude,
+                        (float) $umkm->longitude
+                    );
+                    $distances[] = $dist;
+                }
+            }
+        }
+
+        if (! empty($distances)) {
+            return round(array_sum($distances) / count($distances), 2);
+        }
+
+        return 5.0;
+    }
+
+    /**
+     * Great-circle distance between two GPS coordinates in kilometers.
+     */
+    public function calculateHaversineDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadiusKm = 6371;
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadiusKm * $c;
     }
 
     /**

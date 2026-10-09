@@ -11,9 +11,17 @@ Platform **Smart Collective Procurement** yang menghubungkan UMKM dengan distrib
    - Penanganan deadline otomatis dengan jalur pembelian cepat (fallback) jika kuota tidak terpenuhi sebelum deadline.
 
 2. **Sistem Pendukung Keputusan (SPK):**
-   - **AHP (Analytical Hierarchy Process):** Menghitung bobot kriteria (Harga 40%, Kualitas 25%, Waktu Pengiriman 20%, Jarak 10%, MOQ 5%) dengan pengujian rasio konsistensi ($CR \le 0.1$).
-   - **TOPSIS:** Menentukan rekomendasi distributor terbaik berdasarkan kedekatan dengan solusi ideal positif dan terjauh dari solusi ideal negatif.
-   - **SAW:** Metode pendukung scoring dan pembanding hasil ranking.
+   - **AHP (Analytical Hierarchy Process):** Menghitung pembobotan kriteria secara terstruktur melalui matriks perbandingan berpasangan (*pairwise comparison* Skala Saaty 1–9) dengan verifikasi konsistensi ($CR \le 0.1$).
+     - **Matriks Perbandingan Berpasangan Default (5 Kriteria):**
+       - $C_1$ (Harga / Cost): **42.45%** (0.4245)
+       - $C_2$ (Kualitas / Benefit): **27.28%** (0.2728)
+       - $C_3$ (Waktu Pengiriman / Benefit): **17.72%** (0.1772)
+       - $C_4$ (Jarak ke UMKM / Cost): **8.36%** (0.0836)
+       - $C_5$ (Minimum Order Quantity / Cost): **4.19%** (0.0419)
+     - **Hasil Uji Konsistensi:** $\lambda_{\max} = 5.1376$, $CI = 0.0344$, $RI = 1.12$, $CR = 0.0307 \le 0.10$ (**Konsisten**).
+   - **Kalkulasi Jarak Nyata (Haversine Formula):** Kriteria jarak ($C_4$) dihitung secara dinamis dari koordinat GPS (Latitude/Longitude) distributor ke titik koordinat UMKM dalam grup pengadaan.
+   - **TOPSIS (Technique for Order Preference by Similarity to Ideal Solution):** Menentukan rekomendasi distributor terbaik berdasarkan kedekatan relatif terhadap Solusi Ideal Positif ($A^+$) dan terjauh dari Solusi Ideal Negatif ($A^-$).
+   - **SAW (Simple Additive Weighting):** Metode pendukung pembobotan terpadu (*additive utility*) sebagai pembanding hasil ranking.
 
 3. **Grosir Kolektif & Transparansi Penghematan:**
    - Menghitung harga tier grosir berdasarkan volume kolektif.
