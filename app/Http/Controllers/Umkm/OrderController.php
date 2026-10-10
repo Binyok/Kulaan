@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Umkm;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\DistributorReview;
 use App\Models\OrderItem;
@@ -32,6 +33,12 @@ class OrderController extends Controller
         if (! $umkm || $orderItem->umkm_id !== $umkm->id) {
             abort(403);
         }
+
+        abort_unless(
+            in_array($orderItem->order->status->value, [OrderStatus::DELIVERED->value, OrderStatus::COMPLETED->value], true),
+            403,
+            'Rating hanya bisa diberikan setelah paket tiba.'
+        );
 
         $validated = $request->validate([
             'rating' => ['required', 'integer', 'min:1', 'max:5'],

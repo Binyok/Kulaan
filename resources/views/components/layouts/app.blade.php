@@ -101,6 +101,9 @@
                                 <p class="font-semibold text-brand-dark">{{ Auth::user()->name }}</p>
                                 <p class="text-[0.6875rem] text-brand-slate truncate">{{ Auth::user()->email }}</p>
                             </div>
+                            <a href="{{ route('profile.complete') }}" class="block w-full text-left px-3 py-2 text-brand-slate hover:bg-black/[0.03] rounded-xl font-medium transition-colors">
+                                Edit Profil
+                            </a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="w-full text-left px-3 py-2 text-brand-brick hover:bg-red-50 rounded-xl font-medium transition-colors cursor-pointer mt-1">

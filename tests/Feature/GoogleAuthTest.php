@@ -46,7 +46,8 @@ class GoogleAuthTest extends TestCase
         $response = $this->get(route('auth.google.callback'));
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard'));
+        // A brand new Google account has no phone/address, so it must finish its profile first.
+        $response->assertRedirect(route('profile.complete'));
 
         $this->assertDatabaseHas('users', [
             'email' => 'new.google.user@gmail.com',

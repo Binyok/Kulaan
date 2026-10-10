@@ -97,6 +97,14 @@
                             @endfor
                         </div>
 
+                        @if ($errors->any())
+                            <div class="p-3.5 rounded-xl bg-red-50 border border-brand-brick/20 text-[0.75rem] text-brand-brick space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <p>{{ $error }}</p>
+                                @endforeach
+                            </div>
+                        @endif
+
                         <button type="submit" class="btn-primary w-full justify-center py-3 text-[0.8125rem] font-bold">
                             Hitung Bobot AHP & Uji Konsistensi (CR)
                         </button>

@@ -112,6 +112,38 @@
             </div>
         @endif
 
+        <!-- Fast-Purchase Fallback Requests -->
+        @if ($fallbackRequests->isNotEmpty())
+            <div class="card-shell">
+                <div class="card-core p-5 sm:p-6 border-l-4 border-brand-brick space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                            <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wide">Jalur Pembelian Cepat</h2>
+                            <p class="text-[0.75rem] text-brand-slate mt-0.5">
+                                Kuota kolektif belum tercapai sebelum tenggat. Ajukan ulang dengan deadline baru agar kembali di-matching.
+                            </p>
+                        </div>
+                        <a href="{{ route('umkm.requests.index') }}" class="btn-ghost text-xs py-2 px-4 font-bold self-start sm:self-auto">Ajukan Ulang</a>
+                    </div>
+
+                    <div class="divide-y divide-black/[0.04]">
+                        @foreach ($fallbackRequests as $request)
+                            <div class="py-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div>
+                                    <p class="font-bold text-brand-dark text-sm">{{ $request->product?->name ?? 'Produk' }}</p>
+                                    <p class="text-[0.75rem] text-brand-slate mt-0.5">
+                                        {{ number_format((float) $request->quantity, 0) }} {{ $request->unit }}
+                                        &bull; Tenggat {{ $request->deadline?->format('d M Y, H:i') }}
+                                    </p>
+                                </div>
+                                <span class="badge {{ $request->status->badgeClass() }}">{{ $request->status->label() }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Orders & Shipments Table -->
         <div class="card-shell">
             <div class="card-core p-4 sm:p-7 space-y-5">

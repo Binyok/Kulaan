@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Shipment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class OrderManagementController extends Controller
@@ -41,6 +42,21 @@ class OrderManagementController extends Controller
             'status' => ['required', 'string', 'in:CONFIRMED,PREPARING,READY_TO_SHIP,CANCELLED'],
         ]);
 
+        $transitions = [
+            OrderStatus::PAID->value => ['CONFIRMED', 'CANCELLED'],
+            OrderStatus::CONFIRMED->value => ['PREPARING', 'CANCELLED'],
+            OrderStatus::PREPARING->value => ['READY_TO_SHIP', 'CANCELLED'],
+            OrderStatus::READY_TO_SHIP->value => ['CANCELLED'],
+        ];
+
+        $allowed = $transitions[$order->status->value] ?? [];
+
+        if (! in_array($request->status, $allowed, true)) {
+            throw ValidationException::withMessages([
+                'status' => 'Transisi status dari '.$order->status->label().' ke '.OrderStatus::from($request->status)->label().' tidak diizinkan.',
+            ]);
+        }
+
         $order->update(['status' => $request->status]);
 
         return back()->with('success', 'Status pesanan kolektif berhasil diperbarui.');
@@ -52,6 +68,9 @@ class OrderManagementController extends Controller
         if ($order->distributor_id !== $distributor?->id) {
             abort(403);
         }
+
+        abort_if($order->shipments()->exists(), 400, 'Order ini sudah memiliki kurir.');
+        abort_unless($order->status === OrderStatus::READY_TO_SHIP, 400, 'Kurir hanya bisa di-assign setelah order siap kirim.');
 
         $request->validate([
             'courier_id' => ['required', 'exists:couriers,id'],

@@ -141,6 +141,18 @@ class MidtransService
                 return ['status' => 'not_found', 'message' => 'Payment reference not found'];
             }
 
+            if ($payment->payment_status === PaymentStatus::PAID) {
+                return ['status' => 'already_processed', 'message' => 'Payment already marked as paid'];
+            }
+
+            if (
+                in_array($transactionStatus, ['capture', 'settlement'], true)
+                && isset($payload['gross_amount'])
+                && (float) $payload['gross_amount'] !== (float) $payment->amount
+            ) {
+                return ['status' => 'rejected', 'message' => 'Gross amount does not match invoice amount'];
+            }
+
             PaymentEvent::create([
                 'payment_id' => $payment->id,
                 'event_type' => 'WEBHOOK_RECEIVED',

@@ -29,7 +29,7 @@ class DistributorRecommendationService
         $criteriaTypes = ['cost', 'benefit', 'benefit', 'cost', 'cost'];
 
         // Build alternative list from distributors offering this product
-        $supplierProducts = SupplierProduct::with('distributor')
+        $supplierProducts = SupplierProduct::with(['distributor', 'priceTiers'])
             ->where('product_id', $group->product_id)
             ->where('is_available', true)
             ->where('moq', '<=', $group->total_quantity)
@@ -55,7 +55,7 @@ class DistributorRecommendationService
                 'criteria_values' => [
                     $unitPrice,                                     // C1: Harga (cost - lower is better)
                     $sp->distributor->rating,                       // C2: Kualitas/Rating (benefit)
-                    max(0, 5 - $sp->distributor->delivery_lead_time_days), // C3: Waktu (inverted, benefit)
+                    1 / (1 + (int) $sp->distributor->delivery_lead_time_days), // C3: Waktu (inverted, benefit)
                     $distanceKm,                                    // C4: Jarak Haversine ke UMKM (km, cost - lower is better)
                     $sp->moq,                                       // C5: MOQ (cost - lower is better)
                 ],
@@ -83,7 +83,7 @@ class DistributorRecommendationService
         // Apply selected distributor to matching group
         $bestDistributor = $topsisRankings[0] ?? null;
         if ($bestDistributor) {
-            $bestSP = SupplierProduct::where('distributor_id', $bestDistributor['id'])
+            $bestSP = SupplierProduct::with('priceTiers')->where('distributor_id', $bestDistributor['id'])
                 ->where('product_id', $group->product_id)
                 ->first();
 

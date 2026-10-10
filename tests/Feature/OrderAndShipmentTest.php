@@ -49,6 +49,10 @@ class OrderAndShipmentTest extends TestCase
         $response->assertRedirect();
         $this->assertEquals(OrderStatus::CONFIRMED, $order->fresh()->status);
 
+        $this->actingAs($distUser)->post(route('distributor.orders.update-status', $order), ['status' => 'PREPARING']);
+        $this->actingAs($distUser)->post(route('distributor.orders.update-status', $order), ['status' => 'READY_TO_SHIP']);
+        $this->assertEquals(OrderStatus::READY_TO_SHIP, $order->fresh()->status);
+
         // Distributor assigns courier
         $response = $this->actingAs($distUser)->post(route('distributor.orders.assign-courier', $order), [
             'courier_id' => $courier->id,
@@ -62,6 +66,50 @@ class OrderAndShipmentTest extends TestCase
             'courier_id' => $courier->id,
             'status' => 'PENDING',
         ]);
+
+        // Double submit must not create a second shipment
+        $response = $this->actingAs($distUser)->post(route('distributor.orders.assign-courier', $order), [
+            'courier_id' => $courier->id,
+        ]);
+        $response->assertStatus(400);
+        $this->assertEquals(1, Shipment::where('order_id', $order->id)->count());
+    }
+
+    public function test_distributor_cannot_assign_courier_before_order_is_ready_to_ship(): void
+    {
+        $distUser = User::factory()->create();
+        $distUser->assignRole('distributor');
+        $distributor = Distributor::create(['user_id' => $distUser->id, 'company_name' => 'PT Borneo', 'address' => 'Jl. Trisakti']);
+
+        $courierUser = User::factory()->create();
+        $courierUser->assignRole('kurir');
+        $courier = Courier::create(['user_id' => $courierUser->id, 'distributor_id' => $distributor->id, 'vehicle_type' => 'Mobil Box']);
+
+        $order = Order::create(['distributor_id' => $distributor->id, 'total_amount' => 65000, 'total_quantity' => 10, 'status' => OrderStatus::PAID->value]);
+
+        $response = $this->actingAs($distUser)->post(route('distributor.orders.assign-courier', $order), [
+            'courier_id' => $courier->id,
+        ]);
+
+        $response->assertStatus(400);
+        $this->assertEquals(0, Shipment::where('order_id', $order->id)->count());
+        $this->assertEquals(OrderStatus::PAID, $order->fresh()->status);
+    }
+
+    public function test_distributor_status_cannot_move_backwards(): void
+    {
+        $distUser = User::factory()->create();
+        $distUser->assignRole('distributor');
+        $distributor = Distributor::create(['user_id' => $distUser->id, 'company_name' => 'PT Borneo', 'address' => 'Jl. Trisakti']);
+
+        $order = Order::create(['distributor_id' => $distributor->id, 'total_amount' => 65000, 'total_quantity' => 10, 'status' => OrderStatus::READY_TO_SHIP->value]);
+
+        $response = $this->actingAs($distUser)->postJson(route('distributor.orders.update-status', $order), [
+            'status' => 'CONFIRMED',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertEquals(OrderStatus::READY_TO_SHIP, $order->fresh()->status);
     }
 
     public function test_courier_can_start_delivery_post_gps_and_complete_delivery(): void
@@ -166,5 +214,48 @@ class OrderAndShipmentTest extends TestCase
 
         // Distributor rating should recalculate dynamically
         $this->assertEquals(5.0, (float) $distributor->fresh()->rating);
+    }
+
+    public function test_courier_cannot_complete_delivery_before_it_starts(): void
+    {
+        $courierUser = User::factory()->create();
+        $courierUser->assignRole('kurir');
+        $courier = Courier::create(['user_id' => $courierUser->id, 'vehicle_type' => 'Motor']);
+
+        $distributor = Distributor::create(['user_id' => User::factory()->create()->id, 'company_name' => 'PT Borneo', 'address' => 'Jl. Trisakti']);
+        $order = Order::create(['distributor_id' => $distributor->id, 'total_amount' => 65000, 'total_quantity' => 10, 'status' => OrderStatus::ASSIGNED_TO_COURIER->value]);
+
+        $shipment = Shipment::create(['order_id' => $order->id, 'courier_id' => $courier->id, 'status' => 'PENDING']);
+
+        $response = $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment));
+
+        $response->assertStatus(400);
+        $this->assertEquals('PENDING', $shipment->fresh()->status);
+        $this->assertEquals(OrderStatus::ASSIGNED_TO_COURIER, $order->fresh()->status);
+    }
+
+    public function test_courier_cannot_restart_or_recomplete_a_delivery(): void
+    {
+        $courierUser = User::factory()->create();
+        $courierUser->assignRole('kurir');
+        $courier = Courier::create(['user_id' => $courierUser->id, 'vehicle_type' => 'Motor']);
+
+        $distributor = Distributor::create(['user_id' => User::factory()->create()->id, 'company_name' => 'PT Borneo', 'address' => 'Jl. Trisakti']);
+        $order = Order::create(['distributor_id' => $distributor->id, 'total_amount' => 65000, 'total_quantity' => 10, 'status' => OrderStatus::ASSIGNED_TO_COURIER->value]);
+
+        $shipment = Shipment::create(['order_id' => $order->id, 'courier_id' => $courier->id, 'status' => 'PENDING']);
+
+        $this->actingAs($courierUser)->post(route('kurir.shipments.start', $shipment))->assertRedirect();
+        $this->assertEquals('IN_TRANSIT', $shipment->fresh()->status);
+
+        // Restarting an already running delivery is rejected
+        $this->actingAs($courierUser)->post(route('kurir.shipments.start', $shipment))->assertStatus(400);
+
+        $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment))->assertRedirect();
+        $this->assertEquals('DELIVERED', $shipment->fresh()->status);
+
+        // Completing twice is rejected
+        $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment))->assertStatus(400);
+        $this->assertEquals(OrderStatus::COMPLETED, $order->fresh()->status);
     }
 }

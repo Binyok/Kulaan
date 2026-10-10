@@ -21,6 +21,22 @@ class TopsisService
             return [];
         }
 
+        // A single alternative is both the positive and the negative ideal solution,
+        // which would produce a meaningless 0 preference score without this shortcut.
+        if ($m === 1) {
+            $only = $alternatives[0];
+
+            return [[
+                'id' => $only['id'],
+                'name' => $only['name'],
+                'score' => 1.0,
+                'criteria_values' => $only['criteria_values'],
+                'd_plus' => 0.0,
+                'd_minus' => 0.0,
+                'rank' => 1,
+            ]];
+        }
+
         // Step 1: Build decision matrix
         $decisionMatrix = [];
         foreach ($alternatives as $i => $alt) {

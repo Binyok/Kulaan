@@ -14,6 +14,7 @@ use App\Http\Controllers\Distributor\OrderManagementController;
 use App\Http\Controllers\Distributor\SupplierProductController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Umkm\OrderController;
 use App\Http\Controllers\Umkm\PurchaseRequestController;
 use App\Http\Controllers\Umkm\TrackingController;
@@ -25,7 +26,7 @@ Route::get('/', HomeController::class)->name('home');
 // Auth routes (guest only)
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:5,1');
 
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('register', [RegisteredUserController::class, 'store']);
@@ -43,7 +44,10 @@ Route::middleware('guest')->group(function () {
 Route::post('api/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
 // Authenticated routes
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'profile.complete'])->group(function () {
+    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.complete');
+    Route::post('profile', [ProfileController::class, 'update'])->name('profile.complete.update');
+
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 

@@ -41,4 +41,10 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', 'http://localhost:8000/auth/google/callback'),
     ],
 
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY', 'SB-Mid-server-kulaan-test-key'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY', 'SB-Mid-client-kulaan-test-key'),
+        'is_production' => (bool) env('MIDTRANS_PRODUCTION', false),
+    ],
+
 ];

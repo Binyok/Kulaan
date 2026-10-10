@@ -2,6 +2,7 @@
 
 namespace App\Services\Order;
 
+use App\Enums\MatchingGroupStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\PurchaseRequestStatus;
@@ -81,7 +82,7 @@ class CollectiveOrderService
                 }
             }
 
-            $group->update(['status' => 'ORDERED']);
+            $group->update(['status' => MatchingGroupStatus::ORDERED->value]);
 
             return $order;
         });

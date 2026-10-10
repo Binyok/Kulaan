@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PurchaseRequestStatus;
 use App\Enums\UserRole;
 use App\Models\Courier;
 use App\Models\Distributor;
@@ -71,6 +72,7 @@ class DashboardController extends Controller
         // Default UMKM Dashboard
         $umkm = $user->umkm;
         $pendingRequests = $umkm ? PurchaseRequest::with('product.category')->where('umkm_id', $umkm->id)->where('status', 'PENDING_MATCH')->latest()->get() : collect();
+        $fallbackRequests = $umkm ? PurchaseRequest::with('product')->where('umkm_id', $umkm->id)->where('status', PurchaseRequestStatus::FAILED_MATCH_FALLBACK->value)->latest()->limit(5)->get() : collect();
         $orderItems = $umkm ? OrderItem::with('order.distributor', 'product', 'order.shipments')->where('umkm_id', $umkm->id)->latest()->get() : collect();
 
         $activeRequestsCount = $pendingRequests->count();
@@ -81,6 +83,7 @@ class DashboardController extends Controller
             'user',
             'umkm',
             'pendingRequests',
+            'fallbackRequests',
             'orderItems',
             'activeRequestsCount',
             'unpaidInvoices',

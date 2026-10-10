@@ -44,9 +44,9 @@ class SupplierProductController extends Controller
             'stock_available' => ['required', 'numeric', 'min:1'],
             'moq' => ['required', 'numeric', 'min:1'],
             'base_retail_price' => ['required', 'numeric', 'min:0'],
-            'tiers' => ['nullable', 'array'],
+            'tiers' => ['nullable', 'array', $this->tiersMustNotOverlap()],
             'tiers.*.min_quantity' => ['required_with:tiers', 'numeric', 'min:1'],
-            'tiers.*.max_quantity' => ['nullable', 'numeric', 'gt:tiers.*.min_quantity'],
+            'tiers.*.max_quantity' => ['nullable', 'numeric', 'gte:tiers.*.min_quantity'],
             'tiers.*.unit_price' => ['required_with:tiers', 'numeric', 'min:0'],
         ]);
 
@@ -109,9 +109,9 @@ class SupplierProductController extends Controller
         }
 
         $validated = $request->validate([
-            'tiers' => ['required', 'array'],
+            'tiers' => ['required', 'array', $this->tiersMustNotOverlap()],
             'tiers.*.min_quantity' => ['required', 'numeric', 'min:1'],
-            'tiers.*.max_quantity' => ['nullable', 'numeric'],
+            'tiers.*.max_quantity' => ['nullable', 'numeric', 'gte:tiers.*.min_quantity'],
             'tiers.*.unit_price' => ['required', 'numeric', 'min:0'],
         ]);
 
@@ -130,5 +130,53 @@ class SupplierProductController extends Controller
         });
 
         return back()->with('success', 'Tingkatan harga tier berhasil disimpan.');
+    }
+
+    /**
+     * Ensure each tier has a valid range (max >= min) and that no two tiers overlap.
+     *
+     * @return \Closure(string, mixed, \Closure): void
+     */
+    private function tiersMustNotOverlap(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail): void {
+            if (! is_array($value)) {
+                return;
+            }
+
+            $ranges = [];
+
+            foreach ($value as $index => $tier) {
+                if (! is_array($tier) || ! isset($tier['min_quantity'])) {
+                    continue;
+                }
+
+                $min = (float) $tier['min_quantity'];
+                $max = isset($tier['max_quantity']) && $tier['max_quantity'] !== null
+                    ? (float) $tier['max_quantity']
+                    : null;
+
+                if ($max !== null && $max < $min) {
+                    $fail('Setiap tier harga: batas maksimal kuantitas harus lebih besar atau sama dengan batas minimal.');
+
+                    return;
+                }
+
+                $ranges[] = ['min' => $min, 'max' => $max];
+            }
+
+            usort($ranges, fn (array $a, array $b) => $a['min'] <=> $b['min']);
+
+            for ($i = 1; $i < count($ranges); $i++) {
+                $previous = $ranges[$i - 1];
+                $current = $ranges[$i];
+
+                if ($previous['max'] === null || $current['min'] <= $previous['max']) {
+                    $fail('Rentang kuantitas antar tier harga saling tumpang tindih. Pastikan batas tiap tier tidak beririsan.');
+
+                    return;
+                }
+            }
+        };
     }
 }

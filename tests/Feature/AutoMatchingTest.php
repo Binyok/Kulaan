@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\MatchingGroupStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Models\Distributor;
 use App\Models\MatchingGroup;
@@ -125,7 +126,7 @@ class AutoMatchingTest extends TestCase
 
         $group = MatchingGroup::first();
         $this->assertNotNull($group);
-        $this->assertEquals('ORDERED', $group->status);
+        $this->assertEquals(MatchingGroupStatus::ORDERED, $group->status);
         $this->assertEquals(10.0, (float) $group->total_quantity);
         $this->assertEquals(3, $group->members()->count());
 

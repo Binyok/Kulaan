@@ -33,23 +33,36 @@ class SpkCriteriaController extends Controller
             return back()->with('error', 'Minimal 2 kriteria aktif diperlukan untuk menjalankan AHP.');
         }
 
-        // Build matrix from request input
-        $matrix = [];
+        // Only the upper triangle is posted by the form; validate the Saaty scale (1/9 - 9).
+        $rules = [];
         for ($i = 0; $i < $n; $i++) {
-            for ($j = 0; $j < $n; $j++) {
-                $key = "matrix_{$i}_{$j}";
-                $matrix[$i][$j] = (float) $request->input($key, $i === $j ? 1 : 1);
+            for ($j = $i + 1; $j < $n; $j++) {
+                $rules["matrix_{$i}_{$j}"] = ['required', 'numeric', 'min:0.1111', 'max:9'];
             }
         }
 
-        // Ensure symmetry: if user fills upper triangle, fill lower automatically
+        if ($rules !== []) {
+            $request->validate($rules);
+        }
+
+        // Build matrix from request input
+        $matrix = [];
         for ($i = 0; $i < $n; $i++) {
+            $matrix[$i][$i] = 1;
             for ($j = $i + 1; $j < $n; $j++) {
-                $matrix[$j][$i] = $matrix[$i][$j] > 0 ? 1 / $matrix[$i][$j] : 1;
+                $value = (float) $request->input("matrix_{$i}_{$j}");
+                $matrix[$i][$j] = $value;
+                $matrix[$j][$i] = 1 / $value;
             }
         }
 
         $result = $ahpService->calculate($matrix);
+
+        foreach ($result['weights'] as $weight) {
+            if (! is_finite($weight)) {
+                return back()->with('error', 'Hasil perhitungan AHP tidak valid. Periksa kembali nilai perbandingan berpasangan.');
+            }
+        }
 
         if (! $result['is_consistent']) {
             return back()->with('error', sprintf(

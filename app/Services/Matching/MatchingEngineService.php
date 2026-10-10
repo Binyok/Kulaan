@@ -2,12 +2,14 @@
 
 namespace App\Services\Matching;
 
+use App\Enums\MatchingGroupStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Models\MatchingGroup;
 use App\Models\MatchingMember;
 use App\Models\Product;
 use App\Models\PurchaseRequest;
 use App\Models\SupplierProduct;
+use App\Notifications\KulaanNotification;
 use App\Services\Order\CollectiveOrderService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -56,7 +58,7 @@ class MatchingEngineService
                     'district' => $primaryDistrict,
                     'total_quantity' => $totalQuantity,
                     'target_moq' => $minMoq,
-                    'status' => 'COMPLETED',
+                    'status' => MatchingGroupStatus::COMPLETED->value,
                     'matched_at' => now(),
                 ]);
 
@@ -119,6 +121,15 @@ class MatchingEngineService
             $req->update([
                 'status' => PurchaseRequestStatus::FAILED_MATCH_FALLBACK->value,
             ]);
+
+            $req->umkm?->user?->notify(new KulaanNotification(
+                title: 'Kebutuhan melewati tenggat matching',
+                message: 'Pengajuan '.$req->product?->name.' ('.number_format((float) $req->quantity, 0).' '.$req->unit.
+                    ') tidak terkumpul sebelum deadline. Pengajuan dipindahkan ke jalur pembelian cepat — Anda bisa mengajukan ulang dengan deadline baru.',
+                actionUrl: route('umkm.requests.index'),
+                type: 'warning',
+            ));
+
             $count++;
         }
 

@@ -85,17 +85,20 @@ npm run build
 ```
 
 ### 3. Akun Penguji (Default Credentials)
-Semua akun default menggunakan kata sandi: `password`
+Total 10 akun dari `RoleAndUserSeeder`. Semua akun menggunakan kata sandi: `password`
 
 | Role | Email | Nama / Usaha |
 | :--- | :--- | :--- |
 | **Administrator** | `admin@kulaan.id` | Administrator Kula'an |
-| **UMKM 1** | `umkm.berkah@gmail.com` | Warung Berkah Kuliner (Banjarmasin Utara) |
-| **UMKM 2** | `umkm.barokah@gmail.com` | Katering Barokah (Banjarmasin Barat) |
-| **UMKM 3** | `umkm.sejahtera@gmail.com` | Dapur Sejahtera (Banjarmasin Timur) |
-| **Distributor 1** | `distributor.borneo@gmail.com` | PT Borneo Bahan Sembako |
-| **Distributor 2** | `distributor.banua@gmail.com` | CV Banua Makmur Jaya |
-| **Kurir Armada** | `kurir.budi@gmail.com` | Rizky Kurir Express |
+| **UMKM 1** | `umkm.maju@gmail.com` | Budi Santoso — Kedai Maju Jaya (Banjarmasin Utara) |
+| **UMKM 2** | `umkm.nusantara@gmail.com` | Siti Rahma — Dapur Nusantara (Banjarmasin Barat) |
+| **UMKM 3** | `umkm.berkah@gmail.com` | Andi Pratama — Warung Berkah (Banjarmasin Timur) |
+| **Distributor 1** | `distributor.borneo@gmail.com` | PT Borneo Bahan Sembako (rating 4.85) |
+| **Distributor 2** | `distributor.banua@gmail.com` | CV Banua Makmur Jaya (rating 4.70) |
+| **Distributor 3** | `distributor.kalimantan@gmail.com` | UD Kalimantan Agro Pangan (rating 4.60) |
+| **Kurir 1** | `kurir.rizky@gmail.com` | Rizky Kurir Express (Mobil Box) |
+| **Kurir 2** | `kurir.arif@gmail.com` | Arif Delivery Services (Pickup) |
+| **Kurir 3** | `kurir.fajar@gmail.com` | Fajar Motor Cargo (Motor) |
 
 ---
 

@@ -84,6 +84,8 @@ class PaymentController extends Controller
      */
     public function simulatePay(Request $request, OrderItem $orderItem): RedirectResponse
     {
+        abort_if(app()->isProduction(), 403, 'Simulasi hanya tersedia di environment development.');
+
         $umkm = $request->user()->umkm;
         if ($orderItem->umkm_id !== $umkm?->id) {
             abort(403, 'Akses invoice ditolak.');
@@ -115,8 +117,7 @@ class PaymentController extends Controller
         $grossAmount = $payload['gross_amount'] ?? '';
         $signatureKey = $payload['signature_key'] ?? '';
 
-        // Validate signature if provided
-        if ($signatureKey && ! $this->midtransService->isValidSignature($orderId, $statusCode, $grossAmount, $signatureKey)) {
+        if (! $signatureKey || ! $this->midtransService->isValidSignature($orderId, $statusCode, $grossAmount, $signatureKey)) {
             return response()->json(['error' => 'Invalid signature'], 403);
         }
 

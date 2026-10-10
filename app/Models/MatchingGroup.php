@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MatchingGroupStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,7 @@ class MatchingGroup extends Model
     protected function casts(): array
     {
         return [
+            'status' => MatchingGroupStatus::class,
             'total_quantity' => 'decimal:2',
             'target_moq' => 'decimal:2',
             'agreed_unit_price' => 'decimal:2',

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Umkm;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -22,37 +23,42 @@ class GoogleController extends Controller
     {
         $clientId = config('services.google.client_id');
 
-        // Jika client ID masih dummy / belum diatur Google Cloud Console,
-        // gunakan mode development simulation agar developer langsung bisa login & test.
-        if (empty($clientId) || str_contains($clientId, 'dummy-google-client-id') || app()->environment('local')) {
-            if (empty($clientId) || str_contains($clientId, 'dummy-google-client-id')) {
-                return $this->loginWithSimulatedGoogleUser();
-            }
+        // Simulasi login Google hanya di environment non-production dan hanya
+        // ketika kredensial Google Cloud Console belum dikonfigurasi.
+        if (! app()->isProduction() && (empty($clientId) || str_contains($clientId, 'dummy-google-client-id'))) {
+            return $this->loginWithSimulatedGoogleUser();
         }
 
         try {
             return Socialite::driver('google')->redirect();
         } catch (\Throwable $e) {
-            return $this->loginWithSimulatedGoogleUser();
+            report($e);
+
+            return redirect()->route('login')
+                ->with('error', 'Login Google sedang tidak tersedia. Silakan gunakan email dan kata sandi.');
         }
     }
 
     /**
      * Handle callback from Google OAuth.
      */
-    public function handleGoogleCallback(): RedirectResponse
+    public function handleGoogleCallback(Request $request): RedirectResponse
     {
         try {
             $googleUser = Socialite::driver('google')->user();
         } catch (\Throwable $e) {
-            return redirect()->route('login')->with('error', 'Gagal memverifikasi akun Google: '.$e->getMessage());
+            report($e);
+
+            return redirect()->route('login')->with('error', 'Gagal memverifikasi akun Google. Silakan coba lagi.');
         }
 
         $user = $this->findOrCreateUser($googleUser->getId(), $googleUser->getEmail(), $googleUser->getName(), $googleUser->getAvatar());
 
         Auth::login($user);
 
-        return redirect()->intended(route('dashboard'));
+        $request->session()->forget('url.intended');
+
+        return $this->redirectAfterLogin($user);
     }
 
     /**
@@ -70,7 +76,20 @@ class GoogleController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Berhasil masuk menggunakan akun Google (Mode Simulasi Development)');
+        return $this->redirectAfterLogin($user)
+            ->with('success', 'Berhasil masuk menggunakan akun Google (Mode Simulasi Development)');
+    }
+
+    /**
+     * Send the user to the dashboard, or to profile completion when data is missing.
+     */
+    private function redirectAfterLogin(User $user): RedirectResponse
+    {
+        if (blank($user->phone) || blank($user->address)) {
+            return redirect()->route('profile.complete');
+        }
+
+        return redirect()->route('dashboard');
     }
 
     /**
@@ -97,8 +116,8 @@ class GoogleController extends Controller
                         'google_id' => $googleId,
                         'avatar' => $avatar,
                         'password' => Hash::make(Str::random(24)),
-                        'phone' => '082155599887',
-                        'address' => 'Jl. Pangeran Hidayatullah, Banjarmasin',
+                        'phone' => null,
+                        'address' => null,
                     ]);
 
                     $user->assignRole(UserRole::UMKM->value);
