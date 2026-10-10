@@ -132,6 +132,13 @@
             </div>
         @endif
 
+        @if (session('info'))
+            <div role="status" class="mb-6 p-4 rounded-2xl bg-blue-50 text-brand-info border border-brand-info/15 text-[0.8125rem] font-medium flex items-center gap-2.5">
+                <span class="w-2 h-2 rounded-full bg-brand-info"></span>
+                <span>{{ session('info') }}</span>
+            </div>
+        @endif
+
         {{ $slot }}
     </main>
 

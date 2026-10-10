@@ -30,15 +30,6 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'string', 'in:umkm,distributor,kurir'],
-            'phone' => ['required', 'string', 'max:20'],
-            'address' => ['required', 'string'],
-            'district' => ['required', 'string'],
-
-            // Extra role specific fields
-            'business_type' => ['nullable', 'required_if:role,umkm', 'string'],
-            'company_name' => ['nullable', 'required_if:role,distributor', 'string'],
-            'vehicle_type' => ['nullable', 'required_if:role,kurir', 'string'],
-            'vehicle_number' => ['nullable', 'required_if:role,kurir', 'string'],
         ]);
 
         DB::transaction(function () use ($request, &$user) {
@@ -46,41 +37,34 @@ class RegisteredUserController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'phone' => $request->phone,
-                'address' => $request->address,
+                'phone' => null,
+                'address' => null,
             ]);
 
             $role = $request->role;
             $user->assignRole($role);
 
+            // Profil detail dilengkapi di halaman Lengkapi Profil setelah registrasi.
             if ($role === UserRole::UMKM->value) {
                 Umkm::create([
                     'user_id' => $user->id,
                     'business_name' => $request->name,
-                    'business_type' => $request->business_type ?? 'Kuliner',
-                    'address' => $request->address,
-                    'district' => $request->district,
-                    'city' => 'Banjarmasin',
+                    'address' => '',
                 ]);
             } elseif ($role === UserRole::DISTRIBUTOR->value) {
                 Distributor::create([
                     'user_id' => $user->id,
-                    'company_name' => $request->company_name ?? $request->name,
-                    'address' => $request->address,
-                    'district' => $request->district,
-                    'city' => 'Banjarmasin',
+                    'company_name' => $request->name,
+                    'address' => '',
                 ]);
             } elseif ($role === UserRole::KURIR->value) {
-                Courier::create([
-                    'user_id' => $user->id,
-                    'vehicle_type' => $request->vehicle_type ?? 'Motor',
-                    'vehicle_number' => $request->vehicle_number ?? '-',
-                ]);
+                Courier::create(['user_id' => $user->id]);
             }
         });
 
         Auth::login($user);
 
-        return redirect(route('dashboard'));
+        return redirect()->route('profile.complete')
+            ->with('info', 'Akun berhasil dibuat! Lengkapi data profil usahamu dulu ya.');
     }
 }

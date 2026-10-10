@@ -78,16 +78,12 @@ class AuthenticationTest extends TestCase
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'role' => 'umkm',
-            'phone' => '081234567890',
-            'address' => 'Jl. A. Yani Km 5',
-            'district' => 'Banjarmasin Utara',
-            'business_type' => 'Kuliner',
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('profile.complete'));
 
-        $this->assertDatabaseHas('users', ['email' => 'warung@test.com']);
+        $this->assertDatabaseHas('users', ['email' => 'warung@test.com', 'phone' => null]);
         $this->assertDatabaseHas('umkms', ['business_name' => 'Warung Makmur']);
     }
 
@@ -99,14 +95,38 @@ class AuthenticationTest extends TestCase
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'role' => 'distributor',
-            'phone' => '081234567891',
-            'address' => 'Jl. Industri No. 10',
-            'district' => 'Banjarmasin Barat',
-            'company_name' => 'PT Borneo Supplier',
         ]);
 
         $this->assertAuthenticated();
+        $response->assertRedirect(route('profile.complete'));
         $this->assertDatabaseHas('distributors', ['company_name' => 'PT Borneo Supplier']);
+    }
+
+    public function test_new_user_must_complete_profile_before_dashboard(): void
+    {
+        $this->post('/register', [
+            'name' => 'Warung Makmur',
+            'email' => 'warung@test.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => 'umkm',
+        ]);
+
+        // Profil belum lengkap -> dashboard dialihkan ke lengkapi profil
+        $this->get(route('dashboard'))->assertRedirect(route('profile.complete'));
+
+        // Setelah melengkapi profil -> dashboard bisa diakses
+        $this->post(route('profile.complete.update'), [
+            'name' => 'Warung Makmur',
+            'phone' => '081234567890',
+            'address' => 'Jl. A. Yani Km 5',
+            'district' => 'Banjarmasin Utara',
+            'city' => 'Banjarmasin',
+            'business_name' => 'Warung Makmur',
+            'business_type' => 'Kuliner',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->get(route('dashboard'))->assertOk();
     }
 
     public function test_dashboard_redirects_guest_to_login(): void

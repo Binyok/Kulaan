@@ -1,55 +1,64 @@
 <x-layouts.app>
     <x-slot name="title">Dashboard UMKM</x-slot>
 
+    {{-- Forest band: page header --}}
+    <div class="-mx-3 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-8 mb-6 sm:mb-8">
+        <div class="texture-grain bg-brand-forest text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                    <div class="max-w-2xl" data-reveal>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/10 text-[#D8E8DD] uppercase tracking-[0.14em]">
+                            Portal Pengadaan Mandiri
+                        </span>
+                        <h1 class="font-display font-semibold tracking-tight text-balance text-4xl sm:text-5xl mt-4">
+                            Halo, {{ $umkm?->business_name ?? $user->name }}
+                        </h1>
+                        <p class="text-sm text-white/70 leading-relaxed mt-3">
+                            Wilayah {{ $umkm?->district ?? 'Banjarmasin' }} &bull; Sektor {{ $umkm?->business_type ?? 'Kuliner' }}.
+                            Ajukan kebutuhan, gabung kuota grosir, dan pantau semuanya dari sini.
+                        </p>
+                    </div>
+                    <a href="{{ route('umkm.requests.index') }}" class="btn-accent text-sm py-3.5 px-7 justify-center shadow-lg shadow-black/20 shrink-0 w-full lg:w-auto">
+                        Ajukan Kebutuhan Baru
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="space-y-6 sm:space-y-8">
-        <!-- Hero Banner with Soft Depth -->
-        <div class="hero-gradient texture-grain text-white p-6 sm:p-9 shadow-[0_12px_40px_-12px_rgba(45,106,79,0.35)]" data-reveal>
-            <div class="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                <div>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/10 text-white/90 uppercase tracking-wider mb-3">
-                        Portal Pengadaan Mandiri
-                    </span>
-                    <h1 class="font-display font-semibold text-3xl sm:text-4xl tracking-tight text-balance">Selamat datang, {{ $umkm?->business_name ?? $user->name }}</h1>
-                    <p class="text-xs sm:text-sm text-white/75 mt-1.5">
-                        Wilayah {{ $umkm?->district ?? 'Banjarmasin' }} &bull; Sektor {{ $umkm?->business_type ?? 'Kuliner' }}
-                    </p>
-                </div>
-                <a href="{{ route('umkm.requests.index') }}" class="btn-accent text-sm py-3 px-6 shadow-lg shadow-black/10 flex-shrink-0 w-full sm:w-auto justify-center">
-                    Ajukan Kebutuhan Baru
-                </a>
-            </div>
-        </div>
-
-        <!-- Metric Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-            <div class="card-shell">
-                <div class="card-core p-5 sm:p-6">
-                    <p class="metric-label">Kebutuhan Sedang Matching</p>
-                    <p class="metric-value text-brand-dark mt-2">{{ $activeRequestsCount }}</p>
-                    <p class="text-[0.6875rem] text-brand-slate mt-2">Menunggu kuota grosir UMKM sekitar</p>
+        {{-- Stat strip --}}
+        <dl class="bg-white rounded-[20px] border border-brand-line grid grid-cols-1 sm:grid-cols-3 sm:divide-x divide-brand-line/70 overflow-hidden" data-reveal>
+            <div class="p-5 sm:p-6 flex items-center gap-4 border-b sm:border-b-0 border-brand-line/60">
+                <span class="w-11 h-11 rounded-full bg-brand-mint text-brand-primary flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm6-4a3 3 0 1 1-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div class="min-w-0">
+                    <dd class="font-display font-extrabold text-2xl sm:text-3xl text-brand-dark tabular-nums leading-none">{{ $activeRequestsCount }}</dd>
+                    <dt class="text-[0.6875rem] text-brand-slate font-medium mt-1.5">Kebutuhan sedang matching</dt>
                 </div>
             </div>
-
-            <div class="card-shell">
-                <div class="card-core p-5 sm:p-6">
-                    <p class="metric-label">Tagihan Menunggu Pembayaran</p>
-                    <p class="metric-value {{ $unpaidInvoices->count() > 0 ? 'text-brand-brick' : 'text-brand-primary' }} mt-2">
-                        {{ $unpaidInvoices->count() }}
-                    </p>
-                    <p class="text-[0.6875rem] text-brand-slate mt-2">Kuota kolektif terpenuhi & siap diproses</p>
+            <div class="p-5 sm:p-6 flex items-center gap-4 border-b sm:border-b-0 border-brand-line/60">
+                <span class="w-11 h-11 rounded-full {{ $unpaidInvoices->count() > 0 ? 'bg-red-50 text-brand-brick' : 'bg-brand-mint text-brand-primary' }} flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4m0 5v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5m18 0H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div class="min-w-0">
+                    <dd class="font-display font-extrabold text-2xl sm:text-3xl tabular-nums leading-none {{ $unpaidInvoices->count() > 0 ? 'text-brand-brick' : 'text-brand-primary' }}">{{ $unpaidInvoices->count() }}</dd>
+                    <dt class="text-[0.6875rem] text-brand-slate font-medium mt-1.5">Tagihan menunggu pembayaran</dt>
                 </div>
             </div>
-
-            <div class="card-shell">
-                <div class="card-core p-5 sm:p-6 savings-card">
-                    <p class="metric-label text-brand-brass">Total Penghematan Anda</p>
-                    <p class="metric-value text-brand-brass mt-2">Rp {{ number_format($totalSavings, 0, ',', '.') }}</p>
-                    <p class="text-[0.6875rem] text-brand-slate mt-2">Dibandingkan harga eceran pasar</p>
+            <div class="p-5 sm:p-6 flex items-center gap-4">
+                <span class="w-11 h-11 rounded-full bg-brand-ochre-soft text-brand-brass flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 1v22m5-18H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div class="min-w-0">
+                    <dd class="font-display font-extrabold text-2xl sm:text-3xl text-brand-brass tabular-nums leading-none">Rp {{ number_format($totalSavings, 0, ',', '.') }}</dd>
+                    <dt class="text-[0.6875rem] text-brand-slate font-medium mt-1.5">Total penghematan kamu</dt>
                 </div>
             </div>
-        </div>
+        </dl>
 
-        <!-- Live GPS Banner: all active shipments, grouped honestly by courier. -->
+        {{-- Live GPS banner --}}
         @php
             $activeShipments = $orderItems
                 ->flatMap(fn ($item) => $item->order->shipments)
@@ -58,192 +67,133 @@
             $activeCourierCount = $activeShipments->pluck('courier_id')->filter()->unique()->count();
         @endphp
         @if ($activeShipments->isNotEmpty())
-            <div class="card-shell">
-                <div class="card-core p-5 sm:p-6 border-2 border-brand-primary/20 bg-gradient-to-r from-brand-mint/60 via-white to-brand-mint/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="min-w-0">
-                        <h3 class="font-extrabold text-brand-dark text-base">Pengiriman sedang berjalan</h3>
-                        <p class="text-xs text-brand-slate mt-1">
-                            {{ $activeCourierCount }} kurir &bull; {{ $activeShipments->count() }} paket menuju area Anda.
-                            Semua posisi kurir tampil di satu peta.
-                        </p>
-                    </div>
-                    <a href="{{ route('umkm.tracking.live') }}" class="btn-primary text-xs py-2.5 px-5 font-bold shadow-lg shadow-brand-primary/25 w-full sm:w-auto justify-center">
-                        Buka Peta Live Semua Kurir
-                    </a>
+            <div class="rounded-[20px] bg-brand-forest text-white p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6" data-reveal>
+                <span class="relative flex w-11 h-11 shrink-0">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-emerald opacity-40"></span>
+                    <span class="relative inline-flex w-11 h-11 rounded-full bg-brand-emerald/20 border border-brand-emerald/50 items-center justify-center">
+                        <svg class="w-5 h-5 text-brand-emerald" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
+                    </span>
+                </span>
+                <div class="min-w-0 flex-1">
+                    <h3 class="font-extrabold text-base">Pengiriman sedang berjalan</h3>
+                    <p class="text-xs text-white/70 mt-1">{{ $activeCourierCount }} kurir &bull; {{ $activeShipments->count() }} paket menuju areamu. Semua posisi kurir tampil di satu peta.</p>
                 </div>
+                <a href="{{ route('umkm.tracking.live') }}" class="btn-accent text-xs py-2.5 px-5 font-bold shrink-0 w-full sm:w-auto justify-center">
+                    Buka Peta Live
+                </a>
             </div>
         @endif
 
-        <!-- Unpaid Invoices Alert Banner -->
+        {{-- Unpaid invoices: sand section, rich rows --}}
         @if ($unpaidInvoices->count() > 0)
-            <div class="card-shell">
-                <div class="card-core p-5 sm:p-6 border-l-4 border-brand-accent space-y-4">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-brand-accent"></span>
-                        <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wide">Tagihan Grosir Perlu Pembayaran</h2>
-                    </div>
-
-                    <div class="divide-y divide-black/[0.04]">
-                        @foreach ($unpaidInvoices as $item)
-                            <div class="py-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                <div class="min-w-0">
-                                    <p class="font-bold text-brand-dark text-sm">{{ $item->product->name }}</p>
-                                    <p class="text-[0.75rem] text-brand-slate mt-0.5">
-                                        {{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; Distributor: {{ $item->order->distributor->company_name }}
-                                        &bull; <span class="text-brand-brass font-semibold">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }}</span>
-                                    </p>
-                                </div>
-                                <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
-                                    <span class="font-extrabold text-brand-primary text-base">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
-                                    <a href="{{ route('payment.show', $item) }}" class="btn-primary text-xs py-2 px-4">
-                                        Bayar Sekarang
-                                    </a>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+            <section class="bg-brand-sand/70 rounded-[20px] p-5 sm:p-7" data-reveal>
+                <div class="flex items-center gap-2.5 mb-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-brand-accent"></span>
+                    <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wide">Tagihan perlu dibayar</h2>
+                    <span class="ml-auto text-[0.6875rem] font-bold text-brand-brass bg-white px-2.5 py-1 rounded-full border border-brand-accent/30">{{ $unpaidInvoices->count() }} tagihan</span>
                 </div>
-            </div>
-        @endif
-
-        <!-- Fast-Purchase Fallback Requests -->
-        @if ($fallbackRequests->isNotEmpty())
-            <div class="card-shell">
-                <div class="card-core p-5 sm:p-6 border-l-4 border-brand-brick space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div>
-                            <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wide">Jalur Pembelian Cepat</h2>
-                            <p class="text-[0.75rem] text-brand-slate mt-0.5">
-                                Kuota kolektif belum tercapai sebelum tenggat. Ajukan ulang dengan deadline baru agar kembali di-matching.
-                            </p>
-                        </div>
-                        <a href="{{ route('umkm.requests.index') }}" class="btn-ghost text-xs py-2 px-4 font-bold self-start sm:self-auto">Ajukan Ulang</a>
-                    </div>
-
-                    <div class="divide-y divide-black/[0.04]">
-                        @foreach ($fallbackRequests as $request)
-                            <div class="py-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                <div>
-                                    <p class="font-bold text-brand-dark text-sm">{{ $request->product?->name ?? 'Produk' }}</p>
-                                    <p class="text-[0.75rem] text-brand-slate mt-0.5">
-                                        {{ number_format((float) $request->quantity, 0) }} {{ $request->unit }}
-                                        &bull; Tenggat {{ $request->deadline?->format('d M Y, H:i') }}
-                                    </p>
-                                </div>
-                                <span class="badge {{ $request->status->badgeClass() }}">{{ $request->status->label() }}</span>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <!-- Orders & Shipments -->
-        <div class="card-shell">
-            <div class="card-core p-4 sm:p-7 space-y-5">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h2 class="text-base font-bold text-brand-dark tracking-tight">Riwayat Pengadaan Kolektif</h2>
-                        <p class="text-[0.75rem] text-brand-slate mt-0.5">Semua transaksi pengadaan bahan baku bersama</p>
-                    </div>
-                </div>
-
-                @php $hasOrders = $orderItems->isNotEmpty(); @endphp
-
-                @if ($hasOrders)
-                    <!-- Desktop: table -->
-                    <div class="hidden sm:block overflow-x-auto">
-                        <table class="table-premium">
-                            <thead>
-                                <tr>
-                                    <th>Bahan Baku</th>
-                                    <th class="text-center">Kuantitas</th>
-                                    <th class="text-right">Subtotal Grosir</th>
-                                    <th class="text-right">Penghematan</th>
-                                    <th class="text-center">Status Bayar</th>
-                                    <th class="text-center">Pengiriman &amp; Live GPS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($orderItems as $item)
-                                    <tr>
-                                        <td>
-                                            <div class="font-bold text-brand-dark">{{ $item->product->name }}</div>
-                                            <div class="text-[0.6875rem] text-brand-slate">{{ $item->order->distributor->company_name }}</div>
-                                        </td>
-                                        <td class="text-center font-bold text-brand-dark">
-                                            {{ number_format($item->quantity, 0) }} {{ $item->product->unit }}
-                                        </td>
-                                        <td class="text-right font-extrabold text-brand-primary">
-                                            Rp {{ number_format($item->subtotal, 0, ',', '.') }}
-                                        </td>
-                                        <td class="text-right font-bold text-brand-brass">
-                                            Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }}
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge {{ $item->payment_status->badgeClass() }}">
-                                                {{ $item->payment_status->label() }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            @php $shipment = $item->order->shipments->first(); @endphp
-                                            @if ($shipment)
-                                                <a href="{{ route('umkm.tracking.show', $shipment) }}" class="btn-ghost text-xs py-1.5 px-3.5 font-bold text-brand-primary hover:bg-brand-mint/60 border-brand-primary/20">
-                                                    Lacak Posisi Kurir
-                                                </a>
-                                            @else
-                                                <span class="text-[0.6875rem] text-brand-slate">Menunggu Penugasan Armada</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Mobile: cards -->
-                    <div class="sm:hidden space-y-3">
-                        @foreach ($orderItems as $item)
-                            @php $shipment = $item->order->shipments->first(); @endphp
-                            <div class="list-card space-y-3">
-                                <div class="flex justify-between items-start gap-3">
+                <div class="divide-y divide-brand-line/60">
+                    @foreach ($unpaidInvoices as $item)
+                        <div class="py-4 flex gap-4 items-start">
+                            <span class="w-11 h-11 rounded-full bg-white text-brand-brass flex items-center justify-center shrink-0 border border-brand-accent/25 mt-0.5">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4m0 5v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5m18 0H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <p class="font-bold text-brand-dark text-sm">{{ $item->product->name }}</p>
-                                        <p class="text-[0.6875rem] text-brand-slate mt-0.5">{{ $item->order->distributor->company_name }}</p>
+                                        <p class="text-[0.6875rem] text-brand-slate mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; {{ $item->order->distributor->company_name }}</p>
+                                    </div>
+                                    <p class="font-extrabold text-brand-primary tabular-nums shrink-0">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</p>
+                                </div>
+                                <div class="flex items-center justify-between gap-3 mt-2.5">
+                                    <p class="text-[0.6875rem] font-semibold text-brand-brass">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }}</p>
+                                    <a href="{{ route('payment.show', $item) }}" class="btn-primary text-xs py-2 px-4 font-bold shrink-0">Bayar Sekarang</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        {{-- Fallback requests --}}
+        @if ($fallbackRequests->isNotEmpty())
+            <section class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-7" data-reveal>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                    <div>
+                        <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wide">Jalur pembelian cepat</h2>
+                        <p class="text-[0.75rem] text-brand-slate mt-1">Kuota kolektif belum tercapai sebelum tenggat. Ajukan ulang dengan deadline baru biar kembali di-matching.</p>
+                    </div>
+                    <a href="{{ route('umkm.requests.index') }}" class="btn-ghost text-xs py-2 px-4 font-bold shrink-0 self-start sm:self-auto">Ajukan Ulang</a>
+                </div>
+                <div class="divide-y divide-black/[0.05]">
+                    @foreach ($fallbackRequests as $request)
+                        <div class="py-3.5 flex items-center gap-4">
+                            <span class="w-10 h-10 rounded-full bg-red-50 text-brand-brick flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-bold text-brand-dark text-sm">{{ $request->product?->name ?? 'Produk' }}</p>
+                                <p class="text-[0.6875rem] text-brand-slate mt-0.5">{{ number_format((float) $request->quantity, 0) }} {{ $request->unit }} &bull; Tenggat {{ $request->deadline?->format('d M Y, H:i') }}</p>
+                            </div>
+                            <span class="badge {{ $request->status->badgeClass() }} shrink-0">{{ $request->status->label() }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        {{-- Order history: rich rows --}}
+        <section class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-7" data-reveal>
+            <div class="mb-2">
+                <h2 class="text-base font-bold text-brand-dark tracking-tight">Riwayat pengadaan kolektif</h2>
+                <p class="text-[0.75rem] text-brand-slate mt-0.5">Semua transaksi pengadaan bahan baku bareng</p>
+            </div>
+
+            @php $hasOrders = $orderItems->isNotEmpty(); @endphp
+
+            @if ($hasOrders)
+                <div class="divide-y divide-black/[0.05]">
+                    @foreach ($orderItems as $item)
+                        @php $shipment = $item->order->shipments->first(); @endphp
+                        <div class="py-4 flex gap-4 items-start hover:bg-brand-cream/60 -mx-2 px-2 sm:-mx-4 sm:px-4 rounded-xl transition-colors">
+                            <span class="w-11 h-11 rounded-full bg-brand-mint text-brand-primary flex items-center justify-center shrink-0 mt-0.5">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-brand-dark text-sm">{{ $item->product->name }}</p>
+                                        <p class="text-[0.6875rem] text-brand-slate mt-0.5">{{ $item->order->distributor->company_name }} &bull; {{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</p>
                                     </div>
                                     <span class="badge {{ $item->payment_status->badgeClass() }} shrink-0">{{ $item->payment_status->label() }}</span>
                                 </div>
-                                <div class="grid grid-cols-2 gap-2 text-[0.75rem]">
-                                    <div>
-                                        <p class="text-brand-slate">Kuantitas</p>
-                                        <p class="font-bold text-brand-dark">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</p>
+                                <div class="flex items-center justify-between gap-3 mt-2.5">
+                                    <div class="text-[0.75rem]">
+                                        <span class="font-extrabold text-brand-primary tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
+                                        <span class="text-brand-brass font-semibold ml-2">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }}</span>
                                     </div>
-                                    <div>
-                                        <p class="text-brand-slate">Subtotal</p>
-                                        <p class="font-extrabold text-brand-primary">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</p>
-                                    </div>
-                                    <div class="col-span-2">
-                                        <p class="text-brand-slate">Penghematan</p>
-                                        <p class="font-bold text-brand-brass">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }}</p>
-                                    </div>
+                                    @if ($shipment)
+                                        <a href="{{ route('umkm.tracking.show', $shipment) }}" class="text-xs font-bold text-brand-primary hover:underline shrink-0">Lacak kurir &rarr;</a>
+                                    @else
+                                        <span class="text-[0.6875rem] text-brand-slate shrink-0">Menunggu armada</span>
+                                    @endif
                                 </div>
-                                @if ($shipment)
-                                    <a href="{{ route('umkm.tracking.show', $shipment) }}" class="btn-ghost w-full text-xs font-bold text-brand-primary border-brand-primary/20">
-                                        Lacak Posisi Kurir
-                                    </a>
-                                @else
-                                    <p class="text-[0.6875rem] text-brand-slate text-center pt-1 border-t border-black/[0.04]">Menunggu Penugasan Armada</p>
-                                @endif
                             </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="py-10 text-center">
-                        <p class="text-brand-slate text-[0.8125rem]">Belum ada riwayat pesanan kolektif.</p>
-                        <a href="{{ route('umkm.requests.index') }}" class="btn-primary text-xs mt-4">Ajukan Kebutuhan Pertama</a>
-                    </div>
-                @endif
-            </div>
-        </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="py-10 text-center">
+                    <span class="w-14 h-14 rounded-full bg-brand-mint text-brand-primary inline-flex items-center justify-center">
+                        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    <p class="font-bold text-brand-dark mt-4">Belum ada riwayat pesanan kolektif.</p>
+                    <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Ajukan kebutuhan pertamamu dan hemat bareng UMKM lain.</p>
+                    <a href="{{ route('umkm.requests.index') }}" class="btn-primary text-xs mt-5">Ajukan Kebutuhan Pertama</a>
+                </div>
+            @endif
+        </section>
     </div>
 </x-layouts.app>

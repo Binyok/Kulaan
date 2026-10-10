@@ -59,7 +59,7 @@ class PaymentTest extends TestCase
         $response = $this->actingAs($umkmUser)->get(route('payment.show', $orderItem));
         $response->assertStatus(200);
         $response->assertSee('Rp 26.000');
-        $response->assertSee('Hemat Rp 10.000');
+        $response->assertSee('Kamu hemat');
 
         $response = $this->actingAs($umkmUser)->post(route('payment.pay', $orderItem));
         $response->assertStatus(200);
