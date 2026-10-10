@@ -1,10 +1,10 @@
 <x-layouts.app>
     <x-slot name="title">Dashboard Administrator</x-slot>
 
-    <div class="space-y-8 animate-fade-up">
-        <div>
+    <div class="space-y-8">
+        <div data-reveal>
             <span class="eyebrow">Kontrol Pusat</span>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight mt-2">Dashboard Administrator</h1>
+            <h1 class="font-display font-semibold text-[1.75rem] sm:text-4xl text-brand-dark tracking-tight text-balance mt-2">Dashboard Administrator</h1>
             <p class="text-sm text-brand-slate mt-1">Monitoring pengadaan kolektif, kriteria SPK, dan tata kelola ekosistem Kula'an.</p>
         </div>
 
@@ -33,8 +33,8 @@
             </div>
             <div class="card-shell">
                 <div class="card-core p-5 savings-card">
-                    <p class="metric-label text-brand-accent">Total Hemat UMKM</p>
-                    <p class="text-xl sm:text-2xl font-extrabold text-brand-accent mt-2">Rp {{ number_format($totalSavingsSystem, 0, ',', '.') }}</p>
+                    <p class="metric-label text-brand-brass">Total Hemat UMKM</p>
+                    <p class="text-xl sm:text-2xl font-extrabold text-brand-brass mt-2">Rp {{ number_format($totalSavingsSystem, 0, ',', '.') }}</p>
                     <p class="text-[0.6875rem] text-brand-slate mt-1">Efisiensi biaya pengadaan</p>
                 </div>
             </div>
@@ -58,8 +58,8 @@
             </a>
             <a href="{{ route('admin.spk.index') }}" class="card-shell group block">
                 <div class="card-core p-6 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-y-1">
-                    <span class="w-10 h-10 rounded-xl bg-brand-ochre-soft text-brand-accent flex items-center justify-center font-bold text-sm mb-4">03</span>
-                    <h3 class="font-bold text-base text-brand-dark group-hover:text-brand-accent transition-colors">Kriteria SPK (AHP)</h3>
+                    <span class="w-10 h-10 rounded-xl bg-brand-ochre-soft text-brand-brass flex items-center justify-center font-bold text-sm mb-4">03</span>
+                    <h3 class="font-bold text-base text-brand-dark group-hover:text-brand-brass transition-colors">Kriteria SPK (AHP)</h3>
                     <p class="text-[0.75rem] text-brand-slate mt-1">Konfigurasi bobot perbandingan berpasangan dan uji konsistensi.</p>
                 </div>
             </a>

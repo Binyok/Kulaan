@@ -68,10 +68,13 @@ class OrderAndShipmentTest extends TestCase
         ]);
 
         // Double submit must not create a second shipment
-        $response = $this->actingAs($distUser)->post(route('distributor.orders.assign-courier', $order), [
-            'courier_id' => $courier->id,
-        ]);
-        $response->assertStatus(400);
+        $response = $this->actingAs($distUser)
+            ->from(route('distributor.orders.index'))
+            ->post(route('distributor.orders.assign-courier', $order), [
+                'courier_id' => $courier->id,
+            ]);
+        $response->assertRedirect(route('distributor.orders.index'));
+        $response->assertSessionHas('error');
         $this->assertEquals(1, Shipment::where('order_id', $order->id)->count());
     }
 
@@ -87,11 +90,14 @@ class OrderAndShipmentTest extends TestCase
 
         $order = Order::create(['distributor_id' => $distributor->id, 'total_amount' => 65000, 'total_quantity' => 10, 'status' => OrderStatus::PAID->value]);
 
-        $response = $this->actingAs($distUser)->post(route('distributor.orders.assign-courier', $order), [
-            'courier_id' => $courier->id,
-        ]);
+        $response = $this->actingAs($distUser)
+            ->from(route('distributor.orders.index'))
+            ->post(route('distributor.orders.assign-courier', $order), [
+                'courier_id' => $courier->id,
+            ]);
 
-        $response->assertStatus(400);
+        $response->assertRedirect(route('distributor.orders.index'));
+        $response->assertSessionHas('error');
         $this->assertEquals(0, Shipment::where('order_id', $order->id)->count());
         $this->assertEquals(OrderStatus::PAID, $order->fresh()->status);
     }
@@ -227,9 +233,12 @@ class OrderAndShipmentTest extends TestCase
 
         $shipment = Shipment::create(['order_id' => $order->id, 'courier_id' => $courier->id, 'status' => 'PENDING']);
 
-        $response = $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment));
+        $response = $this->actingAs($courierUser)
+            ->from(route('kurir.shipments.index'))
+            ->post(route('kurir.shipments.complete', $shipment));
 
-        $response->assertStatus(400);
+        $response->assertRedirect(route('kurir.shipments.index'));
+        $response->assertSessionHas('error');
         $this->assertEquals('PENDING', $shipment->fresh()->status);
         $this->assertEquals(OrderStatus::ASSIGNED_TO_COURIER, $order->fresh()->status);
     }
@@ -249,13 +258,21 @@ class OrderAndShipmentTest extends TestCase
         $this->assertEquals('IN_TRANSIT', $shipment->fresh()->status);
 
         // Restarting an already running delivery is rejected
-        $this->actingAs($courierUser)->post(route('kurir.shipments.start', $shipment))->assertStatus(400);
+        $restart = $this->actingAs($courierUser)
+            ->from(route('kurir.shipments.index'))
+            ->post(route('kurir.shipments.start', $shipment));
+        $restart->assertRedirect(route('kurir.shipments.index'));
+        $restart->assertSessionHas('error');
 
         $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment))->assertRedirect();
         $this->assertEquals('DELIVERED', $shipment->fresh()->status);
 
         // Completing twice is rejected
-        $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment))->assertStatus(400);
+        $repeat = $this->actingAs($courierUser)
+            ->from(route('kurir.shipments.index'))
+            ->post(route('kurir.shipments.complete', $shipment));
+        $repeat->assertRedirect(route('kurir.shipments.index'));
+        $repeat->assertSessionHas('error');
         $this->assertEquals(OrderStatus::COMPLETED, $order->fresh()->status);
     }
 }

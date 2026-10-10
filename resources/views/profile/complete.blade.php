@@ -9,7 +9,7 @@
         </div>
 
         @if (session('info'))
-            <div class="mb-6 p-4 rounded-2xl bg-brand-ochre-soft text-brand-accent border border-brand-accent/20 text-[0.8125rem] font-medium">
+            <div class="mb-6 p-4 rounded-2xl bg-brand-ochre-soft text-brand-brass border border-brand-accent/20 text-[0.8125rem] font-medium">
                 {{ session('info') }}
             </div>
         @endif
@@ -102,7 +102,7 @@
             <div class="pt-5 border-t border-black/[0.06]">
                 <h2 class="text-[0.9375rem] font-semibold text-brand-dark mb-1.5">Atur Kata Sandi</h2>
                 <p class="text-[0.75rem] text-brand-slate mb-4">
-                    Opsional — isi hanya jika Anda ingin mengaktifkan login lewat email untuk akun Google ini.
+                    Opsional: isi hanya jika Anda ingin mengaktifkan login lewat email untuk akun Google ini.
                 </p>
 
                 <div class="grid sm:grid-cols-2 gap-4">
@@ -111,7 +111,7 @@
                         <div class="relative">
                             <input id="password" :type="showPass ? 'text' : 'password'" name="password" class="input-field pr-12" autocomplete="new-password">
                             <button type="button" @click="showPass = !showPass"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-slate hover:text-brand-dark text-xs font-semibold cursor-pointer p-1">
+                                class="absolute right-1 top-1/2 -translate-y-1/2 min-h-11 min-w-11 flex items-center justify-center text-brand-slate hover:text-brand-dark text-xs font-semibold cursor-pointer">
                                 <span x-text="showPass ? 'Tutup' : 'Lihat'"></span>
                             </button>
                         </div>
@@ -131,11 +131,12 @@
                     Simpan Profil
                 </button>
                 @if (blank($user->phone) || blank($user->address))
-                    <span class="btn-ghost justify-center py-3 text-[0.875rem] opacity-60 cursor-default sm:flex-1 text-center">
-                        Lengkapi data wajib untuk melanjutkan
-                    </span>
+                    <button type="button" disabled aria-disabled="true"
+                        class="btn-ghost justify-center py-3 text-[0.875rem] opacity-50 cursor-not-allowed sm:flex-1">
+                        Lengkapi data wajib terlebih dahulu
+                    </button>
                 @else
-                    <a href="{{ route('dashboard') }}" class="btn-ghost justify-center py-3 text-[0.875rem] sm:flex-1 text-center">Kembali ke Dashboard</a>
+                    <a href="{{ route('dashboard') }}" class="btn-ghost justify-center py-3 text-[0.875rem] sm:flex-1">Kembali ke Dashboard</a>
                 @endif
             </div>
         </form>

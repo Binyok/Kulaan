@@ -1,11 +1,11 @@
 <x-layouts.guest>
     <div class="mb-7">
-        <h1 class="text-[1.375rem] font-bold text-brand-dark tracking-tight">Lupa Kata Sandi?</h1>
+        <h1 class="font-display font-semibold text-[1.625rem] text-brand-dark tracking-tight text-balance">Lupa Kata Sandi?</h1>
         <p class="text-[0.8125rem] text-brand-slate mt-1.5">Masukkan alamat email Anda dan kami akan mengirimkan tautan untuk mengatur ulang kata sandi Anda.</p>
     </div>
 
     @if (session('status'))
-        <div class="mb-5 text-[0.8125rem] font-medium text-brand-emerald bg-brand-mint p-3.5 rounded-xl">
+        <div class="mb-5 text-[0.8125rem] font-medium text-brand-emerald bg-brand-mint p-3.5 rounded-xl" role="status">
             {{ session('status') }}
         </div>
     @endif
@@ -14,10 +14,10 @@
         @csrf
 
         <div>
-            <label for="email" class="block text-[0.8125rem] font-medium text-brand-dark mb-1.5">Alamat Email Terdaftar</label>
-            <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus class="input-field">
+            <label for="email" class="field-label">Alamat email terdaftar</label>
+            <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus class="input-field">
             @error('email')
-                <p class="text-[0.75rem] text-brand-brick mt-1.5">{{ $message }}</p>
+                <p class="text-[0.75rem] text-brand-brick mt-1.5" role="alert">{{ $message }}</p>
             @enderror
         </div>
 

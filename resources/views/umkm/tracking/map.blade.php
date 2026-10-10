@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-    <div class="space-y-6 sm:space-y-8 animate-fade-up" x-data="{
+    <div class="space-y-6 sm:space-y-8" x-data="{
         shipmentStatus: '{{ $shipment->status }}',
         courierName: '{{ $shipment->courier?->user->name ?? 'Kurir Armada' }}',
         courierVehicle: '{{ $shipment->courier?->vehicle_type ?? 'Motor' }} ({{ $shipment->courier?->vehicle_number ?? '-' }})',
@@ -35,7 +35,7 @@
             // Custom Courier Icon
             const courierIcon = L.divIcon({
                 className: 'custom-courier-pin',
-                html: `<div class='w-10 h-10 rounded-full bg-[#2D6A4F] text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-xs ring-4 ring-[#2D6A4F]/20 animate-bounce'>🛵</div>`,
+                html: `<div class='w-10 h-10 rounded-full bg-[#2D6A4F] text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-sm ring-4 ring-[#2D6A4F]/20'>K</div>`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20]
             });
@@ -43,7 +43,7 @@
             // Custom Destination Icon
             const destIcon = L.divIcon({
                 className: 'custom-dest-pin',
-                html: `<div class='w-10 h-10 rounded-full bg-[#D4A017] text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-xs ring-4 ring-[#D4A017]/20'>📍</div>`,
+                html: `<div class='w-10 h-10 rounded-full bg-[#D4A017] text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-sm ring-4 ring-[#D4A017]/20'>T</div>`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20]
             });
@@ -57,9 +57,16 @@
                 .addTo(this.map)
                 .bindPopup(`<strong>Tujuan Pengiriman:</strong><br>{{ $umkm->business_name }}<br>{{ $umkm->address }}`);
 
-            // Fit bounds between courier and destination
-            const group = new L.featureGroup([this.courierMarker, this.destMarker]);
-            this.map.fitBounds(group.getBounds().pad(0.2));
+            // Fit both points, but clamp: if the pair is absurdly far apart
+            // (bad coordinate data), frame the destination instead of a country-wide zoom.
+            const courierPos = this.courierMarker.getLatLng();
+            const destPos = this.destMarker.getLatLng();
+            if (courierPos.distanceTo(destPos) > 100000) {
+                this.map.setView([this.destLat, this.destLng], 14);
+            } else {
+                const group = new L.featureGroup([this.courierMarker, this.destMarker]);
+                this.map.fitBounds(group.getBounds().pad(0.2));
+            }
 
             // Start polling location every 4 seconds
             this.pollTimer = setInterval(() => this.fetchLocation(), 4000);
@@ -79,25 +86,34 @@
                     this.courierMarker.setPopupContent(`<strong>Posisi Kurir:</strong><br>${this.courierName}<br>Kecepatan: ${this.speed} km/jam<br><small>Update: ${this.lastUpdated}</small>`);
                 }
             }).catch(err => console.warn('Polling GPS:', err));
+        },
+
+        goHome() {
+            this.map.setView([this.destLat, this.destLng], 14);
         }
     }" x-init="initMap()">
 
         <!-- Header Bar -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary hover:underline mb-1">
-                    &larr; <span>Kembali ke Dashboard</span>
+                <a href="{{ route('dashboard') }}" class="btn-back mb-3">
+                    &larr; Kembali ke Dashboard
                 </a>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">Pelacakan Live GPS Kurir Armada</h1>
+                <h1 class="font-display font-semibold text-[1.75rem] sm:text-4xl text-brand-dark tracking-tight text-balance">Pelacakan Live GPS Kurir Armada</h1>
                 <p class="text-[0.8125rem] text-brand-slate mt-0.5">
-                    Surat Jalan: <span class="font-mono font-bold text-brand-dark">{{ $shipment->shipment_number }}</span> &bull; 
+                    Surat Jalan: <span class="font-mono font-bold text-brand-dark">{{ $shipment->shipment_number }}</span> &bull;
                     Pesanan: <span class="font-mono text-brand-dark">{{ $shipment->order->order_number }}</span>
                 </p>
             </div>
-            
-            <div class="flex items-center gap-2.5 px-4 py-2 bg-white rounded-full border border-black/[0.06] shadow-sm">
-                <span class="w-2.5 h-2.5 rounded-full" :class="shipmentStatus === 'IN_TRANSIT' ? 'bg-brand-emerald animate-ping' : (shipmentStatus === 'DELIVERED' ? 'bg-brand-primary' : 'bg-brand-accent')"></span>
-                <span class="text-xs font-bold text-brand-dark" x-text="shipmentStatus === 'IN_TRANSIT' ? 'Kurir Sedang Bergerak (Live GPS)' : (shipmentStatus === 'DELIVERED' ? 'Barang Telah Tiba' : 'Menunggu Pengambilan')"></span>
+
+            <div class="flex flex-wrap items-center gap-2.5">
+                <div class="flex items-center gap-2.5 px-4 py-2 bg-white rounded-full border border-black/[0.06] shadow-sm">
+                    <span class="w-2.5 h-2.5 rounded-full" :class="shipmentStatus === 'IN_TRANSIT' ? 'bg-brand-emerald' : (shipmentStatus === 'DELIVERED' ? 'bg-brand-primary' : 'bg-brand-accent')"></span>
+                    <span class="text-xs font-bold text-brand-dark" x-text="shipmentStatus === 'IN_TRANSIT' ? 'Kurir Sedang Bergerak (Live GPS)' : (shipmentStatus === 'DELIVERED' ? 'Barang Telah Tiba' : 'Menunggu Pengambilan')"></span>
+                </div>
+                <button type="button" @click="goHome()" class="btn-ghost text-xs py-2 px-4 font-bold">
+                    Lokasi Saya
+                </button>
             </div>
         </div>
 
@@ -116,7 +132,6 @@
                     <div class="card-core p-6 space-y-5">
                         <div class="flex items-center justify-between pb-3 border-b border-black/[0.04]">
                             <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wider">Kurir Ditugaskan</h2>
-                            <span class="badge bg-brand-mint text-brand-primary text-[10px]">Armada Resmi</span>
                         </div>
 
                         <div class="flex items-center gap-3.5">

@@ -42,6 +42,7 @@ class DashboardController extends Controller
             $catalogCount = $distributor ? $distributor->supplierProducts()->count() : 0;
             $pendingOrdersCount = $distributor ? Order::where('distributor_id', $distributor->id)->whereIn('status', ['PAID', 'CONFIRMED', 'PREPARING'])->count() : 0;
             $completedOrdersCount = $distributor ? Order::where('distributor_id', $distributor->id)->where('status', 'COMPLETED')->count() : 0;
+            $reviewCount = $distributor ? $distributor->reviews()->count() : 0;
             $orders = $distributor ? Order::with('items.product', 'items.umkm')->where('distributor_id', $distributor->id)->latest()->take(5)->get() : collect();
 
             return view('dashboard.distributor', compact(
@@ -50,6 +51,7 @@ class DashboardController extends Controller
                 'catalogCount',
                 'pendingOrdersCount',
                 'completedOrdersCount',
+                'reviewCount',
                 'orders'
             ));
         }

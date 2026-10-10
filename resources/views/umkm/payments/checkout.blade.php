@@ -1,7 +1,7 @@
 <x-layouts.app>
     <x-slot name="title">Invoice Tagihan Kolektif</x-slot>
 
-    <div class="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-fade-up" x-data="{
+    <div class="max-w-3xl mx-auto space-y-6 sm:space-y-8" x-data="{
         selectedMethod: 'qris',
         isCheckingStatus: false,
         copiedText: '',
@@ -54,10 +54,10 @@
         <!-- Breadcrumb & Title -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <a href="{{ route('umkm.orders.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary hover:underline mb-1">
-                    &larr; <span>Kembali ke Riwayat Pesanan</span>
+                <a href="{{ route('umkm.orders.index') }}" class="btn-back mb-3">
+                    &larr; Kembali ke Riwayat Pesanan
                 </a>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">Invoice Pembayaran Kolektif</h1>
+                <h1 class="font-display font-semibold text-[1.75rem] sm:text-4xl text-brand-dark tracking-tight text-balance">Invoice Pembayaran Kolektif</h1>
                 <p class="text-[0.8125rem] text-brand-slate mt-0.5">Tagihan pengadaan kolektif berdasarkan kuantitas pesanan riil usaha Anda.</p>
             </div>
 
@@ -70,7 +70,7 @@
         </div>
 
         @if (session('success'))
-            <div class="p-4 rounded-2xl bg-brand-mint text-brand-primary border border-brand-primary/15 text-xs font-bold flex items-center gap-2.5 animate-fade-up">
+            <div class="p-4 rounded-2xl bg-brand-mint text-brand-primary border border-brand-primary/15 text-xs font-bold flex items-center gap-2.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-brand-emerald"></span>
                 <span>{{ session('success') }}</span>
             </div>
@@ -112,10 +112,10 @@
                         <!-- Savings Badge Card -->
                         <div class="p-4 savings-card flex justify-between items-center">
                             <div>
-                                <span class="text-[10px] font-bold text-brand-accent uppercase tracking-wider">Hemat Pembelian Kolektif</span>
+                                <span class="text-[10px] font-bold text-brand-brass uppercase tracking-wider">Hemat Pembelian Kolektif</span>
                                 <p class="text-xs text-brand-slate mt-0.5">Patokan eceran pasar: Rp {{ number_format($orderItem->quantity * $orderItem->benchmark_retail_price, 0, ',', '.') }}</p>
                             </div>
-                            <p class="text-base sm:text-lg font-extrabold text-brand-accent">
+                            <p class="text-base sm:text-lg font-extrabold text-brand-brass">
                                 Hemat Rp {{ number_format($orderItem->savings_amount, 0, ',', '.') }}
                             </p>
                         </div>
@@ -145,7 +145,7 @@
                     <div class="card-shell">
                         <div class="card-core p-6 sm:p-7 space-y-6">
                             <!-- Countdown Banner -->
-                            <div class="p-3.5 bg-brand-ochre-soft rounded-xl border border-brand-accent/20 flex items-center justify-between text-xs text-brand-accent font-bold">
+                            <div class="p-3.5 bg-brand-ochre-soft rounded-xl border border-brand-accent/20 flex items-center justify-between text-xs text-brand-brass font-bold">
                                 <span>Batas Waktu Pembayaran:</span>
                                 <span class="font-mono text-sm" x-text="`${String(minutesLeft).padStart(2, '0')}:${String(secondsLeft).padStart(2, '0')}`"></span>
                             </div>
@@ -156,17 +156,17 @@
                                 <div class="grid grid-cols-3 gap-2">
                                     <button type="button" @click="selectedMethod = 'qris'"
                                         :class="selectedMethod === 'qris' ? 'border-brand-primary bg-brand-mint/60 text-brand-primary font-bold ring-1 ring-brand-primary/20' : 'border-black/[0.08] bg-white text-brand-slate'"
-                                        class="border rounded-xl p-2.5 text-center text-xs transition-all cursor-pointer">
+                                        class="border rounded-xl min-h-11 px-2 py-2.5 text-center text-xs transition-all cursor-pointer">
                                         QRIS Instan
                                     </button>
                                     <button type="button" @click="selectedMethod = 'bca_va'"
                                         :class="selectedMethod === 'bca_va' ? 'border-brand-primary bg-brand-mint/60 text-brand-primary font-bold ring-1 ring-brand-primary/20' : 'border-black/[0.08] bg-white text-brand-slate'"
-                                        class="border rounded-xl p-2.5 text-center text-xs transition-all cursor-pointer">
+                                        class="border rounded-xl min-h-11 px-2 py-2.5 text-center text-xs transition-all cursor-pointer">
                                         BCA VA
                                     </button>
                                     <button type="button" @click="selectedMethod = 'bni_va'"
                                         :class="selectedMethod === 'bni_va' ? 'border-brand-primary bg-brand-mint/60 text-brand-primary font-bold ring-1 ring-brand-primary/20' : 'border-black/[0.08] bg-white text-brand-slate'"
-                                        class="border rounded-xl p-2.5 text-center text-xs transition-all cursor-pointer">
+                                        class="border rounded-xl min-h-11 px-2 py-2.5 text-center text-xs transition-all cursor-pointer">
                                         BNI / Mandiri
                                     </button>
                                 </div>
@@ -228,7 +228,7 @@
                             <div class="space-y-3 pt-4 border-t border-black/[0.06]">
                                 <button type="button" @click="checkPaymentStatus(true)" :disabled="isCheckingStatus"
                                     class="btn-ghost w-full justify-center py-3 text-xs font-bold text-brand-dark border-black/[0.12] hover:bg-black/[0.02] cursor-pointer">
-                                    <span x-show="!isCheckingStatus">Cek Status Pembayaran (Sinkronisasi Gateway) &olarr;</span>
+                                    <span x-show="!isCheckingStatus">Cek Status Pembayaran</span>
                                     <span x-show="isCheckingStatus" x-cloak>Menghubungi Server Gateway...</span>
                                 </button>
 
@@ -236,7 +236,7 @@
                                     @csrf
                                     <input type="hidden" name="payment_method" :value="selectedMethod">
                                     <button type="submit" class="btn-primary w-full justify-center py-3 text-xs font-bold shadow-md shadow-brand-primary/25 cursor-pointer">
-                                        Konfirmasi Dana Masuk (Simulasi Bank Settlement) &check;
+                                        Konfirmasi Dana Masuk (Simulasi)
                                     </button>
                                 </form>
 
@@ -277,7 +277,7 @@
                             @php $shipment = $orderItem->order->shipments->first(); @endphp
                             @if ($shipment)
                                 <a href="{{ route('umkm.tracking.show', $shipment) }}" class="btn-primary w-full justify-center py-3 text-xs font-bold shadow-md shadow-brand-primary/25">
-                                    Pantau Posisi Kurir di Peta Live GPS &rarr;
+                                    Pantau Posisi Kurir di Peta Live GPS
                                 </a>
                             @else
                                 <a href="{{ route('umkm.orders.index') }}" class="btn-ghost w-full justify-center py-3 text-xs font-bold text-brand-primary">

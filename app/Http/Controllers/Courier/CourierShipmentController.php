@@ -35,7 +35,9 @@ class CourierShipmentController extends Controller
             abort(403);
         }
 
-        abort_unless(in_array($shipment->status, ['PENDING', 'ASSIGNED_TO_COURIER'], true), 400, 'Status tidak valid untuk memulai pengiriman.');
+        if (! in_array($shipment->status, ['PENDING', 'ASSIGNED_TO_COURIER'], true)) {
+            return back()->with('error', 'Status tidak valid untuk memulai pengiriman.');
+        }
 
         $shipment->update(['status' => 'IN_TRANSIT']);
         $shipment->order->update(['status' => OrderStatus::IN_TRANSIT->value]);
@@ -88,7 +90,9 @@ class CourierShipmentController extends Controller
             abort(403);
         }
 
-        abort_if($shipment->status !== 'IN_TRANSIT', 400, 'Pengiriman belum dimulai.');
+        if ($shipment->status !== 'IN_TRANSIT') {
+            return back()->with('error', 'Pengiriman belum dimulai, belum bisa diselesaikan.');
+        }
 
         $shipment->update([
             'status' => 'DELIVERED',

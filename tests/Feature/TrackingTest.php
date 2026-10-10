@@ -78,6 +78,97 @@ class TrackingTest extends TestCase
         $this->assertEquals(-3.319500, $response->json('current_location.lat'));
     }
 
+    public function test_umkm_can_view_combined_live_map_with_multiple_couriers(): void
+    {
+        $umkmUser = User::factory()->create();
+        $umkmUser->assignRole('umkm');
+        $umkm = Umkm::create(['user_id' => $umkmUser->id, 'business_name' => 'Warung A', 'address' => 'Jl. A', 'district' => 'Banjarmasin Utara', 'city' => 'Banjarmasin']);
+
+        $category = ProductCategory::create(['name' => 'Sembako']);
+        $product = Product::create(['category_id' => $category->id, 'name' => 'Beras Ramos', 'unit' => 'kg', 'benchmark_retail_price' => 9000]);
+
+        $shipmentOne = $this->createActiveShipment($umkm, $product, 'PT Borneo', -3.319500, 114.590000, 'Rizky Kurir');
+        $shipmentTwo = $this->createActiveShipment($umkm, $product, 'CV Banua', -3.335000, 114.575000, 'Arif Delivery');
+
+        $response = $this->actingAs($umkmUser)->get(route('umkm.tracking.live'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Peta Semua Kurir Aktif');
+        $response->assertSee('allCouriersMap', false);
+        $response->assertSee(route('umkm.tracking.active-locations'), false);
+    }
+
+    public function test_active_locations_endpoint_returns_only_own_in_transit_shipments(): void
+    {
+        $umkmUser = User::factory()->create();
+        $umkmUser->assignRole('umkm');
+        $umkm = Umkm::create(['user_id' => $umkmUser->id, 'business_name' => 'Warung A', 'address' => 'Jl. A', 'district' => 'Banjarmasin Utara', 'city' => 'Banjarmasin']);
+
+        $otherUmkmUser = User::factory()->create();
+        $otherUmkmUser->assignRole('umkm');
+        $otherUmkm = Umkm::create(['user_id' => $otherUmkmUser->id, 'business_name' => 'Warung B', 'address' => 'Jl. B', 'district' => 'Banjarmasin Barat', 'city' => 'Banjarmasin']);
+
+        $category = ProductCategory::create(['name' => 'Sembako']);
+        $product = Product::create(['category_id' => $category->id, 'name' => 'Beras Ramos', 'unit' => 'kg', 'benchmark_retail_price' => 9000]);
+
+        $shipmentOne = $this->createActiveShipment($umkm, $product, 'PT Borneo', -3.319500, 114.590000, 'Rizky Kurir');
+        $shipmentTwo = $this->createActiveShipment($umkm, $product, 'CV Banua', -3.335000, 114.575000, 'Arif Delivery');
+
+        // Finished shipments and other UMKMs' shipments must stay invisible.
+        $finished = $this->createActiveShipment($umkm, $product, 'PT Borneo', -3.320000, 114.591000, 'Rizky Kurir');
+        $finished->update(['status' => 'DELIVERED']);
+        $this->createActiveShipment($otherUmkm, $product, 'PT Borneo', -3.321000, 114.592000, 'Rizky Kurir');
+
+        $response = $this->actingAs($umkmUser)->getJson(route('umkm.tracking.active-locations'));
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(2, 'couriers');
+        $response->assertJsonFragment(['shipment_number' => $shipmentOne->shipment_number]);
+        $response->assertJsonFragment(['shipment_number' => $shipmentTwo->shipment_number]);
+        $response->assertJsonStructure(['couriers' => [['courier_id', 'courier' => ['name'], 'current_location' => ['lat', 'lng'], 'destination', 'deliveries']]]);
+
+        $lats = collect($response->json('couriers'))->pluck('current_location.lat')->all();
+        $this->assertContains(-3.3195, $lats);
+        $this->assertContains(-3.335, $lats);
+
+        // The other UMKM sees none of these.
+        $otherResponse = $this->actingAs($otherUmkmUser)->getJson(route('umkm.tracking.active-locations'));
+        $otherResponse->assertStatus(200);
+        $otherResponse->assertJsonCount(1, 'couriers');
+    }
+
+    public function test_active_locations_groups_multiple_packages_of_one_courier(): void
+    {
+        $umkmUser = User::factory()->create();
+        $umkmUser->assignRole('umkm');
+        $umkm = Umkm::create(['user_id' => $umkmUser->id, 'business_name' => 'Warung A', 'address' => 'Jl. A', 'district' => 'Banjarmasin Utara', 'city' => 'Banjarmasin']);
+
+        $category = ProductCategory::create(['name' => 'Sembako']);
+        $product = Product::create(['category_id' => $category->id, 'name' => 'Beras Ramos', 'unit' => 'kg', 'benchmark_retail_price' => 9000]);
+
+        $distributor = Distributor::create(['user_id' => User::factory()->create()->id, 'company_name' => 'PT Borneo', 'address' => 'Jl. Trisakti']);
+        $courierUser = User::factory()->create(['name' => 'Rizky Kurir']);
+        $courierUser->assignRole('kurir');
+        $courier = Courier::create(['user_id' => $courierUser->id, 'distributor_id' => $distributor->id, 'vehicle_type' => 'Motor']);
+
+        // Same courier delivers two different orders to the same UMKM.
+        $first = $this->createActiveShipment($umkm, $product, 'PT Borneo', -3.319500, 114.590000, 'Rizky Kurir', $courier);
+        $second = $this->createActiveShipment($umkm, $product, 'PT Borneo', -3.319600, 114.590100, 'Rizky Kurir', $courier);
+
+        $response = $this->actingAs($umkmUser)->getJson(route('umkm.tracking.active-locations'));
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(1, 'couriers');
+
+        $entry = $response->json('couriers.0');
+        $this->assertEquals('Rizky Kurir', $entry['courier']['name']);
+        $this->assertCount(2, $entry['deliveries']);
+
+        $numbers = collect($entry['deliveries'])->pluck('shipment_number')->all();
+        $this->assertContains($first->shipment_number, $numbers);
+        $this->assertContains($second->shipment_number, $numbers);
+    }
+
     public function test_unauthorized_umkm_cannot_access_other_umkm_tracking(): void
     {
         $umkmUser1 = User::factory()->create();
@@ -102,5 +193,52 @@ class TrackingTest extends TestCase
         // UMKM 2 tries to access UMKM 1's shipment tracking
         $response = $this->actingAs($umkmUser2)->get(route('umkm.tracking.show', $shipment));
         $response->assertStatus(403);
+    }
+
+    private function createActiveShipment(Umkm $umkm, Product $product, string $distributorName, float $lat, float $lng, string $courierName, ?Courier $courier = null): Shipment
+    {
+        $distributor = Distributor::create([
+            'user_id' => User::factory()->create()->id,
+            'company_name' => $distributorName,
+            'address' => 'Jl. Trisakti',
+        ]);
+
+        $order = Order::create([
+            'distributor_id' => $distributor->id,
+            'total_amount' => 26000,
+            'total_quantity' => 4,
+            'status' => OrderStatus::IN_TRANSIT->value,
+        ]);
+
+        OrderItem::create([
+            'order_id' => $order->id,
+            'umkm_id' => $umkm->id,
+            'product_id' => $product->id,
+            'quantity' => 4,
+            'unit_price' => 6500,
+            'subtotal' => 26000,
+            'benchmark_retail_price' => 9000,
+            'delivery_district' => 'Banjarmasin Utara',
+            'delivery_address' => 'Jl. A',
+        ]);
+
+        $courier ??= Courier::create([
+            'user_id' => User::factory()->create(['name' => $courierName])->id,
+            'distributor_id' => $distributor->id,
+            'vehicle_type' => 'Motor',
+        ]);
+
+        $shipment = Shipment::create(['order_id' => $order->id, 'courier_id' => $courier->id, 'status' => 'IN_TRANSIT']);
+
+        TrackingLocation::create([
+            'shipment_id' => $shipment->id,
+            'courier_id' => $courier->id,
+            'latitude' => $lat,
+            'longitude' => $lng,
+            'speed' => 25.0,
+            'recorded_at' => now(),
+        ]);
+
+        return $shipment;
     }
 }

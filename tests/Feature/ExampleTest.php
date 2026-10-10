@@ -15,6 +15,6 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Smart Collective Procurement');
-        $response->assertSee('Hitung Estimasi Penghematan');
+        $response->assertSee('Hitung estimasi penghematan usaha Anda');
     }
 }

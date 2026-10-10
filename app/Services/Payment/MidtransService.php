@@ -24,8 +24,8 @@ class MidtransService
 
     public function __construct()
     {
-        $this->serverKey = config('services.midtrans.server_key', env('MIDTRANS_SERVER_KEY', 'SB-Mid-server-kulaan-test-key'));
-        $this->clientKey = config('services.midtrans.client_key', env('MIDTRANS_CLIENT_KEY', 'SB-Mid-client-kulaan-test-key'));
+        $this->serverKey = (string) config('services.midtrans.server_key');
+        $this->clientKey = (string) config('services.midtrans.client_key');
         $this->isProduction = (bool) config('services.midtrans.is_production', false);
         $this->snapApiUrl = $this->isProduction
             ? 'https://app.midtrans.com/snap/v1/transactions'
@@ -80,7 +80,7 @@ class MidtransService
             $snapToken = 'SNAP-TOKEN-'.strtoupper(substr(md5($payment->payment_reference), 0, 16));
             $redirectUrl = 'https://app.sandbox.midtrans.com/snap/v2/vtweb/'.$snapToken;
 
-            if (env('MIDTRANS_LIVE_API', false)) {
+            if (config('services.midtrans.is_production', false)) {
                 try {
                     $response = Http::withBasicAuth($this->serverKey, '')
                         ->post($this->snapApiUrl, $payload);

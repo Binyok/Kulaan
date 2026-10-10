@@ -69,8 +69,13 @@ class OrderManagementController extends Controller
             abort(403);
         }
 
-        abort_if($order->shipments()->exists(), 400, 'Order ini sudah memiliki kurir.');
-        abort_unless($order->status === OrderStatus::READY_TO_SHIP, 400, 'Kurir hanya bisa di-assign setelah order siap kirim.');
+        if ($order->shipments()->exists()) {
+            return back()->with('error', 'Order ini sudah memiliki kurir yang ditugaskan.');
+        }
+
+        if ($order->status !== OrderStatus::READY_TO_SHIP) {
+            return back()->with('error', 'Kurir hanya bisa di-assign setelah order siap kirim. Selesaikan tahap persiapan terlebih dahulu.');
+        }
 
         $request->validate([
             'courier_id' => ['required', 'exists:couriers,id'],

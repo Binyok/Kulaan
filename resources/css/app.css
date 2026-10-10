@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -7,20 +7,23 @@
 
 @theme {
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-    
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+
     --color-brand-primary: #2D6A4F;
     --color-brand-primary-hover: #1B4332;
     --color-brand-primary-light: #40916C;
+    --color-brand-forest: #12352A;
     --color-brand-mint: #E8F5E9;
+    --color-brand-emerald: #157A3A;
     --color-brand-accent: #D4A017;
     --color-brand-accent-hover: #B78A13;
+    --color-brand-brass: #8A6708;
     --color-brand-ochre-soft: #FEF9E7;
-    --color-brand-dark: #1E293B;
-    --color-brand-slate: #64748B;
-    --color-brand-cream: #FAFAF8;
+    --color-brand-dark: #22302A;
+    --color-brand-slate: #686E63;
+    --color-brand-cream: #FAF7F1;
     --color-brand-soft-grey: #E2E8F0;
     --color-brand-brick: #C0392B;
-    --color-brand-emerald: #16A34A;
 }
 
 body {
@@ -31,267 +34,430 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Double-Bezel Card System */
-.card-shell {
-    background: rgba(255, 255, 255, 0.45);
-    border: 1px solid rgba(0, 0, 0, 0.04);
-    padding: 6px;
-    border-radius: 1.25rem;
+/* Keyboard focus must stay visible on every interactive control (R-32). */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+summary:focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: 2px;
 }
 
-.card-core {
-    background: #fff;
-    border-radius: calc(1.25rem - 6px);
-    box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.03),
-        0 1px 2px rgba(0, 0, 0, 0.04),
-        0 8px 24px -4px rgba(0, 0, 0, 0.06);
+/* Component classes live in the components layer so per-view Tailwind
+   utilities (max-w-*, py-*, text-*) can still override them. */
+@layer components {
+    /* Double-Bezel Card System */
+    .card-shell {
+        background: rgba(255, 255, 255, 0.45);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        padding: 6px;
+        border-radius: 1.25rem;
+    }
+
+    .card-core {
+        background: #fff;
+        border-radius: calc(1.25rem - 6px);
+        box-shadow:
+            0 0 0 1px rgba(27, 67, 50, 0.05),
+            0 1px 2px rgba(27, 67, 50, 0.05),
+            0 12px 32px -8px rgba(27, 67, 50, 0.12);
+    }
+
+    .card-elevated {
+        background: #fff;
+        border-radius: 1.25rem;
+        border: 1px solid rgba(27, 67, 50, 0.07);
+        box-shadow:
+            0 0 0 1px rgba(27, 67, 50, 0.03),
+            0 1px 3px rgba(27, 67, 50, 0.05),
+            0 16px 40px -12px rgba(27, 67, 50, 0.14);
+    }
+
+    /* Premium Button Physics (min-height 44px: thumb-safe tap target) */
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+        padding: 0.625rem 1.5rem;
+        background: var(--color-brand-primary);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        border-radius: 9999px;
+        transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+        cursor: pointer;
+        border: none;
+        letter-spacing: -0.01em;
+        text-align: center;
+    }
+
+    .btn-primary:hover {
+        background: var(--color-brand-primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px -2px rgba(45, 106, 79, 0.35);
+    }
+
+    .btn-primary:active {
+        transform: scale(0.98) translateY(0);
+    }
+
+    .btn-accent {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+        padding: 0.625rem 1.5rem;
+        background: var(--color-brand-accent);
+        color: var(--color-brand-primary-hover);
+        font-weight: 700;
+        font-size: 0.8125rem;
+        border-radius: 9999px;
+        transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-accent:hover {
+        background: var(--color-brand-accent-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px -2px rgba(212, 160, 23, 0.35);
+    }
+
+    .btn-accent:active {
+        transform: scale(0.98) translateY(0);
+    }
+
+    .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+        padding: 0.625rem 1.25rem;
+        background: transparent;
+        color: var(--color-brand-dark);
+        font-weight: 500;
+        font-size: 0.8125rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .btn-ghost:hover {
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 0, 0, 0.12);
+    }
+
+    /* Back control: a real button for "go back", arrow acts as direction cue. */
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        min-height: 2.75rem;
+        padding: 0.5rem 1.125rem;
+        background: #fff;
+        color: var(--color-brand-slate);
+        font-weight: 600;
+        font-size: 0.8125rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+        cursor: pointer;
+    }
+
+    .btn-back:hover {
+        color: var(--color-brand-dark);
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 0, 0, 0.14);
+    }
+
+    /* Round icon-only button (close, map controls). 44px tap target. */
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 9999px;
+        background: transparent;
+        border: none;
+        color: var(--color-brand-slate);
+        font-weight: 600;
+        transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+        cursor: pointer;
+    }
+
+    .btn-icon:hover {
+        background: rgba(0, 0, 0, 0.04);
+        color: var(--color-brand-dark);
+    }
+
+    /* Premium Input Style */
+    .input-field {
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 0.75rem;
+        font-size: 0.875rem;
+        background: #fff;
+        color: var(--color-brand-dark);
+        transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+        outline: none;
+    }
+
+    .input-field:focus {
+        border-color: var(--color-brand-primary);
+        box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.14);
+    }
+
+    .input-field::placeholder {
+        color: #94a3b8;
+    }
+
+    /* Form label & hint: sentence case, shared across every form in the app. */
+    .field-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-brand-dark);
+        margin-bottom: 0.375rem;
+    }
+
+    .field-hint {
+        font-size: 0.6875rem;
+        color: var(--color-brand-slate);
+        margin-top: 0.375rem;
+        line-height: 1.5;
+    }
+
+    /* Eyebrow Tag: the app's recurring label motif */
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.625rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        border-radius: 9999px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: rgba(0, 0, 0, 0.02);
+        color: var(--color-brand-slate);
+    }
+
+    /* Status Badge */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.1875rem 0.625rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        border-radius: 9999px;
+        letter-spacing: 0.01em;
+    }
+
+    /* Premium Table (desktop only; mobile uses card lists) */
+    .table-premium {
+        width: 100%;
+        text-align: left;
+        font-size: 0.8125rem;
+    }
+
+    .table-premium thead th {
+        padding: 0.875rem 1rem;
+        font-size: 0.6875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-brand-slate);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .table-premium tbody td {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        vertical-align: middle;
+    }
+
+    .table-premium tbody tr {
+        transition: background 300ms cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .table-premium tbody tr:hover {
+        background: rgba(45, 106, 79, 0.02);
+    }
+
+    /* Premium Modal Overlay. On phones it reflows into a bottom sheet. */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.35);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: #fff;
+        border-radius: 1.5rem;
+        padding: 1.75rem;
+        max-width: 32rem;
+        width: 100%;
+        max-height: calc(100dvh - 2rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        box-shadow:
+            0 0 0 1px rgba(0, 0, 0, 0.04),
+            0 24px 48px -12px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 639px) {
+        .modal-overlay {
+            align-items: flex-end;
+            padding: 0;
+        }
+
+        .modal-content {
+            max-width: 100%;
+            max-height: 92dvh;
+            border-radius: 1.5rem 1.5rem 0 0;
+            padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+        }
+    }
+
+    /* Stat Card Metric: display serif + tabular figures for a premium ledger feel. */
+    .metric-value {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.875rem;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .metric-label {
+        font-size: 0.6875rem;
+        font-weight: 500;
+        color: var(--color-brand-slate);
+        letter-spacing: 0.02em;
+    }
+
+    /* Soft Gradient Hero */
+    .hero-gradient {
+        background: linear-gradient(135deg, #2D6A4F 0%, #1B4332 60%, #143728 100%);
+        border-radius: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-gradient::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(64, 145, 108, 0.15) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    /* Savings Highlight Card */
+    .savings-card {
+        background: linear-gradient(135deg, #FEF9E7 0%, #FFFDF5 100%);
+        border: 1px solid rgba(212, 160, 23, 0.12);
+        border-radius: 1.25rem;
+    }
+
+    /* Mobile card row: the phone-sized replacement for table rows. */
+    .list-card {
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 1rem;
+        padding: 1rem;
+        transition: border-color 300ms cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .list-card:hover {
+        border-color: rgba(45, 106, 79, 0.25);
+    }
+
+    /* Tabular numbers for prices, scores, codes: columns align, layout stays calm. */
+    .tnum {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Film grain for hero + forest panels only. Breaks digital flatness. */
+    .texture-grain {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+    }
+
+    .texture-grain::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0.07;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .texture-grain > * {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Scroll reveal (MOTION dial 2): rise 14px + fade, staggered to guide the eye. */
+    [data-reveal] {
+        opacity: 0;
+        transform: translateY(14px);
+        transition:
+            opacity 0.6s ease,
+            transform 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+        transition-delay: var(--reveal-delay, 0ms);
+    }
+
+    [data-reveal].is-revealed {
+        opacity: 1;
+        transform: none;
+    }
 }
 
-.card-elevated {
-    background: #fff;
-    border-radius: 1.25rem;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.02),
-        0 1px 3px rgba(0, 0, 0, 0.04),
-        0 12px 32px -8px rgba(0, 0, 0, 0.08);
+html {
+    scroll-behavior: smooth;
 }
 
-/* Premium Button Physics */
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.5rem;
-    background: var(--color-brand-primary);
-    color: #fff;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    border-radius: 9999px;
-    transition: all 500ms cubic-bezier(0.32, 0.72, 0, 1);
-    cursor: pointer;
-    border: none;
-    letter-spacing: -0.01em;
+::selection {
+    background: rgba(45, 106, 79, 0.18);
 }
 
-.btn-primary:hover {
-    background: var(--color-brand-primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px -2px rgba(45, 106, 79, 0.35);
-}
-
-.btn-primary:active {
-    transform: scale(0.98) translateY(0);
-}
-
-.btn-accent {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.5rem;
-    background: var(--color-brand-accent);
-    color: #fff;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    border-radius: 9999px;
-    transition: all 500ms cubic-bezier(0.32, 0.72, 0, 1);
-    cursor: pointer;
-    border: none;
-}
-
-.btn-accent:hover {
-    background: var(--color-brand-accent-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px -2px rgba(212, 160, 23, 0.35);
-}
-
-.btn-accent:active {
-    transform: scale(0.98) translateY(0);
-}
-
-.btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    background: transparent;
-    color: var(--color-brand-dark);
-    font-weight: 500;
-    font-size: 0.8125rem;
-    border-radius: 9999px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    transition: all 500ms cubic-bezier(0.32, 0.72, 0, 1);
-    cursor: pointer;
-}
-
-.btn-ghost:hover {
-    background: rgba(0, 0, 0, 0.03);
-    border-color: rgba(0, 0, 0, 0.12);
-}
-
-/* Premium Input Style */
-.input-field {
-    width: 100%;
-    padding: 0.625rem 0.875rem;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 0.75rem;
-    font-size: 0.8125rem;
-    background: #fff;
-    color: var(--color-brand-dark);
-    transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
-    outline: none;
-}
-
-.input-field:focus {
-    border-color: var(--color-brand-primary);
-    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
-}
-
-.input-field::placeholder {
-    color: #94a3b8;
-}
-
-/* Eyebrow Tag */
-.eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.625rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    border-radius: 9999px;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    background: rgba(0, 0, 0, 0.02);
-    color: var(--color-brand-slate);
-}
-
-/* Status Badge */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.1875rem 0.625rem;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    border-radius: 9999px;
-    letter-spacing: 0.01em;
-}
-
-/* Premium Table */
-.table-premium {
-    width: 100%;
-    text-align: left;
-    font-size: 0.8125rem;
-}
-
-.table-premium thead th {
-    padding: 0.875rem 1rem;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-brand-slate);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.table-premium tbody td {
-    padding: 0.875rem 1rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-    vertical-align: middle;
-}
-
-.table-premium tbody tr {
-    transition: background 300ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.table-premium tbody tr:hover {
-    background: rgba(45, 106, 79, 0.02);
-}
-
-/* Premium Modal Overlay */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 1rem;
-}
-
-.modal-content {
-    background: #fff;
-    border-radius: 1.5rem;
-    padding: 1.75rem;
-    max-width: 28rem;
-    width: 100%;
-    box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.04),
-        0 24px 48px -12px rgba(0, 0, 0, 0.12);
-}
-
-/* Stat Card Metric */
-.metric-value {
-    font-size: 1.75rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1;
-}
-
-.metric-label {
-    font-size: 0.6875rem;
-    font-weight: 500;
-    color: var(--color-brand-slate);
-    letter-spacing: 0.02em;
-}
-
-/* Soft Gradient Hero */
-.hero-gradient {
-    background: linear-gradient(135deg, #2D6A4F 0%, #1B4332 60%, #143728 100%);
-    border-radius: 1.5rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-gradient::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 60%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(64, 145, 108, 0.15) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-/* Savings Highlight Card */
-.savings-card {
-    background: linear-gradient(135deg, #FEF9E7 0%, #FFFDF5 100%);
-    border: 1px solid rgba(212, 160, 23, 0.12);
-    border-radius: 1.25rem;
-}
-
-/* Smooth scroll-reveal animation (triggered via Alpine.js) */
 [x-cloak] { display: none !important; }
 
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(1rem); filter: blur(4px); }
-    to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+/* MOTION dial 2: purposeful reveals + state transitions, no decorative loops. */
+@media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
-
-.animate-fade-up {
-    animation: fadeUp 600ms cubic-bezier(0.32, 0.72, 0, 1) both;
-}
-
-/* Stagger children */
-.stagger > :nth-child(1) { animation-delay: 0ms; }
-.stagger > :nth-child(2) { animation-delay: 80ms; }
-.stagger > :nth-child(3) { animation-delay: 160ms; }
-.stagger > :nth-child(4) { animation-delay: 240ms; }
-.stagger > :nth-child(5) { animation-delay: 320ms; }

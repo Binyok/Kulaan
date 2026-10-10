@@ -94,7 +94,7 @@
     </div>
 
     <div class="header">
-        <h1 class="title">KULA'AN — UMKM SUPPLY HUB</h1>
+        <h1 class="title">KULA'AN &middot; UMKM SUPPLY HUB</h1>
         <div class="subtitle">Laporan Hasil Sistem Pendukung Keputusan Penentuan Distributor Terbaik (AHP + TOPSIS + SAW)</div>
     </div>
 

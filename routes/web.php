@@ -67,6 +67,8 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::post('orders/{orderItem}/review', [OrderController::class, 'storeReview'])->name('orders.review');
 
         Route::get('shipments', [TrackingController::class, 'index'])->name('tracking.index');
+        Route::get('shipments/live', [TrackingController::class, 'liveMap'])->name('tracking.live');
+        Route::get('shipments/active-locations', [TrackingController::class, 'activeLocations'])->name('tracking.active-locations');
         Route::get('shipments/{shipment}/tracking', [TrackingController::class, 'show'])->name('tracking.show');
         Route::get('shipments/{shipment}/location', [TrackingController::class, 'getLocationData'])->name('tracking.location');
     });
