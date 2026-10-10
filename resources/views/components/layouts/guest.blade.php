@@ -1,3 +1,5 @@
+@props(['wide' => false])
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -12,16 +14,17 @@
 </head>
 <body class="min-h-[100dvh] font-sans text-brand-dark" style="background-color: var(--color-brand-cream);">
     <div class="min-h-[100dvh] grid lg:grid-cols-[5fr_6fr]">
-        <!-- Brand panel -->
-        <aside class="texture-grain bg-brand-forest text-white px-6 py-8 sm:px-10 lg:p-12 flex flex-col justify-center gap-6 lg:gap-0 lg:min-h-[100dvh] lg:sticky lg:top-0">
-            <a href="/" class="inline-flex items-center gap-3" aria-label="Kula'an beranda">
+        <!-- Brand panel: logo menempel atas, lokasi menempel bawah, konten mengisi tengah. -->
+        <aside class="texture-grain bg-brand-forest text-white px-6 py-8 sm:px-10 lg:p-12 flex flex-col gap-8 lg:min-h-[100dvh] lg:sticky lg:top-0">
+            <a href="/" class="inline-flex items-center gap-3 self-start" aria-label="Kula'an beranda">
                 <span class="w-11 h-11 rounded-2xl bg-white/10 border border-white/15 text-white flex items-center justify-center font-display font-semibold text-xl shrink-0">K</span>
                 <span class="font-display font-semibold text-[1.75rem] tracking-tight">Kula'an</span>
             </a>
 
-            <h2 class="font-display font-semibold tracking-tight text-balance text-3xl lg:text-[2.5rem] lg:leading-[1.12] lg:mt-10">
-                Belanja bahan baku barengan, hemat sampai 28%.
-            </h2>
+            <div class="my-auto flex flex-col gap-6 lg:gap-8">
+                <h2 class="font-display font-semibold tracking-tight text-balance text-3xl lg:text-[2.5rem] lg:leading-[1.12]">
+                    Belanja bahan baku barengan, hemat sampai 28%.
+                </h2>
 
             <ul class="hidden lg:block space-y-6 mt-10">
                 <li class="flex gap-4">
@@ -46,13 +49,14 @@
                     </div>
                 </li>
             </ul>
+            </div>
 
-            <p class="hidden lg:block text-white/50 text-xs mt-auto pt-10">Banjarmasin, Kalimantan Selatan</p>
+            <p class="hidden lg:block text-white/50 text-xs">Banjarmasin, Kalimantan Selatan</p>
         </aside>
 
         <!-- Form -->
         <main class="flex flex-col justify-center items-center px-4 py-10 sm:py-14">
-            <div class="w-full max-w-[26rem]" data-reveal>
+            <div class="w-full {{ $wide ? 'max-w-3xl' : 'max-w-[26rem]' }}" data-reveal>
                 <div class="card-shell">
                     <div class="card-core p-7 md:p-9">
                         {{ $slot }}
