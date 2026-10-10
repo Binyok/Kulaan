@@ -1,7 +1,7 @@
 <x-layouts.guest>
     <div class="mb-7">
         <h1 class="font-display font-semibold text-[1.625rem] text-brand-dark tracking-tight text-balance">Pendaftaran Akun Kula'an</h1>
-        <p class="text-[0.8125rem] text-brand-slate mt-1.5">Pilih peran dan lengkapi data usaha Anda.</p>
+        <p class="text-[0.8125rem] text-brand-slate mt-1.5">Pilih peran, buat akun, lalu lengkapi data usaha di langkah berikutnya.</p>
     </div>
 
     <!-- Google OAuth Button -->
@@ -51,35 +51,6 @@
             @enderror
         </div>
 
-        <template x-if="role === 'umkm'">
-            <div>
-                <label for="business_type" class="field-label">Jenis usaha</label>
-                <select id="business_type" name="business_type" class="input-field bg-white">
-                    <option value="Kuliner">Kuliner &amp; Makanan</option>
-                    <option value="Minuman">Minuman &amp; Kafe</option>
-                    <option value="Sembako">Toko Kelontong / Sembako</option>
-                    <option value="Kerajinan">Kerajinan &amp; Olahan</option>
-                </select>
-            </div>
-        </template>
-
-        <template x-if="role === 'kurir'">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label for="vehicle_type" class="field-label">Jenis kendaraan</label>
-                    <select id="vehicle_type" name="vehicle_type" class="input-field bg-white">
-                        <option value="Motor">Motor</option>
-                        <option value="Mobil Box">Mobil Box</option>
-                        <option value="Pickup">Pickup</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="vehicle_number" class="field-label">Plat nomor</label>
-                    <input id="vehicle_number" type="text" name="vehicle_number" placeholder="DA 1234 AB" class="input-field">
-                </div>
-            </div>
-        </template>
-
         <div>
             <label for="email" class="field-label">Alamat email</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" class="input-field">
@@ -89,57 +60,26 @@
         </div>
 
         <div>
-            <label for="phone" class="field-label">Nomor WhatsApp / telepon</label>
-            <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" placeholder="081234567890" required autocomplete="tel" class="input-field">
-            @error('phone')
+            <label for="password" class="field-label">Kata sandi</label>
+            <div class="relative">
+                <input id="password" :type="showPass ? 'text' : 'password'" name="password" required autocomplete="new-password" class="input-field pr-14">
+                <button type="button" @click="showPass = !showPass"
+                    class="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 inline-flex items-center justify-center rounded-xl text-brand-slate hover:text-brand-dark hover:bg-black/[0.04] transition-colors cursor-pointer"
+                    :aria-label="showPass ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
+                    :aria-pressed="showPass.toString()">
+                    <svg x-show="!showPass" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                    <svg x-show="showPass" x-cloak class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+                </button>
+            </div>
+            <p class="field-hint">Minimal 8 karakter.</p>
+            @error('password')
                 <p class="text-[0.75rem] text-brand-brick mt-1.5" role="alert">{{ $message }}</p>
             @enderror
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-                <label for="district" class="field-label">Kecamatan</label>
-                <select id="district" name="district" required class="input-field bg-white">
-                    <option value="Banjarmasin Utara">Banjarmasin Utara</option>
-                    <option value="Banjarmasin Barat">Banjarmasin Barat</option>
-                    <option value="Banjarmasin Timur">Banjarmasin Timur</option>
-                    <option value="Banjarmasin Selatan">Banjarmasin Selatan</option>
-                    <option value="Banjarmasin Tengah">Banjarmasin Tengah</option>
-                </select>
-            </div>
-            <div>
-                <label for="city" class="field-label">Kota</label>
-                <input id="city" type="text" value="Banjarmasin" readonly class="input-field bg-brand-cream/50 text-brand-slate">
-            </div>
         </div>
 
         <div>
-            <label for="address" class="field-label">Alamat lengkap</label>
-            <textarea id="address" name="address" rows="2" required class="input-field">{{ old('address') }}</textarea>
-            @error('address')
-                <p class="text-[0.75rem] text-brand-brick mt-1.5" role="alert">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-                <label for="password" class="field-label">Kata sandi</label>
-                <div class="relative">
-                    <input id="password" :type="showPass ? 'text' : 'password'" name="password" required autocomplete="new-password" class="input-field pr-14">
-                    <button type="button" @click="showPass = !showPass"
-                        class="absolute right-1.5 top-1/2 -translate-y-1/2 min-h-11 px-2 flex items-center text-brand-slate hover:text-brand-dark text-xs font-semibold cursor-pointer"
-                        :aria-label="showPass ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'">
-                        <span x-text="showPass ? 'Sembunyikan' : 'Lihat'"></span>
-                    </button>
-                </div>
-                @error('password')
-                    <p class="text-[0.75rem] text-brand-brick mt-1.5" role="alert">{{ $message }}</p>
-                @enderror
-            </div>
-            <div>
-                <label for="password_confirmation" class="field-label">Konfirmasi kata sandi</label>
-                <input id="password_confirmation" :type="showPass ? 'text' : 'password'" name="password_confirmation" required autocomplete="new-password" class="input-field">
-            </div>
+            <label for="password_confirmation" class="field-label">Konfirmasi kata sandi</label>
+            <input id="password_confirmation" :type="showPass ? 'text' : 'password'" name="password_confirmation" required autocomplete="new-password" class="input-field">
         </div>
 
         <button type="submit" class="btn-primary w-full justify-center py-3 text-[0.875rem] mt-2">
