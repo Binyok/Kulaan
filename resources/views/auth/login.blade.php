@@ -36,7 +36,7 @@
         <span class="bg-white px-3 text-[0.6875rem] font-semibold text-brand-slate uppercase tracking-wider absolute">atau</span>
     </div>
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-5" x-data="{ showPassword: false }">
+    <form method="POST" action="{{ route('login') }}" class="space-y-5" x-data="{ showPassword: false }" data-loading>
         @csrf
 
         <div>

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Distributor;
 
+use App\Enums\ProposalStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Models\ProductProposal;
 use App\Models\SupplierPriceTier;
 use App\Models\SupplierProduct;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +32,14 @@ class SupplierProductController extends Controller
             ->whereNotIn('id', $supplierProducts->pluck('product_id'))
             ->get();
 
-        return view('distributor.products.index', compact('supplierProducts', 'availableProducts', 'distributor'));
+        $proposals = ProductProposal::with('category')
+            ->where('distributor_id', $distributor->id)
+            ->latest()
+            ->paginate(10, ['*'], 'usulan');
+
+        $categories = ProductCategory::where('is_active', true)->orderBy('name')->get();
+
+        return view('distributor.products.index', compact('supplierProducts', 'availableProducts', 'proposals', 'categories', 'distributor'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -130,6 +140,55 @@ class SupplierProductController extends Controller
         });
 
         return back()->with('success', 'Tingkatan harga tier berhasil disimpan.');
+    }
+
+    public function storeProposal(Request $request): RedirectResponse
+    {
+        $distributor = $request->user()->distributor;
+        if (! $distributor) {
+            abort(403, 'Akses khusus profil distributor.');
+        }
+
+        $validated = $request->validate([
+            'category_id' => ['required', 'exists:product_categories,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'unit' => ['required', 'string', 'max:50'],
+            'standard_specification' => ['nullable', 'string', 'max:1000'],
+            'stock_available' => ['required', 'numeric', 'min:1'],
+            'moq' => ['required', 'numeric', 'min:1'],
+            'base_retail_price' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $alreadyPending = ProductProposal::where('distributor_id', $distributor->id)
+            ->where('name', $validated['name'])
+            ->where('status', ProposalStatus::PENDING)
+            ->exists();
+
+        if ($alreadyPending) {
+            return back()->with('error', 'Usulan produk ini masih menunggu review admin.');
+        }
+
+        ProductProposal::create([
+            ...$validated,
+            'distributor_id' => $distributor->id,
+            'status' => ProposalStatus::PENDING,
+        ]);
+
+        return back()->with('success', 'Usulan produk dikirim. Admin akan mereview sebelum masuk katalog master.');
+    }
+
+    public function destroyProposal(Request $request, ProductProposal $proposal): RedirectResponse
+    {
+        $distributor = $request->user()->distributor;
+        if (! $distributor || $proposal->distributor_id !== $distributor->id) {
+            abort(403);
+        }
+
+        abort_unless($proposal->status === ProposalStatus::PENDING, 422, 'Hanya usulan yang menunggu review yang bisa ditarik.');
+
+        $proposal->delete();
+
+        return back()->with('success', 'Usulan produk ditarik kembali.');
     }
 
     /**

@@ -350,7 +350,7 @@
                 <span class="font-display font-semibold text-white text-base">Kula'an</span>
                 <span>&middot; Smart Collective Procurement &copy; {{ date('Y') }}</span>
             </div>
-            <p>Banjarmasin, Kalimantan Selatan &middot; Hak Cipta Dilindungi</p>
+            <p>Sidoarjo, Jawa Timur &middot; Hak Cipta Dilindungi</p>
         </div>
     </footer>
 </body>

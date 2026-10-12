@@ -62,25 +62,25 @@
                     @enderror
                 </div>
 
-                <div class="grid sm:grid-cols-2 gap-4 mt-4">
-                    <div>
-                        <label for="district" class="block text-[0.8125rem] font-medium text-brand-dark mb-1.5">Kecamatan</label>
-                        <select id="district" name="district" required class="input-field bg-white">
-                            @foreach (['Banjarmasin Utara', 'Banjarmasin Barat', 'Banjarmasin Timur', 'Banjarmasin Selatan', 'Banjarmasin Tengah'] as $area)
-                                <option value="{{ $area }}" @selected(old('district', $umkm?->district ?? $distributor?->district) === $area)>{{ $area }}</option>
-                            @endforeach
-                        </select>
-                        @error('district')
-                            <p class="text-[0.75rem] text-brand-brick mt-1.5">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="city" class="block text-[0.8125rem] font-medium text-brand-dark mb-1.5">Kota</label>
-                        <input id="city" type="text" name="city" value="{{ old('city', $umkm?->city ?? $distributor?->city ?? 'Banjarmasin') }}" required class="input-field">
-                        @error('city')
-                            <p class="text-[0.75rem] text-brand-brick mt-1.5">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <div class="mt-4">
+                    <x-region-selects :values="[
+                        'province' => old('province', $umkm?->province ?? $distributor?->province),
+                        'city' => old('city', $umkm?->city ?? $distributor?->city),
+                        'district' => old('district', $umkm?->district ?? $distributor?->district),
+                        'village' => old('village', $umkm?->village ?? $distributor?->village),
+                    ]" />
+                    @error('province')
+                        <p class="text-[0.75rem] text-brand-brick mt-1.5">{{ $message }}</p>
+                    @enderror
+                    @error('city')
+                        <p class="text-[0.75rem] text-brand-brick mt-1.5">{{ $message }}</p>
+                    @enderror
+                    @error('district')
+                        <p class="text-[0.75rem] text-brand-brick mt-1.5">{{ $message }}</p>
+                    @enderror
+                    @error('village')
+                        <p class="text-[0.75rem] text-brand-brick mt-1.5">{{ $message }}</p>
+                    @enderror
                 </div>
             </section>
 

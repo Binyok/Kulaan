@@ -37,7 +37,9 @@ class ProfileController extends Controller
             'phone' => ['required', 'string', 'max:20'],
             'address' => ['required', 'string'],
             'district' => ['required', 'string', 'max:100'],
+            'village' => ['nullable', 'string', 'max:100'],
             'city' => ['required', 'string', 'max:100'],
+            'province' => ['nullable', 'string', 'max:100'],
             'business_name' => ['nullable', 'string', 'max:255'],
             'business_type' => ['nullable', 'string', 'max:100'],
             'password' => ['nullable', 'string', 'confirmed', 'min:8'],
@@ -76,14 +78,16 @@ class ProfileController extends Controller
         $attributes = [
             'address' => $validated['address'],
             'district' => $validated['district'],
+            'village' => $validated['village'] ?? null,
             'city' => $validated['city'],
+            'province' => $validated['province'] ?? null,
         ];
 
         if ($user->umkm) {
             $user->umkm->update([
                 ...$attributes,
-                'business_name' => $validated['business_name'] ?: $user->umkm->business_name,
-                'business_type' => $validated['business_type'] ?: $user->umkm->business_type,
+                'business_name' => ($validated['business_name'] ?? null) ?: $user->umkm->business_name,
+                'business_type' => ($validated['business_type'] ?? null) ?: $user->umkm->business_type,
             ]);
 
             return;
@@ -92,7 +96,7 @@ class ProfileController extends Controller
         if ($user->distributor) {
             $user->distributor->update([
                 ...$attributes,
-                'company_name' => $validated['business_name'] ?: $user->distributor->company_name,
+                'company_name' => ($validated['business_name'] ?? null) ?: $user->distributor->company_name,
             ]);
         }
     }

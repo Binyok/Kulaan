@@ -212,7 +212,7 @@
             <strong>Platform Kula'an Decision Support Engine</strong>
         </div>
         <div style="text-align: right;">
-            Banjarmasin, {{ now()->format('d F Y') }}<br>
+            Sidoarjo, {{ now()->format('d F Y') }}<br>
             Penanggung Jawab Pengadaan / Admin Sistem
             <div style="margin-top: 50px; font-weight: bold;">( ____________________________ )</div>
         </div>

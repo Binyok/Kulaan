@@ -51,7 +51,7 @@
             </ul>
             </div>
 
-            <p class="hidden lg:block text-white/50 text-xs">Banjarmasin, Kalimantan Selatan</p>
+            <p class="hidden lg:block text-white/50 text-xs">Sidoarjo, Jawa Timur</p>
         </aside>
 
         <!-- Form -->

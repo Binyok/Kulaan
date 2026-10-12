@@ -4,7 +4,7 @@
         <p class="text-[0.8125rem] text-brand-slate mt-1.5">Masukkan kata sandi baru untuk akun Anda.</p>
     </div>
 
-    <form method="POST" action="{{ route('password.store') }}" class="space-y-5" x-data="{ showPass: false }">
+    <form method="POST" action="{{ route('password.store') }}" class="space-y-5" x-data="{ showPass: false }" data-loading>
         @csrf
 
         <input type="hidden" name="token" value="{{ $request->route('token') }}">

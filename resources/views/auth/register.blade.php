@@ -22,7 +22,7 @@
         <span class="bg-white px-3 text-[0.6875rem] font-semibold text-brand-slate uppercase tracking-wider absolute">atau daftar manual</span>
     </div>
 
-    <form method="POST" action="{{ route('register') }}" x-data="{ role: '{{ old('role', 'umkm') }}', showPass: false }" class="space-y-5">
+    <form method="POST" action="{{ route('register') }}" x-data="{ role: '{{ old('role', 'umkm') }}', showPass: false }" class="space-y-5" data-loading>
         @csrf
 
         <div>

@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ProposalStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Enums\UserRole;
 use App\Models\Courier;
 use App\Models\Distributor;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\ProductProposal;
 use App\Models\PurchaseRequest;
 use App\Models\Shipment;
 use App\Models\Umkm;
@@ -25,6 +27,7 @@ class DashboardController extends Controller
             $totalOrders = Order::count();
             $totalCollectiveVolume = OrderItem::sum('quantity');
             $totalSavingsSystem = OrderItem::sum('savings_amount');
+            $pendingProposals = ProductProposal::where('status', ProposalStatus::PENDING)->count();
 
             return view('dashboard.admin', compact(
                 'user',
@@ -33,7 +36,8 @@ class DashboardController extends Controller
                 'totalCouriers',
                 'totalOrders',
                 'totalCollectiveVolume',
-                'totalSavingsSystem'
+                'totalSavingsSystem',
+                'pendingProposals'
             ));
         }
 

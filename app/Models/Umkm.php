@@ -16,7 +16,9 @@ class Umkm extends Model
         'business_type',
         'address',
         'district',
+        'village',
         'city',
+        'province',
         'latitude',
         'longitude',
     ];

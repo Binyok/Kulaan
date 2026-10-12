@@ -13,7 +13,7 @@
                         {{ $distributor?->company_name ?? $user->name }}
                     </h1>
                     <p class="text-sm text-white/70 leading-relaxed mt-3">
-                        Area operasional: {{ $distributor?->district ?? 'Banjarmasin' }} &bull; Rata-rata kirim {{ $distributor?->delivery_lead_time_days ?? 1 }} hari.
+                        Area operasional: {{ $distributor?->district ?? 'Sidoarjo' }} &bull; Rata-rata kirim {{ $distributor?->delivery_lead_time_days ?? 1 }} hari.
                         Kelola katalog, konfirmasi pesanan, dan tugaskan kurirmu dari sini.
                     </p>
                 </div>

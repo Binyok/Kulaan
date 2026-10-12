@@ -65,7 +65,7 @@
                                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
                                                     {{ $item->review->rating }}/5
                                                 </span>
-                                            @elseif ($item->payment_status->value === 'PAID')
+                                            @elseif (in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true))
                                                 <button type="button"
                                                     @click="openRatingModal({{ $item->id }}, '{{ addslashes($item->order->distributor->company_name) }}', '{{ route('umkm.orders.review', $item) }}')"
                                                     class="min-h-11 px-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition-colors cursor-pointer">
@@ -103,7 +103,7 @@
             <x-modal open="showModal" size="sm" title="Beri Penilaian Distributor">
                 <p class="text-xs text-brand-slate mt-4" x-text="distributorName"></p>
 
-                <form :action="reviewAction" method="POST" class="pt-4 space-y-4">
+                <form :action="reviewAction" method="POST" class="pt-4 space-y-4" data-loading>
                     @csrf
                     <div>
                         <label class="field-label">Rating bintang (kualitas layanan &amp; produk)</label>

@@ -10,7 +10,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
+    <form method="POST" action="{{ route('password.email') }}" class="space-y-5" data-loading>
         @csrf
 
         <div>

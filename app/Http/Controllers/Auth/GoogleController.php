@@ -126,11 +126,13 @@ class GoogleController extends Controller
                         'user_id' => $user->id,
                         'business_name' => $name ?? 'UMKM Google',
                         'business_type' => 'Kuliner',
-                        'address' => 'Jl. Pangeran Hidayatullah No. 10',
-                        'district' => 'Banjarmasin Timur',
-                        'city' => 'Banjarmasin',
-                        'latitude' => -3.315000,
-                        'longitude' => 114.605000,
+                        'address' => 'Jl. Pahlawan No. 10',
+                        'district' => null,
+                        'village' => null,
+                        'city' => 'KABUPATEN SIDOARJO',
+                        'province' => 'JAWA TIMUR',
+                        'latitude' => -7.447800,
+                        'longitude' => 112.718300,
                     ]);
                 }
             } else {

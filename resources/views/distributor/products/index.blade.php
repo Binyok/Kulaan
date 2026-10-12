@@ -3,6 +3,7 @@
 
     <div x-data="{
         openAddProduct: false,
+        openProposal: false,
         tierModal: false,
         selectedProduct: null,
         tiers: [],
@@ -25,11 +26,16 @@
                                 Atur stok, MOQ grosir, dan tingkatan harga — makin besar kuota grup yang kebentuk, makin murah harganya.
                             </p>
                         </div>
-                        @if ($availableProducts->count() > 0)
-                            <button type="button" @click="openAddProduct = true" class="btn-accent text-sm py-3.5 px-7 justify-center shadow-lg shadow-black/20 shrink-0 w-full lg:w-auto">
-                                Daftarkan Produk Baru
+                        <div class="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto">
+                            @if ($availableProducts->count() > 0)
+                                <button type="button" @click="openAddProduct = true" class="btn-accent text-sm py-3.5 px-7 justify-center shadow-lg shadow-black/20 shrink-0 w-full sm:w-auto">
+                                    Daftarkan Produk Baru
+                                </button>
+                            @endif
+                            <button type="button" @click="openProposal = true" class="btn-ghost text-sm py-3.5 px-6 justify-center shrink-0 w-full sm:w-auto text-white border-white/25 hover:bg-white/10">
+                                Usulkan Produk Baru
                             </button>
-                        @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -108,6 +114,60 @@
                     @endif
                 </section>
             @endif
+
+            <!-- Usulan produk custom -->
+            <section class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-7" data-reveal>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+                    <div>
+                        <h2 class="text-base font-bold text-brand-dark tracking-tight">Usulan Produk Baru</h2>
+                        <p class="text-[0.75rem] text-brand-slate mt-0.5">Produk di luar katalog master — aktif setelah disetujui admin.</p>
+                    </div>
+                    <button type="button" @click="openProposal = true" class="btn-ghost text-xs py-2.5 px-4 font-bold text-brand-primary border-brand-primary/20 self-start sm:self-auto">
+                        Usulkan Produk
+                    </button>
+                </div>
+
+                @if ($proposals->isNotEmpty())
+                    <div class="divide-y divide-black/[0.05]">
+                        @foreach ($proposals as $proposal)
+                            <div class="py-4 flex gap-4 items-start">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="min-w-0">
+                                            <p class="font-bold text-brand-dark text-sm">{{ $proposal->name }}</p>
+                                            <p class="text-[0.6875rem] text-brand-slate mt-0.5">
+                                                {{ $proposal->category?->name ?? 'Tanpa kategori' }} &bull; per {{ $proposal->unit }}
+                                                &bull; MOQ {{ number_format($proposal->moq, 0) }} &bull; Rp {{ number_format($proposal->base_retail_price, 0, ',', '.') }}
+                                            </p>
+                                            @if ($proposal->status->value === 'REJECTED' && $proposal->admin_note)
+                                                <p class="text-[0.6875rem] text-brand-brick mt-1">Catatan admin: {{ $proposal->admin_note }}</p>
+                                            @endif
+                                            @if ($proposal->status->value === 'APPROVED')
+                                                <p class="text-[0.6875rem] text-brand-emerald font-semibold mt-1">Sudah masuk katalog master — daftarkan lewat tombol di atas.</p>
+                                            @endif
+                                        </div>
+                                        <span class="badge {{ $proposal->status->badgeClass() }} shrink-0">{{ $proposal->status->label() }}</span>
+                                    </div>
+                                </div>
+                                @if ($proposal->status->value === 'PENDING')
+                                    <form method="POST" action="{{ route('distributor.products.proposals.destroy', $proposal) }}" onsubmit="return confirm('Tarik kembali usulan ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="min-h-11 px-3 text-xs font-semibold text-brand-brick hover:underline cursor-pointer shrink-0">
+                                            Tarik
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="pt-4 mt-2 border-t border-black/[0.04]">
+                        {{ $proposals->links() }}
+                    </div>
+                @else
+                    <p class="text-[0.8125rem] text-brand-slate py-4">Belum ada usulan. Punya barang di luar katalog? Usulkan agar bisa dijual kolektif.</p>
+                @endif
+            </section>
 
             <!-- Add Product Modal -->
             <x-modal open="openAddProduct" size="lg"
@@ -240,12 +300,63 @@
                         + Tambah Baris Tier
                     </button>
 
-                    <div class="flex flex-col-reverse sm:flex-row-reverse sm:justify-end gap-3 pt-3 border-t border-black/[0.06]">
-                        <button type="submit" class="btn-primary text-sm py-3 px-6 w-full sm:w-auto">Simpan Tier</button>
-                        <button type="button" @click="tierModal = false" class="btn-ghost text-sm py-3 w-full sm:w-auto">Batal</button>
+                <div class="flex flex-col-reverse sm:flex-row-reverse sm:justify-end gap-3 pt-3 border-t border-black/[0.06]">
+                    <button type="submit" class="btn-primary text-sm py-3 px-6 w-full sm:w-auto">Simpan Tier</button>
+                    <button type="button" @click="tierModal = false" class="btn-ghost text-sm py-3 w-full sm:w-auto">Batal</button>
+                </div>
+            </form>
+        </x-modal>
+
+        <!-- Propose Custom Product Modal -->
+        <x-modal open="openProposal" size="lg"
+                 eyebrow="Usulan Produk"
+                 title="Usulkan Produk Baru ke Katalog">
+            <form method="POST" action="{{ route('distributor.products.proposals.store') }}" class="pt-5 space-y-4" data-loading>
+                @csrf
+                <div>
+                    <label for="proposal_category" class="field-label">Kategori terdekat</label>
+                    <select id="proposal_category" name="category_id" required class="input-field bg-white">
+                        <option value="">Pilih kategori</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="proposal_name" class="field-label">Nama produk</label>
+                    <input id="proposal_name" type="text" name="name" placeholder="Contoh: Gula Aren Asli Sidoarjo" required class="input-field">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="proposal_unit" class="field-label">Satuan</label>
+                        <input id="proposal_unit" type="text" name="unit" placeholder="kg / liter / pcs" required class="input-field">
                     </div>
-                </form>
-            </x-modal>
+                    <div>
+                        <label for="proposal_price" class="field-label">Harga eceran (Rp)</label>
+                        <input id="proposal_price" type="number" name="base_retail_price" step="100" placeholder="15000" required class="input-field">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="proposal_stock" class="field-label">Stok tersedia</label>
+                        <input id="proposal_stock" type="number" name="stock_available" value="100" min="1" required class="input-field">
+                    </div>
+                    <div>
+                        <label for="proposal_moq" class="field-label">MOQ grosir</label>
+                        <input id="proposal_moq" type="number" name="moq" value="10" min="1" required class="input-field">
+                    </div>
+                </div>
+                <div>
+                    <label for="proposal_spec" class="field-label">Spesifikasi (opsional)</label>
+                    <textarea id="proposal_spec" name="standard_specification" rows="2" placeholder="Ciri khas, kemasan, mutu…" class="input-field"></textarea>
+                </div>
+                <p class="field-hint">Usulan masuk antrean review admin. Setelah disetujui, produk tampil di katalog master dan tier harga bisa diatur.</p>
+                <div class="flex flex-col-reverse sm:flex-row-reverse sm:justify-end gap-3 pt-3 border-t border-black/[0.06]">
+                    <button type="submit" class="btn-primary text-sm py-3 px-6 w-full sm:w-auto">Kirim Usulan</button>
+                    <button type="button" @click="openProposal = false" class="btn-ghost text-sm py-3 w-full sm:w-auto">Batal</button>
+                </div>
+            </form>
+        </x-modal>
         </div>
     </div>
 </x-layouts.app>

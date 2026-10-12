@@ -196,7 +196,7 @@
                             <span x-show="isCheckingStatus" x-cloak>Menghubungi server gateway...</span>
                         </button>
 
-                        <form method="POST" action="{{ route('payment.simulate', $orderItem) }}">
+                        <form method="POST" action="{{ route('payment.simulate', $orderItem) }}" data-loading>
                             @csrf
                             <input type="hidden" name="payment_method" :value="selectedMethod">
                             <button type="submit" class="btn-primary w-full justify-center py-3.5 text-sm font-bold shadow-md shadow-brand-primary/25 cursor-pointer">

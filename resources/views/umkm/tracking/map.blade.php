@@ -21,6 +21,7 @@
         destMarker: null,
         routeLine: null,
         pollTimer: null,
+        mapReady: false,
 
         initMap() {
             this.map = L.map('liveGpsMap', {
@@ -28,9 +29,12 @@
                 attributionControl: false
             }).setView([this.courierLat, this.courierLng], 14);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19
-            }).addTo(this.map);
+            });
+            tiles.on('load', () => { this.mapReady = true; });
+            tiles.addTo(this.map);
+            setTimeout(() => { this.mapReady = true; }, 6000);
 
             // Custom Courier Icon
             const courierIcon = L.divIcon({
@@ -121,8 +125,18 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <!-- Map Container (Double-Bezel) -->
             <div class="lg:col-span-8 card-shell">
-                <div class="card-core p-2 sm:p-3 overflow-hidden">
+                <div class="card-core p-2 sm:p-3 overflow-hidden relative">
                     <div id="liveGpsMap" class="w-full h-[420px] sm:h-[500px] rounded-xl z-10 border border-black/[0.04]"></div>
+                    <div x-show="!mapReady" x-cloak class="absolute inset-2 sm:inset-3 z-20 rounded-xl overflow-hidden p-4" style="background-color: var(--color-brand-cream);" aria-hidden="true">
+                        <div class="skeleton absolute inset-0" style="border-radius: 0;"></div>
+                        <div class="absolute top-4 left-4">
+                            <div class="skeleton h-9 w-36"></div>
+                        </div>
+                        <div class="absolute bottom-4 left-4 right-4 space-y-2">
+                            <div class="skeleton h-4 w-1/2"></div>
+                            <div class="skeleton h-4 w-2/3"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

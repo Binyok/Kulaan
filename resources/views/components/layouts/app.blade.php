@@ -68,7 +68,11 @@
                             </a>
                             <a href="{{ route('admin.products.index') }}"
                                class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('admin.products*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                               Master Produk
+                                Master Produk
+                            </a>
+                            <a href="{{ route('admin.proposals.index') }}"
+                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('admin.proposals*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
+                                Usulan Produk
                             </a>
                             <a href="{{ route('admin.spk.index') }}"
                                class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('admin.spk*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
@@ -146,7 +150,7 @@
     <footer class="border-t border-black/[0.04] pt-6 pb-24 sm:pb-6 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-[0.75rem] text-brand-slate">
             <p>Kula'an &middot; Platform Pengadaan Kolektif &copy; {{ date('Y') }}</p>
-            <p>Banjarmasin, Kalimantan Selatan</p>
+            <p>Sidoarjo, Jawa Timur</p>
         </div>
     </footer>
 
@@ -195,6 +199,10 @@
                 <a href="{{ route('admin.products.index') }}"
                    class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('admin.products*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
                     Produk
+                </a>
+                <a href="{{ route('admin.proposals.index') }}"
+                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('admin.proposals*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
+                    Usulan
                 </a>
                 <a href="{{ route('admin.spk.index') }}"
                    class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('admin.spk*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">

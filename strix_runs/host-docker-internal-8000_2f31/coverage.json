@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-12 09:19:29 UTC",
+  "run_id": "host-docker-internal-8000_2f31",
+  "run_name": "host-docker-internal-8000_2f31",
+  "scope": {
+    "targets": [
+      {
+        "type": "web_application",
+        "details": {
+          "target_url": "http://host.docker.internal:8000"
+        },
+        "original": "http://host.docker.internal:8000"
+      }
+    ],
+    "scan_mode": "deep",
+    "scope_mode": "auto",
+    "diff_scope": {
+      "active": false,
+      "mode": "auto"
+    },
+    "instruction": ""
+  },
+  "summary": {
+    "surfaces_reviewed": 0,
+    "outcomes": {},
+    "findings_filed": 0,
+    "gaps": 3
+  },
+  "machine_observed": {
+    "agents": [
+      {
+        "agent_id": "687214ec",
+        "agent_name": "Endpoint Mapper",
+        "status": "running",
+        "skills": [
+          "tooling/python"
+        ],
+        "task": "Analyze the HTTP web service running at http://host.docker.internal:8000.\n\n1. Send an HTTP GET request to http://host.docker.internal:8000 using Python to inspect the response headers, status code, and HTML content.\n2. Parse any hyperlinks, forms, or script references present in the homepage HTML.\n3. Fetch the linked internal pages to understand what the web application does and how its routes and parameters are structured.\n4. Document the discovered routes, endpoints, and input parameters using create_note (category=\"wiki\", tags=[\"endpoints\"]).\n5. Record coverage for the reviewed surfaces using record_coverage.\n6. Summarize your findings in agent_finish.",
+        "is_root": false
+      },
+      {
+        "agent_id": "d11c0b29",
+        "agent_name": "Recon Specialist",
+        "status": "completed",
+        "skills": [
+          "tooling/httpx",
+          "tooling/katana",
+          "tooling/ffuf"
+        ],
+        "task": "Target: http://host.docker.internal:8000\n\nObjective:\nPerform thorough reconnaissance and attack surface mapping of the target:\n1. Probe the target with httpx/curl, analyze HTTP headers, server fingerprints, technologies, cookies.\n2. Crawl the application comprehensively using katana, curl, or scripts. Discover all linked paths, static assets, and client-side scripts.\n3. Perform directory and endpoint discovery using ffuf or custom wordlists. Discover unlinked endpoints, API routes, admin portals, docs, etc.\n4. Enumerate all entry points, parameters (GET/POST/JSON), forms, authentication mechanisms (login, registration, reset, session cookies/JWT).\n5. Document all mapped endpoints, parameters, inputs, and technologies in shared notes using create_note (category=\"wiki\" or \"general\", tags=[\"recon\", \"endpoints\"]).\n6. Record coverage for scanned attack surfaces using record_coverage.\n7. Call agent_finish with a comprehensive summary of all discovered endpoints, technologies, and candidate attack surfaces. Do NOT attempt deep exploit execution or PoC building yourself — map everything so specialized hunters can test each vector.",
+        "is_root": false
+      },
+      {
+        "agent_id": "6179f084",
+        "agent_name": "Root Agent",
+        "status": "waiting",
+        "skills": [],
+        "task": "\n\nURLs: - http://host.docker.internal:8000",
+        "is_root": true
+      },
+      {
+        "agent_id": "72379912",
+        "agent_name": "Web Application Auditor",
+        "status": "completed",
+        "skills": [
+          "tooling/agent_browser"
+        ],
+        "task": "Target: http://host.docker.internal:8000\n\nObjective:\nMap and review the authorized web application for security architecture assessment:\n1. Use agent-browser and standard HTTP inspection to review http://host.docker.internal:8000.\n2. Navigate all available pages, links, menus, and forms.\n3. Document application features, user roles, authentication/session mechanisms, input fields, and parameters.\n4. Inspect client-side scripts and headers to identify the framework, web server, and technology stack.\n5. Record all discovered routes, parameters, and application features in shared notes using create_note (category=\"wiki\", tags=[\"recon\", \"endpoints\"]).\n6. Record coverage for assessed surfaces using record_coverage.\n7. Call agent_finish with a complete breakdown of the application architecture, routes, parameters, and identified areas of security interest for follow-up review.",
+        "is_root": false
+      }
+    ],
+    "skills_exercised": [
+      "agent_browser",
+      "ffuf",
+      "httpx",
+      "katana",
+      "python"
+    ],
+    "findings_filed": 0,
+    "source": "runtime"
+  },
+  "completeness": {
+    "complete": false,
+    "scan_status": "running",
+    "exit_reason": null,
+    "caveats": [
+      "The scan ended with status 'running' rather than completing, so coverage reflects only the work finished before it stopped.",
+      "2 agent(s) did not finish cleanly (Endpoint Mapper, Root Agent); any surface they held is under-covered."
+    ]
+  },
+  "entries": [],
+  "gaps": [
+    {
+      "kind": "agent_recorded_no_coverage",
+      "agent_name": "Endpoint Mapper",
+      "detail": "Endpoint Mapper ran (status: running) without recording any coverage. Whatever it examined is absent from this record."
+    },
+    {
+      "kind": "agent_recorded_no_coverage",
+      "agent_name": "Recon Specialist",
+      "detail": "Recon Specialist ran (status: completed) without recording any coverage. Whatever it examined is absent from this record."
+    },
+    {
+      "kind": "agent_recorded_no_coverage",
+      "agent_name": "Web Application Auditor",
+      "detail": "Web Application Auditor ran (status: completed) without recording any coverage. Whatever it examined is absent from this record."
+    }
+  ]
+}

@@ -64,7 +64,7 @@
         {{-- Management shortcuts --}}
         <section data-reveal>
             <h2 class="text-base font-bold text-brand-dark tracking-tight mb-4">Kelola ekosistem</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 <a href="{{ route('admin.categories.index') }}" class="group bg-white rounded-[20px] border border-brand-line p-6 flex gap-4 items-start hover:border-brand-primary/40 hover:-translate-y-0.5 transition-all">
                     <span class="w-11 h-11 rounded-full bg-brand-mint text-brand-primary flex items-center justify-center shrink-0">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
@@ -81,6 +81,20 @@
                     <span class="min-w-0">
                         <span class="block font-bold text-brand-dark group-hover:text-brand-primary transition-colors">Master Produk Baku</span>
                         <span class="block text-[0.75rem] text-brand-slate mt-1 leading-relaxed">Produk acuan, harga benchmark &amp; unit standar.</span>
+                    </span>
+                </a>
+                <a href="{{ route('admin.proposals.index') }}" class="group bg-white rounded-[20px] border border-brand-line p-6 flex gap-4 items-start hover:border-brand-primary/40 hover:-translate-y-0.5 transition-all">
+                    <span class="w-11 h-11 rounded-full bg-brand-ochre-soft text-brand-brass flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <span class="min-w-0">
+                        <span class="flex items-center gap-2 font-bold text-brand-dark group-hover:text-brand-primary transition-colors">
+                            Usulan Produk
+                            @if ($pendingProposals > 0)
+                                <span class="badge bg-brand-ochre-soft text-brand-brass">{{ $pendingProposals }} baru</span>
+                            @endif
+                        </span>
+                        <span class="block text-[0.75rem] text-brand-slate mt-1 leading-relaxed">Review produk custom dari distributor.</span>
                     </span>
                 </a>
                 <a href="{{ route('admin.spk.index') }}" class="group bg-brand-forest rounded-[20px] p-6 flex gap-4 items-start text-white hover:-translate-y-0.5 transition-all shadow-[0_12px_32px_-12px_rgba(20,52,42,0.5)]">

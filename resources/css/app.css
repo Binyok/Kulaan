@@ -398,6 +398,49 @@ summary:focus-visible {
         font-variant-numeric: tabular-nums;
     }
 
+    /* Skeleton shimmer (warm base + white sheen) for async surfaces only:
+       map containers, polling lists. Never faked on server-rendered content. */
+    .skeleton {
+        position: relative;
+        overflow: hidden;
+        background: rgba(27, 67, 50, 0.08);
+        border-radius: 0.5rem;
+    }
+
+    .skeleton::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+        animation: skeleton-shimmer 1.4s infinite;
+    }
+
+    @keyframes skeleton-shimmer {
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    /* Top route progress bar (MPA navigation feedback). */
+    #route-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        width: 0;
+        z-index: 100;
+        background: var(--color-brand-primary);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    #route-progress.is-active {
+        width: 100%;
+        opacity: 1;
+        transition: width 1.2s ease, opacity 0.2s ease;
+    }
+
     /* Film grain for hero + forest panels only. Breaks digital flatness. */
     .texture-grain {
         position: relative;

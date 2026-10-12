@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductProposalController;
 use App\Http\Controllers\Admin\SpkCriteriaController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleController;
@@ -77,6 +78,9 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('categories', CategoryController::class)->except(['create', 'show', 'edit']);
         Route::resource('products', ProductController::class)->except(['create', 'show', 'edit']);
+        Route::get('proposals', [ProductProposalController::class, 'index'])->name('proposals.index');
+        Route::post('proposals/{proposal}/approve', [ProductProposalController::class, 'approve'])->name('proposals.approve');
+        Route::post('proposals/{proposal}/reject', [ProductProposalController::class, 'reject'])->name('proposals.reject');
         Route::get('spk', [SpkCriteriaController::class, 'index'])->name('spk.index');
         Route::post('spk/calculate', [SpkCriteriaController::class, 'calculate'])->name('spk.calculate');
         Route::get('spk/sensitivity', [SpkCriteriaController::class, 'sensitivity'])->name('spk.sensitivity');
@@ -89,6 +93,8 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::post('products', [SupplierProductController::class, 'store'])->name('products.store');
         Route::put('products/{supplierProduct}', [SupplierProductController::class, 'update'])->name('products.update');
         Route::put('products/{supplierProduct}/tiers', [SupplierProductController::class, 'updateTiers'])->name('products.update-tiers');
+        Route::post('products/proposals', [SupplierProductController::class, 'storeProposal'])->name('products.proposals.store');
+        Route::delete('products/proposals/{proposal}', [SupplierProductController::class, 'destroyProposal'])->name('products.proposals.destroy');
 
         Route::get('orders', [OrderManagementController::class, 'index'])->name('orders.index');
         Route::post('orders/{order}/status', [OrderManagementController::class, 'updateStatus'])->name('orders.update-status');

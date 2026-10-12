@@ -20,15 +20,40 @@ class TrackingController extends Controller
             abort(403);
         }
 
+        $tab = $request->input('tab', 'all');
+        if (! in_array($tab, ['all', 'active', 'history'], true)) {
+            $tab = 'all';
+        }
+
+        $q = trim((string) $request->input('q', ''));
+        $from = $this->cleanDate($request->input('from'));
+        $to = $this->cleanDate($request->input('to'));
+
         // Get all shipments related to this UMKM's orders
         $shipments = Shipment::whereHas('order.items', function ($query) use ($umkm) {
             $query->where('umkm_id', $umkm->id);
         })
             ->with('order.distributor', 'order.items.product', 'courier.user', 'latestLocation')
+            ->when($tab === 'active', fn ($query) => $query->whereIn('status', ['PENDING', 'IN_TRANSIT']))
+            ->when($tab === 'history', fn ($query) => $query->where('status', 'DELIVERED'))
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($wrapping) use ($q) {
+                    $wrapping->where('shipment_number', 'like', "%{$q}%")
+                        ->orWhereHas('order', function ($orderQuery) use ($q) {
+                            $orderQuery->where('order_number', 'like', "%{$q}%")
+                                ->orWhereHas('distributor', function ($distributorQuery) use ($q) {
+                                    $distributorQuery->where('company_name', 'like', "%{$q}%");
+                                });
+                        });
+                });
+            })
+            ->when($from !== null, fn ($query) => $query->whereDate('created_at', '>=', $from))
+            ->when($to !== null, fn ($query) => $query->whereDate('created_at', '<=', $to))
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('umkm.tracking.index', compact('shipments', 'umkm'));
+        return view('umkm.tracking.index', compact('shipments', 'umkm', 'tab', 'q', 'from', 'to'));
     }
 
     /**
@@ -110,6 +135,22 @@ class TrackingController extends Controller
                 'lng' => (float) $loc->longitude,
             ]),
         ]);
+    }
+
+    /**
+     * Lenient YYYY-MM-DD parsing for the history date filter.
+     * Anything unparseable is ignored instead of failing validation,
+     * so a bad query string can never break the tracking page.
+     */
+    private function cleanDate(mixed $value): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $timestamp = strtotime($value);
+
+        return $timestamp === false ? null : date('Y-m-d', $timestamp);
     }
 
     /**

@@ -27,6 +27,33 @@
 
     <div class="space-y-6 sm:space-y-8">
         @php $hasShipments = $shipments->isNotEmpty(); @endphp
+        @php $isFiltering = $tab !== 'all' || $q !== '' || $from || $to; @endphp
+
+        <section class="bg-white rounded-[20px] border border-brand-line p-4 sm:p-5 space-y-4" data-reveal aria-label="Filter dan cari pengiriman">
+            <div class="flex flex-wrap gap-2" role="tablist" aria-label="Status pengiriman">
+                @foreach (['all' => 'Semua', 'active' => 'Berjalan', 'history' => 'Riwayat'] as $key => $label)
+                    <a href="{{ route('umkm.tracking.index', array_filter(['tab' => $key === 'all' ? null : $key, 'q' => $q ?: null, 'from' => $from, 'to' => $to])) }}"
+                        role="tab" aria-selected="{{ $tab === $key ? 'true' : 'false' }}"
+                        class="min-h-11 inline-flex items-center px-4 rounded-xl text-xs font-bold transition-colors {{ $tab === $key ? 'bg-brand-primary text-white' : 'bg-brand-cream text-brand-slate hover:text-brand-dark' }}">
+                        {{ $label }}
+                    </a>
+                @endforeach
+            </div>
+            <form method="GET" action="{{ route('umkm.tracking.index') }}" class="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-2">
+                @if ($tab !== 'all')
+                    <input type="hidden" name="tab" value="{{ $tab }}">
+                @endif
+                <input type="search" name="q" value="{{ $q }}" placeholder="Cari no. surat jalan, pesanan, distributor…" class="input-field" aria-label="Cari pengiriman">
+                <input type="date" name="from" value="{{ $from }}" class="input-field" aria-label="Dari tanggal">
+                <input type="date" name="to" value="{{ $to }}" class="input-field" aria-label="Sampai tanggal">
+                <div class="flex gap-2">
+                    <button type="submit" class="btn-primary text-xs flex-1 sm:flex-none justify-center">Cari</button>
+                    @if ($isFiltering)
+                        <a href="{{ route('umkm.tracking.index') }}" class="btn-ghost text-xs">Reset</a>
+                    @endif
+                </div>
+            </form>
+        </section>
 
         @if ($hasShipments)
             <section class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-7" data-reveal>
@@ -86,8 +113,14 @@
                 <span class="w-14 h-14 rounded-full bg-brand-mint text-brand-primary inline-flex items-center justify-center">
                     <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
                 </span>
-                <p class="font-bold text-brand-dark mt-4">Belum ada surat jalan pengiriman.</p>
-                <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Pengiriman muncul otomatis setelah pembayaran dikonfirmasi dan kurir ditugaskan distributor.</p>
+                @if ($isFiltering)
+                    <p class="font-bold text-brand-dark mt-4">Tidak ada pengiriman yang cocok.</p>
+                    <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Coba kata kunci atau rentang tanggal lain, atau kembali ke semua pengiriman.</p>
+                    <a href="{{ route('umkm.tracking.index') }}" class="btn-primary text-sm mt-5">Tampilkan Semua</a>
+                @else
+                    <p class="font-bold text-brand-dark mt-4">Belum ada surat jalan pengiriman.</p>
+                    <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Pengiriman muncul otomatis setelah pembayaran dikonfirmasi dan kurir ditugaskan distributor.</p>
+                @endif
             </section>
         @endif
     </div>

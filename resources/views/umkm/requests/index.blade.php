@@ -182,17 +182,15 @@
                     </fieldset>
 
                     <!-- Area pengiriman -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="delivery_district" class="field-label">Kecamatan pengiriman</label>
-                            <select id="delivery_district" name="delivery_district" required class="input-field bg-white">
-                                <option value="Banjarmasin Utara" {{ $umkm->district === 'Banjarmasin Utara' ? 'selected' : '' }}>Banjarmasin Utara</option>
-                                <option value="Banjarmasin Barat" {{ $umkm->district === 'Banjarmasin Barat' ? 'selected' : '' }}>Banjarmasin Barat</option>
-                                <option value="Banjarmasin Timur" {{ $umkm->district === 'Banjarmasin Timur' ? 'selected' : '' }}>Banjarmasin Timur</option>
-                                <option value="Banjarmasin Selatan" {{ $umkm->district === 'Banjarmasin Selatan' ? 'selected' : '' }}>Banjarmasin Selatan</option>
-                                <option value="Banjarmasin Tengah" {{ $umkm->district === 'Banjarmasin Tengah' ? 'selected' : '' }}>Banjarmasin Tengah</option>
-                            </select>
-                        </div>
+                    <div class="space-y-4">
+                        <x-region-selects
+                            :values="['district' => old('delivery_district', $umkm->district)]"
+                            :fields="['province', 'city', 'district']"
+                            :names="['district' => 'delivery_district']"
+                        />
+                        @error('delivery_district')
+                            <p class="text-[0.75rem] text-brand-brick" role="alert">{{ $message }}</p>
+                        @enderror
                         <div>
                             <label for="delivery_address" class="field-label">Alamat lengkap usaha</label>
                             <input type="text" id="delivery_address" name="delivery_address" value="{{ $umkm->address }}" required class="input-field">

@@ -94,6 +94,35 @@ class ProfileCompletionTest extends TestCase
         $this->assertTrue(Hash::check('rahasia123', $user->fresh()->password));
     }
 
+    public function test_profile_update_persists_province_and_village_to_role_profile(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('umkm');
+        $umkm = Umkm::create([
+            'user_id' => $user->id,
+            'business_name' => 'Warung A',
+            'address' => 'Jl. A',
+            'district' => 'Waru',
+            'city' => 'KABUPATEN SIDOARJO',
+        ]);
+
+        $this->actingAs($user)->post(route('profile.complete.update'), [
+            'name' => 'Warung A',
+            'phone' => '081234567890',
+            'address' => 'Jl. A',
+            'province' => 'JAWA TIMUR',
+            'city' => 'KABUPATEN SIDOARJO',
+            'district' => 'Waru',
+            'village' => 'Kedungrejo',
+        ])->assertRedirect(route('dashboard'));
+
+        $umkm->refresh();
+        $this->assertEquals('JAWA TIMUR', $umkm->province);
+        $this->assertEquals('KABUPATEN SIDOARJO', $umkm->city);
+        $this->assertEquals('Waru', $umkm->district);
+        $this->assertEquals('Kedungrejo', $umkm->village);
+    }
+
     private function mockSocialiteCallback(): void
     {
         $abstractUser = Mockery::mock(SocialiteUser::class);

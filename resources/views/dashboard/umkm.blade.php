@@ -14,7 +14,7 @@
                             Halo, {{ $umkm?->business_name ?? $user->name }}
                         </h1>
                         <p class="text-sm text-white/70 leading-relaxed mt-3">
-                            Wilayah {{ $umkm?->district ?? 'Banjarmasin' }} &bull; Sektor {{ $umkm?->business_type ?? 'Kuliner' }}.
+                            Wilayah {{ $umkm?->district ?? 'Sidoarjo' }} &bull; Sektor {{ $umkm?->business_type ?? 'Kuliner' }}.
                             Ajukan kebutuhan, gabung kuota grosir, dan pantau semuanya dari sini.
                         </p>
                     </div>
