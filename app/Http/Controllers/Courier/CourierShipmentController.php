@@ -9,6 +9,7 @@ use App\Models\TrackingLocation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class CourierShipmentController extends Controller
@@ -39,8 +40,10 @@ class CourierShipmentController extends Controller
             return back()->with('error', 'Status tidak valid untuk memulai pengiriman.');
         }
 
-        $shipment->update(['status' => 'IN_TRANSIT']);
-        $shipment->order->update(['status' => OrderStatus::IN_TRANSIT->value]);
+        DB::transaction(function () use ($shipment) {
+            $shipment->update(['status' => 'IN_TRANSIT']);
+            $shipment->order->update(['status' => OrderStatus::IN_TRANSIT->value]);
+        });
 
         return back()->with('success', 'Pengiriman dimulai. GPS Tracking diaktifkan.');
     }
@@ -58,20 +61,24 @@ class CourierShipmentController extends Controller
             'speed' => ['nullable', 'numeric'],
         ]);
 
-        $location = TrackingLocation::create([
-            'shipment_id' => $shipment->id,
-            'courier_id' => $courier->id,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'speed' => $request->speed ?? 0,
-            'recorded_at' => now(),
-        ]);
+        $location = DB::transaction(function () use ($courier, $request, $shipment) {
+            $location = TrackingLocation::create([
+                'shipment_id' => $shipment->id,
+                'courier_id' => $courier->id,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'speed' => $request->speed ?? 0,
+                'recorded_at' => now(),
+            ]);
 
-        $courier->update([
-            'current_latitude' => $request->latitude,
-            'current_longitude' => $request->longitude,
-            'last_location_updated_at' => now(),
-        ]);
+            $courier->update([
+                'current_latitude' => $request->latitude,
+                'current_longitude' => $request->longitude,
+                'last_location_updated_at' => now(),
+            ]);
+
+            return $location;
+        });
 
         return response()->json([
             'success' => true,
@@ -94,14 +101,16 @@ class CourierShipmentController extends Controller
             return back()->with('error', 'Pengiriman belum dimulai, belum bisa diselesaikan.');
         }
 
-        $shipment->update([
-            'status' => 'DELIVERED',
-            'delivered_at' => now(),
-        ]);
+        DB::transaction(function () use ($shipment) {
+            $shipment->update([
+                'status' => 'DELIVERED',
+                'delivered_at' => now(),
+            ]);
 
-        $shipment->order->update([
-            'status' => OrderStatus::COMPLETED->value,
-        ]);
+            $shipment->order->update([
+                'status' => OrderStatus::COMPLETED->value,
+            ]);
+        });
 
         return back()->with('success', 'Pengiriman berhasil diselesaikan!');
     }

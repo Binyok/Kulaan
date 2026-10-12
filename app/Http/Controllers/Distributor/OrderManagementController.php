@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Shipment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -84,15 +85,17 @@ class OrderManagementController extends Controller
 
         $courier = Courier::findOrFail($request->courier_id);
 
-        $shipment = Shipment::create([
-            'order_id' => $order->id,
-            'courier_id' => $courier->id,
-            'status' => 'PENDING',
-            'estimated_arrival_at' => now()->addHours(2),
-            'notes' => $request->notes,
-        ]);
+        DB::transaction(function () use ($order, $courier, $request) {
+            Shipment::create([
+                'order_id' => $order->id,
+                'courier_id' => $courier->id,
+                'status' => 'PENDING',
+                'estimated_arrival_at' => now()->addHours(2),
+                'notes' => $request->notes,
+            ]);
 
-        $order->update(['status' => OrderStatus::ASSIGNED_TO_COURIER->value]);
+            $order->update(['status' => OrderStatus::ASSIGNED_TO_COURIER->value]);
+        });
 
         return back()->with('success', 'Kurir '.$courier->user->name.' berhasil ditugaskan untuk pengiriman pesanan.');
     }
