@@ -55,7 +55,7 @@ class DashboardAndNotificationTest extends TestCase
         $response = $this->actingAs($umkmUser)->get(route('dashboard'));
         $response->assertStatus(200);
         $response->assertSee('Rp 10.000');
-        $response->assertSee('Tagihan perlu dibayar');
+        $response->assertSee('Tagihan Menunggu Pembayaran');
     }
 
     public function test_admin_dashboard_displays_system_wide_analytics(): void

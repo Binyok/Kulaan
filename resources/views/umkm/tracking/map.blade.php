@@ -95,33 +95,33 @@
         goHome() {
             this.map.setView([this.destLat, this.destLng], 14);
         }
-    }" x-init="initMap()">
+    }"     x-init="initMap()">
 
         <!-- Header Bar -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
             <div>
-                <a href="{{ route('dashboard') }}" class="btn-back mb-3">
-                    &larr; Kembali ke Dashboard
+                <a href="{{ route('umkm.tracking.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-slate hover:text-brand-primary transition-colors">
+                    &larr; Daftar Pengiriman
                 </a>
-                <h1 class="font-display font-semibold text-[1.75rem] sm:text-4xl text-brand-dark tracking-tight text-balance">Pelacakan Live GPS Kurir Armada</h1>
-                <p class="text-[0.8125rem] text-brand-slate mt-0.5">
-                    Surat Jalan: <span class="font-mono font-bold text-brand-dark">{{ $shipment->shipment_number }}</span> &bull;
-                    Pesanan: <span class="font-mono text-brand-dark">{{ $shipment->order->order_number }}</span>
+                <h1 class="font-display font-bold text-xl sm:text-2xl text-brand-dark tracking-tight mt-1">Live GPS Kurir</h1>
+                <p class="text-xs text-brand-slate mt-0.5">
+                    Surat jalan <span class="font-mono font-bold text-brand-dark">{{ $shipment->shipment_number }}</span>
+                    &bull; Pesanan <span class="font-mono">{{ $shipment->order->order_number }}</span>
                 </p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2.5">
-                <div class="flex items-center gap-2.5 px-4 py-2 bg-white rounded-full border border-black/[0.06] shadow-sm">
+            <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 px-3 py-2 bg-white rounded-full border border-brand-line shadow-xs text-xs font-bold text-brand-dark">
                     <span class="w-2.5 h-2.5 rounded-full" :class="shipmentStatus === 'IN_TRANSIT' ? 'bg-brand-emerald' : (shipmentStatus === 'DELIVERED' ? 'bg-brand-primary' : 'bg-brand-accent')"></span>
-                    <span class="text-xs font-bold text-brand-dark" x-text="shipmentStatus === 'IN_TRANSIT' ? 'Kurir Sedang Bergerak (Live GPS)' : (shipmentStatus === 'DELIVERED' ? 'Barang Telah Tiba' : 'Menunggu Pengambilan')"></span>
+                    <span x-text="shipmentStatus === 'IN_TRANSIT' ? 'Kurir Sedang Bergerak' : (shipmentStatus === 'DELIVERED' ? 'Pesanan Telah Tiba' : 'Menunggu Pengambilan')"></span>
                 </div>
-                <button type="button" @click="goHome()" class="btn-ghost text-xs py-2 px-4 font-bold">
-                    Lokasi Saya
+                <button type="button" @click="goHome()" class="btn-ghost text-xs py-2 px-3 font-bold rounded-full">
+                    Ke Lokasi Saya
                 </button>
             </div>
         </div>
 
-        <!-- Main Map & Info Grid -->
+        <!-- Timeline Progress Stepper (Horizontal, Bersih) -->
         @php
             $orderStatus = $shipment->order->status->value;
             $step = match (true) {
@@ -133,29 +133,30 @@
             };
             $steps = ['Dipesan', 'Dibayar', 'Diproses', 'Dikirim', 'Sampai'];
         @endphp
-        <ol class="bg-white rounded-[20px] border border-brand-line px-5 sm:px-7 py-5 flex items-start" aria-label="Status pengiriman">
+        <ol class="bg-white rounded-2xl border border-brand-line px-4 sm:px-6 py-4 flex items-start mb-5 shadow-xs" aria-label="Status pengiriman">
             @foreach ($steps as $i => $label)
-                <li class="flex-1 flex flex-col items-center gap-2 min-w-0 {{ $i < count($steps) - 1 ? 'relative' : '' }}">
-                    <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 {{ $i < $step ? 'bg-brand-primary text-white' : ($i === $step ? 'bg-brand-accent text-brand-primary-hover ring-4 ring-brand-accent/20' : 'bg-brand-cream text-brand-slate border border-black/[0.06]') }}">
+                <li class="flex-1 flex flex-col items-center gap-1.5 min-w-0 {{ $i < count($steps) - 1 ? 'relative' : '' }}">
+                    <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 {{ $i < $step ? 'bg-brand-primary text-white' : ($i === $step ? 'bg-brand-accent text-brand-dark ring-4 ring-brand-accent/20' : 'bg-brand-cream text-brand-slate border border-brand-line') }}">
                         @if ($i < $step)
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         @else
                             {{ $i + 1 }}
                         @endif
                     </span>
-                    <span class="text-[0.625rem] sm:text-[0.6875rem] font-bold text-center leading-tight {{ $i <= $step ? 'text-brand-dark' : 'text-brand-slate' }}">{{ $label }}</span>
+                    <span class="text-[0.5625rem] sm:text-[0.625rem] font-bold text-center leading-tight {{ $i <= $step ? 'text-brand-dark' : 'text-brand-slate/60' }}">{{ $label }}</span>
                     @if ($i < count($steps) - 1)
-                        <span class="hidden sm:block absolute top-3.5 left-[calc(50%+1.25rem)] right-[calc(-50%+1.25rem)] h-0.5 rounded {{ $i < $step ? 'bg-brand-primary' : 'bg-black/[0.08]' }}" aria-hidden="true"></span>
+                        <span class="hidden sm:block absolute top-3.5 left-[calc(50%+1.25rem)] right-[calc(-50%+1.25rem)] h-0.5 rounded {{ $i < $step ? 'bg-brand-primary' : 'bg-brand-line' }}" aria-hidden="true"></span>
                     @endif
                 </li>
             @endforeach
         </ol>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <!-- Map Container (Double-Bezel) -->
+        <!-- Pola E: Peta Dominan (70%) + Panel Info Kurir (30%) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <!-- Peta (Dominan 8 kolom / 65%) -->
             <div class="lg:col-span-8 card-shell">
                 <div class="card-core p-2 sm:p-3 overflow-hidden relative">
-                    <div id="liveGpsMap" class="w-full h-[420px] sm:h-[500px] rounded-xl z-10 border border-black/[0.04]"></div>
+                    <div id="liveGpsMap" class="w-full h-[55vh] sm:h-[65vh] rounded-xl z-10 border border-black/[0.04]"></div>
                     <div x-show="!mapReady" x-cloak class="absolute inset-2 sm:inset-3 z-20 rounded-xl overflow-hidden p-4" style="background-color: var(--color-brand-cream);" aria-hidden="true">
                         <div class="skeleton absolute inset-0" style="border-radius: 0;"></div>
                         <div class="absolute top-4 left-4">
@@ -169,67 +170,63 @@
                 </div>
             </div>
 
-            <!-- Courier Details & Delivery Summary (Double-Bezel) -->
-            <div class="lg:col-span-4 space-y-5">
-                <div class="card-shell">
-                    <div class="card-core p-6 space-y-5">
-                        <div class="flex items-center justify-between pb-3 border-b border-black/[0.04]">
-                            <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wider">Kurir Ditugaskan</h2>
-                        </div>
+            <!-- Info Kurir & Pesanan (4 kolom / 35%) -->
+            <div class="lg:col-span-4 space-y-4">
+                <!-- Kartu Kurir -->
+                <div class="bg-white rounded-2xl border border-brand-line p-5 shadow-xs">
+                    <div class="flex items-center justify-between pb-3 border-b border-brand-line mb-4">
+                        <h2 class="text-xs font-bold text-brand-dark uppercase tracking-wider">Kurir Ditugaskan</h2>
+                    </div>
 
-                        <div class="flex items-center gap-3.5">
-                            <div class="w-12 h-12 rounded-2xl bg-brand-primary text-white font-extrabold flex items-center justify-center text-lg shadow-md shadow-brand-primary/20">
-                                {{ strtoupper(substr($shipment->courier?->user->name ?? 'K', 0, 1)) }}
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-base text-brand-dark" x-text="courierName"></h3>
-                                <p class="text-xs text-brand-slate" x-text="courierVehicle"></p>
-                            </div>
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-brand-primary text-white font-extrabold flex items-center justify-center text-lg shadow-sm">
+                            {{ strtoupper(substr($shipment->courier?->user->name ?? 'K', 0, 1)) }}
                         </div>
-
-                        <div class="p-3 bg-brand-cream/60 rounded-xl text-xs space-y-1.5 border border-black/[0.03]">
-                            <div class="flex justify-between">
-                                <span class="text-brand-slate">Nomor WhatsApp:</span>
-                                <span class="font-bold text-brand-dark" x-text="courierPhone"></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-brand-slate">Kecepatan Saat Ini:</span>
-                                <span class="font-bold text-brand-primary"><span x-text="speed"></span> km/jam</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-brand-slate">Update Terakhir:</span>
-                                <span class="font-medium text-brand-dark" x-text="lastUpdated"></span>
-                            </div>
+                        <div>
+                            <h3 class="font-bold text-sm text-brand-dark" x-text="courierName"></h3>
+                            <p class="text-xs text-brand-slate" x-text="courierVehicle"></p>
                         </div>
+                    </div>
 
-                        <!-- Product List in this Shipment -->
-                        <div class="pt-3 border-t border-black/[0.04] space-y-2">
-                            <span class="text-[0.6875rem] font-bold text-brand-slate uppercase tracking-wider">Bahan Baku Diantar</span>
-                            @foreach ($shipment->order->items->where('umkm_id', $umkm->id) as $item)
-                                <div class="p-3 bg-brand-mint/40 rounded-xl flex justify-between items-center text-xs">
-                                    <div>
-                                        <p class="font-bold text-brand-dark">{{ $item->product->name }}</p>
-                                        <p class="text-[11px] text-brand-slate">Pengirim: {{ $shipment->order->distributor->company_name }}</p>
-                                    </div>
-                                    <span class="font-extrabold text-brand-primary">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</span>
-                                </div>
-                            @endforeach
+                    <div class="mt-4 p-3 bg-brand-cream/60 rounded-xl text-xs space-y-2 border border-brand-line/60">
+                        <div class="flex justify-between">
+                            <span class="text-brand-slate">No. WhatsApp</span>
+                            <span class="font-bold text-brand-dark" x-text="courierPhone"></span>
                         </div>
-
-                        <!-- Destination Info -->
-                        <div class="pt-3 border-t border-black/[0.04] space-y-1 text-xs">
-                            <span class="text-[0.6875rem] font-bold text-brand-slate uppercase tracking-wider">Lokasi Tujuan Anda</span>
-                            <p class="font-bold text-brand-dark">{{ $umkm->business_name }}</p>
-                            <p class="text-brand-slate leading-relaxed">{{ $umkm->address }}, {{ $umkm->district }}</p>
+                        <div class="flex justify-between">
+                            <span class="text-brand-slate">Kecepatan</span>
+                            <span class="font-bold text-brand-primary"><span x-text="speed"></span> km/jam</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-brand-slate">Update Terakhir</span>
+                            <span class="font-medium text-brand-dark" x-text="lastUpdated"></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-4 bg-brand-mint/60 rounded-2xl text-xs text-brand-primary border border-brand-primary/15 flex items-start gap-2.5">
-                    <span class="w-2 h-2 rounded-full bg-brand-emerald mt-1 flex-shrink-0"></span>
-                    <p class="leading-relaxed">
-                        Data koordinat kurir dikirimkan langsung oleh perangkat kurir secara realtime untuk transparansi penuh proses pengiriman kolektif.
-                    </p>
+                <!-- Bahan Baku yang Diantar -->
+                <div class="bg-white rounded-2xl border border-brand-line p-5 shadow-xs space-y-3">
+                    <span class="text-[0.6875rem] font-bold text-brand-slate uppercase tracking-wider block">Bahan Baku Diantar</span>
+                    @foreach ($shipment->order->items->where('umkm_id', $umkm->id) as $item)
+                        <div class="p-3 bg-brand-mint/40 rounded-xl flex justify-between items-center text-xs">
+                            <div>
+                                <p class="font-bold text-brand-dark">{{ $item->product->name }}</p>
+                                <p class="text-[11px] text-brand-slate">{{ $shipment->order->distributor->company_name }}</p>
+                            </div>
+                            <span class="font-extrabold text-brand-primary">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</span>
+                        </div>
+                    @endforeach
+
+                    <div class="pt-3 border-t border-brand-line/60 text-xs space-y-1">
+                        <span class="text-[0.6875rem] font-bold text-brand-slate uppercase tracking-wider block">Tujuan Pengiriman</span>
+                        <p class="font-bold text-brand-dark">{{ $umkm->business_name }}</p>
+                        <p class="text-brand-slate text-[0.6875rem] leading-relaxed">{{ $umkm->address }}, {{ $umkm->district }}</p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-brand-mint/60 rounded-2xl text-xs text-brand-primary border border-brand-primary/15 flex items-start gap-2">
+                    <span class="w-2 h-2 rounded-full bg-brand-emerald mt-0.5 shrink-0"></span>
+                    <p class="leading-relaxed">Koordinat dikirimkan langsung dari perangkat kurir untuk transparansi penuh.</p>
                 </div>
             </div>
         </div>

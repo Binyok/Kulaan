@@ -15,122 +15,194 @@
             this.showModal = true;
         }
     }">
-        {{-- Forest band: page header --}}
-        <div class="-mx-3 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-8 mb-6 sm:mb-8">
-            <div class="texture-grain bg-brand-forest text-white">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-                    <div class="max-w-2xl" data-reveal>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/10 text-[#D8E8DD] uppercase tracking-[0.14em]">
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="bg-gradient-to-r from-brand-forest to-brand-primary text-white rounded-2xl p-5 sm:p-7 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold bg-white/15 text-white">
                             Pesanan Kolektif
                         </span>
-                        <h1 class="font-display font-semibold tracking-tight text-balance text-4xl sm:text-5xl mt-4">
-                            Riwayat Pesanan &amp; Tagihan
-                        </h1>
-                        <p class="text-sm text-white/70 leading-relaxed mt-3">
-                            Semua invoice individualmu, status pembayaran, dan ulasan buat distributor mitra — rapi dalam satu daftar.
+                        <h1 class="font-display font-bold text-2xl sm:text-3xl mt-2 tracking-tight">Riwayat Pesanan &amp; Tagihan</h1>
+                        <p class="text-xs sm:text-sm text-white/80 mt-1">
+                            Invoice, status pembayaran, dan ulasan distributor mitra pengadaanmu.
                         </p>
                     </div>
+                    <a href="{{ route('umkm.catalog.index') }}" class="btn-accent text-xs font-bold px-4 py-2.5 rounded-xl shrink-0 text-center">
+                        + Pesan Lagi
+                    </a>
                 </div>
             </div>
         </div>
 
-        <div class="space-y-6 sm:space-y-8">
-            @php $hasOrders = $orderItems->isNotEmpty(); @endphp
+        @php
+            $hasOrders = $orderItems->isNotEmpty();
+            $unpaidItems = $orderItems->filter(fn($i) => $i->payment_status->value === 'UNPAID');
+            $paidItems   = $orderItems->filter(fn($i) => $i->payment_status->value !== 'UNPAID');
+        @endphp
 
-            @if ($hasOrders)
-                <section class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-7" data-reveal>
-                    <div class="divide-y divide-black/[0.05]">
-                        @foreach ($orderItems as $item)
-                            <div class="py-4 flex gap-4 items-start hover:bg-brand-cream/60 -mx-2 px-2 sm:-mx-4 sm:px-4 rounded-xl transition-colors">
-                                <span class="w-11 h-11 rounded-full bg-brand-mint text-brand-primary flex items-center justify-center shrink-0 mt-0.5">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 8h6M9 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                                </span>
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div class="min-w-0">
-                                            <p class="font-bold text-brand-dark text-sm">{{ $item->product->name }}</p>
-                                            <p class="font-mono text-[0.6875rem] text-brand-slate mt-0.5">{{ $item->order->order_number }} &bull; {{ $item->created_at->format('d M Y') }}</p>
-                                            <p class="text-[0.6875rem] text-brand-slate mt-0.5">Distributor: {{ $item->order->distributor->company_name }} &bull; {{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</p>
-                                        </div>
-                                        <span class="badge {{ $item->payment_status->badgeClass() }} shrink-0">{{ $item->payment_status->label() }}</span>
+        @if ($hasOrders)
+            <!-- Pola C: Section "Menunggu Pembayaran" di Atas (Urgent) -->
+            @if ($unpaidItems->isNotEmpty())
+                <section class="mb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brand-brick"></span>
+                        <h2 class="text-xs font-bold text-brand-brick uppercase tracking-wider">
+                            Menunggu Pembayaran ({{ $unpaidItems->count() }})
+                        </h2>
+                    </div>
+                    <div class="space-y-3">
+                        @foreach ($unpaidItems as $item)
+                            <!-- Kartu vertikal tagihan: header (nomor+badge), isi (item+qty), footer (total+aksi utama) -->
+                            <article class="bg-white rounded-2xl border border-brand-brick/30 shadow-xs overflow-hidden">
+                                <div class="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-brand-line/60 bg-brand-cream/40">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="font-mono text-xs text-brand-slate">{{ $item->order->order_number }}</span>
+                                        <span class="badge {{ $item->payment_status->badgeClass() }}">{{ $item->payment_status->label() }}</span>
                                     </div>
-                                    <div class="flex flex-wrap items-center justify-between gap-3 mt-2.5">
-                                        <div class="text-[0.75rem]">
-                                            <span class="font-extrabold text-brand-primary tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
-                                            <span class="text-brand-brass font-semibold ml-2">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-2 shrink-0">
-                                            @if ($item->review)
-                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-brand-brass bg-brand-ochre-soft px-2.5 py-1 rounded-full border border-brand-accent/30" title="{{ $item->review->comment }}">
-                                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
-                                                    {{ $item->review->rating }}/5
-                                                </span>
-                                            @elseif (in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true))
-                                                <button type="button"
-                                                    @click="openRatingModal({{ $item->id }}, '{{ addslashes($item->order->distributor->company_name) }}', '{{ route('umkm.orders.review', $item) }}')"
-                                                    class="min-h-11 px-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-brass hover:text-brand-dark bg-brand-ochre-soft hover:bg-brand-ochre-soft rounded-lg border border-brand-accent/30 transition-colors cursor-pointer">
-                                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
-                                                    Beri Ulasan
-                                                </button>
-                                            @endif
-                                            <a href="{{ route('payment.show', $item) }}"
-                                                class="{{ $item->payment_status->value === 'UNPAID' ? 'btn-primary' : 'btn-ghost text-brand-primary font-bold' }} text-xs py-2 px-4">
-                                                {{ $item->payment_status->value === 'UNPAID' ? 'Bayar Invoice' : 'Lihat Invoice' }}
-                                            </a>
-                                        </div>
+                                    <span class="text-[0.625rem] text-brand-slate">{{ $item->created_at->format('d M Y') }}</span>
+                                </div>
+                                <div class="px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-brand-dark text-sm sm:text-base">{{ $item->product->name }}</p>
+                                        <p class="text-xs text-brand-slate mt-0.5">
+                                            {{ number_format($item->quantity, 0) }} {{ $item->product->unit }}
+                                            &bull; Distributor: {{ $item->order->distributor->company_name }}
+                                        </p>
+                                        @if ($item->savings_amount > 0)
+                                            <p class="text-[0.6875rem] font-semibold text-brand-brass mt-1">
+                                                Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }} vs eceran
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-3 shrink-0">
+                                        <span class="font-extrabold text-brand-primary text-base sm:text-xl tabular-nums">
+                                            Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+                                        </span>
+                                        <a href="{{ route('payment.show', $item) }}" class="btn-primary text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm">
+                                            Bayar Sekarang &rarr;
+                                        </a>
                                     </div>
                                 </div>
-                            </div>
+                            </article>
                         @endforeach
                     </div>
-
-                    <div class="pt-4 mt-2 border-t border-black/[0.04]">
-                        {{ $orderItems->links() }}
-                    </div>
-                </section>
-            @else
-                <section class="bg-white rounded-[20px] border border-brand-line px-6 py-12 text-center" data-reveal>
-                    <span class="w-14 h-14 rounded-full bg-brand-mint text-brand-primary inline-flex items-center justify-center">
-                        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </span>
-                    <p class="font-bold text-brand-dark mt-4">Belum ada riwayat pesanan kolektif.</p>
-                    <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Setelah pengajuanmu ter-matching dan dibayar, invoice dan ulasan mitra tampil di sini.</p>
-                    <a href="{{ route('umkm.catalog.index') }}" class="btn-primary text-sm mt-5">Buka Katalog</a>
                 </section>
             @endif
 
-            <!-- Rating Modal -->
-            <x-modal open="showModal" size="sm" title="Beri Penilaian Distributor">
-                <p class="text-xs text-brand-slate mt-4" x-text="distributorName"></p>
-
-                <form :action="reviewAction" method="POST" class="pt-4 space-y-4" data-loading>
-                    @csrf
-                    <div>
-                        <label class="field-label">Rating bintang (kualitas layanan &amp; produk)</label>
-                        <div class="flex items-center gap-1">
-                            <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
-                                <button type="button" @click="rating = star"
-                                    class="min-w-11 min-h-11 flex items-center justify-center transition-transform hover:scale-110 rounded-lg cursor-pointer"
-                                    :aria-label="star + ' bintang'">
-                                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" :class="star <= rating ? 'text-brand-accent' : 'text-brand-slate/30'"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
-                                </button>
-                            </template>
-                            <span class="text-xs font-bold text-brand-slate ml-2" x-text="rating + ' / 5 Bintang'"></span>
-                        </div>
-                        <input type="hidden" name="rating" :value="rating">
+            <!-- Riwayat Pesanan Lunas (Pola C) -->
+            @if ($paidItems->isNotEmpty())
+                <section>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brand-emerald"></span>
+                        <h2 class="text-xs font-bold text-brand-slate uppercase tracking-wider">
+                            Riwayat Pesanan Lunas ({{ $paidItems->count() }})
+                        </h2>
                     </div>
+                    <div class="space-y-3">
+                        @foreach ($paidItems as $item)
+                            @php $shipment = $item->order->shipments->first(); @endphp
+                            <article class="bg-white rounded-2xl border border-brand-line shadow-xs overflow-hidden">
+                                <div class="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-brand-line/60">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="font-mono text-xs text-brand-slate">{{ $item->order->order_number }}</span>
+                                        <span class="badge {{ $item->payment_status->badgeClass() }}">{{ $item->payment_status->label() }}</span>
+                                    </div>
+                                    <span class="text-[0.625rem] text-brand-slate">{{ $item->created_at->format('d M Y') }}</span>
+                                </div>
+                                <div class="px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-brand-dark text-sm">{{ $item->product->name }}</p>
+                                        <p class="text-xs text-brand-slate mt-0.5">
+                                            {{ number_format($item->quantity, 0) }} {{ $item->product->unit }}
+                                            &bull; {{ $item->order->distributor->company_name }}
+                                        </p>
+                                        @if ($item->savings_amount > 0)
+                                            <p class="text-[0.6875rem] font-semibold text-brand-brass mt-0.5">
+                                                Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+                                        <span class="font-extrabold text-brand-dark text-sm tabular-nums">
+                                            Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+                                        </span>
 
-                    <div>
-                        <label for="review-comment" class="field-label">Catatan / ulasan tambahan (opsional)</label>
-                        <textarea id="review-comment" name="comment" rows="3" x-model="comment" placeholder="Bagikan pengalaman transaksi, kualitas bahan baku, dan ketepatan waktu pengiriman..." class="input-field"></textarea>
-                    </div>
+                                        @if ($item->review)
+                                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-brand-brass bg-brand-ochre-soft px-2.5 py-1 rounded-full border border-brand-accent/30">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
+                                                {{ $item->review->rating }}/5
+                                            </span>
+                                        @elseif (in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true))
+                                            <button type="button"
+                                                    @click="openRatingModal({{ $item->id }}, '{{ addslashes($item->order->distributor->company_name) }}', '{{ route('umkm.orders.review', $item) }}')"
+                                                    class="min-h-9 px-3 inline-flex items-center gap-1 text-[11px] font-semibold text-brand-brass bg-brand-ochre-soft rounded-lg border border-brand-accent/30 transition-colors cursor-pointer">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
+                                                Beri Ulasan
+                                            </button>
+                                        @endif
 
-                    <div class="flex flex-col-reverse sm:flex-row-reverse sm:justify-end gap-3 pt-2 border-t border-black/[0.06]">
-                        <button type="submit" class="btn-primary text-sm py-3 px-6 w-full sm:w-auto">Kirim Penilaian</button>
-                        <button type="button" @click="showModal = false" class="btn-ghost text-sm py-3 w-full sm:w-auto">Batal</button>
+                                        @if ($shipment)
+                                            <a href="{{ route('umkm.tracking.show', $shipment) }}" class="text-xs font-bold text-brand-primary hover:underline">
+                                                Lacak Kurir &rarr;
+                                            </a>
+                                        @endif
+                                        <a href="{{ route('payment.show', $item) }}" class="btn-ghost text-xs py-1.5 px-3 font-semibold">
+                                            Invoice
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
                     </div>
-                </form>
-            </x-modal>
-        </div>
+                </section>
+            @endif
+
+            <div class="pt-4">{{ $orderItems->links() }}</div>
+        @else
+            <section class="bg-white rounded-2xl border border-brand-line p-10 sm:p-16 text-center max-w-lg mx-auto shadow-xs">
+                <div class="w-14 h-14 rounded-2xl bg-brand-mint text-brand-primary flex items-center justify-center mx-auto font-display font-bold text-2xl">K</div>
+                <h2 class="font-display font-bold text-brand-dark text-lg sm:text-xl mt-4">Belum Ada Riwayat Pesanan</h2>
+                <p class="text-xs sm:text-sm text-brand-slate mt-2 leading-relaxed max-w-sm mx-auto">
+                    Setelah pengajuanmu ter-matching dan dibayar, invoice dan ulasan mitra tampil di sini.
+                </p>
+                <a href="{{ route('umkm.catalog.index') }}" class="btn-primary inline-flex text-sm font-bold px-5 py-2.5 mt-5">
+                    Buka Katalog &rarr;
+                </a>
+            </section>
+        @endif
+
+        <!-- Rating Modal -->
+        <x-modal open="showModal" size="sm" title="Beri Penilaian Distributor">
+            <p class="text-xs text-brand-slate mt-4" x-text="distributorName"></p>
+
+            <form :action="reviewAction" method="POST" class="pt-4 space-y-4" data-loading>
+                @csrf
+                <div>
+                    <label class="field-label">Rating bintang (kualitas layanan &amp; produk)</label>
+                    <div class="flex items-center gap-1">
+                        <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
+                            <button type="button" @click="rating = star"
+                                class="min-w-11 min-h-11 flex items-center justify-center transition-transform hover:scale-110 rounded-lg cursor-pointer"
+                                :aria-label="star + ' bintang'">
+                                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" :class="star <= rating ? 'text-brand-accent' : 'text-brand-slate/30'"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
+                            </button>
+                        </template>
+                        <span class="text-xs font-bold text-brand-slate ml-2" x-text="rating + ' / 5 Bintang'"></span>
+                    </div>
+                    <input type="hidden" name="rating" :value="rating">
+                </div>
+
+                <div>
+                    <label for="review-comment" class="field-label">Catatan / ulasan tambahan (opsional)</label>
+                    <textarea id="review-comment" name="comment" rows="3" x-model="comment" placeholder="Bagikan pengalaman transaksi, kualitas bahan baku, dan ketepatan waktu pengiriman..." class="input-field"></textarea>
+                </div>
+
+                <div class="flex flex-col-reverse sm:flex-row-reverse sm:justify-end gap-3 pt-2 border-t border-black/[0.06]">
+                    <button type="submit" class="btn-primary text-sm py-3 px-6 w-full sm:w-auto">Kirim Penilaian</button>
+                    <button type="button" @click="showModal = false" class="btn-ghost text-sm py-3 w-full sm:w-auto">Batal</button>
+                </div>
+            </form>
+        </x-modal>
     </div>
 </x-layouts.app>
