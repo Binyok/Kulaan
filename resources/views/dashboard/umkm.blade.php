@@ -1,91 +1,118 @@
 <x-layouts.app>
     <x-slot name="title">Dashboard UMKM</x-slot>
 
-    <!-- Header Section -->
-    <div class="mb-6">
-        <div class="bg-gradient-to-r from-brand-forest to-brand-primary text-white rounded-2xl p-6 sm:p-8 shadow-sm">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold bg-white/15 text-white">
-                        Portal UMKM &bull; {{ $umkm?->district ?? 'Wilayah Anda' }}
-                    </span>
-                    <h1 class="font-display font-bold text-2xl sm:text-3xl mt-2 tracking-tight">
-                        Halo, {{ $umkm?->business_name ?? $user->name }}
-                    </h1>
-                    <p class="text-xs sm:text-sm text-white/80 mt-1 max-w-xl">
-                        Pantau kuota urunan bahan baku, status invoice, dan kurir aktif pengadaan bisnismu di sini.
-                    </p>
-                </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <a href="{{ route('umkm.cart.index') }}" class="btn-ghost bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold px-4 py-2.5 rounded-xl">
-                        Lihat Keranjang
-                    </a>
-                    <a href="{{ route('umkm.catalog.index') }}" class="btn-accent px-5 py-2.5 text-xs font-bold rounded-xl shadow-sm">
-                        Buka Katalog &rarr;
-                    </a>
+    <!-- Header Hero Banner Full-Width dengan background solid forest + texture-grain terbukti -->
+    <div class="-mx-3 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-8 mb-6 sm:mb-8">
+        <div class="texture-grain bg-brand-forest text-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                    <div class="max-w-2xl">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.625rem] font-bold bg-white/15 text-[#E8F5E9] uppercase tracking-wider">
+                                UMKM Mitra &bull; {{ $umkm?->district ?? 'Banjarmasin' }}
+                            </span>
+                            <span class="text-xs text-white/70">&bull; {{ $umkm?->business_type ?? 'Usaha Kuliner' }}</span>
+                        </div>
+                        <h1 class="font-display font-bold text-3xl sm:text-4xl text-white tracking-tight leading-tight">
+                            Halo, {{ $umkm?->business_name ?? $user->name }}
+                        </h1>
+                        <p class="text-xs sm:text-sm text-white/80 leading-relaxed mt-2">
+                            Pusat pengadaan bahan baku kolektif. Gabung kuota dengan UMKM lain untuk dapat harga grosir langsung dari distributor.
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 shrink-0">
+                        <a href="{{ route('umkm.cart.index') }}" class="btn-ghost bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold px-4 py-2.5 rounded-xl">
+                            Keranjang ({{ app(\App\Services\CartService::class)->count() }})
+                        </a>
+                        <a href="{{ route('umkm.catalog.index') }}" class="btn-accent px-5 py-2.5 text-xs font-bold rounded-xl shadow-md text-brand-dark">
+                            Buka Katalog &rarr;
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Pola F: Angka Statistik BESAR sebagai Hero -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <!-- Stat 1: Total Penghematan (Highlight Emas) -->
-        <div class="bg-white rounded-2xl border border-brand-accent/30 p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+    <!-- Pola F: Hero Statistik Besar yang Berkarakter -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6">
+        <!-- Kartu 1 (Fokus Utama 6 Kolom): Total Penghematan dengan Card Emas Mewah -->
+        <div class="lg:col-span-6 bg-gradient-to-br from-brand-ochre-soft via-white to-brand-ochre-soft/50 rounded-2xl border-2 border-brand-accent/40 p-6 shadow-sm flex flex-col justify-between">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-brand-slate uppercase tracking-wider">Total Penghematan</span>
-                <span class="w-8 h-8 rounded-lg bg-brand-ochre-soft text-brand-brass flex items-center justify-center font-bold text-xs">
-                    Rp
+                <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-brand-accent text-brand-dark font-extrabold flex items-center justify-center text-sm shadow-xs">
+                        Rp
+                    </span>
+                    <span class="text-xs font-extrabold text-brand-dark uppercase tracking-wider">Total Penghematan Anda</span>
+                </div>
+                <span class="badge bg-brand-accent/20 text-brand-brass border border-brand-accent/40 font-bold text-[0.625rem]">
+                    Urunan Grosir
                 </span>
             </div>
-            <div class="mt-4">
-                <div class="font-display font-extrabold text-2xl sm:text-3xl text-brand-brass tabular-nums">
+
+            <div class="my-5">
+                <div class="font-display font-extrabold text-3xl sm:text-4xl text-brand-dark tabular-nums leading-none">
                     Rp {{ number_format($totalSavings, 0, ',', '.') }}
                 </div>
-                <p class="text-[0.6875rem] text-brand-slate mt-1">
-                    Akumulasi hemat vs harga eceran biasa
+                <p class="text-xs text-brand-slate mt-2 leading-relaxed">
+                    Total selisih dana yang berhasil Anda hemat dibanding belanja dengan harga eceran biasa di pasaran.
                 </p>
+            </div>
+
+            <div class="pt-3 border-t border-brand-accent/20 flex items-center justify-between text-xs text-brand-slate">
+                <span>Dihitung dari {{ $orderItems->count() }} transaksi kolektif</span>
+                <a href="{{ route('umkm.orders.index') }}" class="font-bold text-brand-primary hover:underline">
+                    Rincian &rarr;
+                </a>
             </div>
         </div>
 
-        <!-- Stat 2: Kebutuhan Sedang Matching -->
-        <div class="bg-white rounded-2xl border border-brand-line p-5 shadow-xs flex flex-col justify-between">
+        <!-- Kartu 2 (3 Kolom): Kebutuhan Sedang Matching -->
+        <div class="lg:col-span-3 bg-white rounded-2xl border border-brand-line p-5 shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-brand-slate uppercase tracking-wider">Urunan Berjalan</span>
-                <span class="w-8 h-8 rounded-lg bg-brand-mint text-brand-primary flex items-center justify-center">
+                <span class="text-[0.6875rem] font-bold text-brand-slate uppercase tracking-wider">Urunan Berjalan</span>
+                <span class="w-8 h-8 rounded-xl bg-brand-mint text-brand-primary flex items-center justify-center">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6-4a3 3 0 11-3-3" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-4">
-                <div class="font-display font-extrabold text-2xl sm:text-3xl text-brand-dark tabular-nums">
-                    {{ $activeRequestsCount }} <span class="text-sm font-sans font-normal text-brand-slate">kebutuhan</span>
+
+            <div class="my-4">
+                <div class="font-display font-extrabold text-3xl text-brand-dark tabular-nums leading-none">
+                    {{ $activeRequestsCount }}
                 </div>
-                <p class="text-[0.6875rem] text-brand-slate mt-1">
-                    Sedang mengumpulkan kuota bersama UMKM lain
-                </p>
+                <span class="text-xs font-semibold text-brand-slate mt-1 block">kebutuhan mencari kuota</span>
             </div>
+
+            <a href="{{ route('umkm.requests.index') }}" class="text-xs font-bold text-brand-primary hover:underline pt-3 border-t border-brand-line flex items-center justify-between">
+                <span>Lihat Antrian</span>
+                <span>&rarr;</span>
+            </a>
         </div>
 
-        <!-- Stat 3: Tagihan Menunggu Pembayaran -->
-        <div class="bg-white rounded-2xl border {{ $unpaidInvoices->count() > 0 ? 'border-brand-brick/40 ring-2 ring-brand-brick/10' : 'border-brand-line' }} p-5 shadow-xs flex flex-col justify-between">
+        <!-- Kartu 3 (3 Kolom): Tagihan Menunggu Pembayaran -->
+        <div class="lg:col-span-3 bg-white rounded-2xl border {{ $unpaidInvoices->count() > 0 ? 'border-brand-brick/40 ring-2 ring-brand-brick/10' : 'border-brand-line' }} p-5 shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-brand-slate uppercase tracking-wider">Menunggu Bayar</span>
-                <span class="w-8 h-8 rounded-lg {{ $unpaidInvoices->count() > 0 ? 'bg-brand-brick/10 text-brand-brick' : 'bg-brand-mint text-brand-primary' }} flex items-center justify-center">
+                <span class="text-[0.6875rem] font-bold text-brand-slate uppercase tracking-wider">Menunggu Bayar</span>
+                <span class="w-8 h-8 rounded-xl {{ $unpaidInvoices->count() > 0 ? 'bg-brand-brick/10 text-brand-brick' : 'bg-brand-mint text-brand-primary' }} flex items-center justify-center">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-4">
-                <div class="font-display font-extrabold text-2xl sm:text-3xl {{ $unpaidInvoices->count() > 0 ? 'text-brand-brick' : 'text-brand-dark' }} tabular-nums">
-                    {{ $unpaidInvoices->count() }} <span class="text-sm font-sans font-normal text-brand-slate">tagihan</span>
+
+            <div class="my-4">
+                <div class="font-display font-extrabold text-3xl {{ $unpaidInvoices->count() > 0 ? 'text-brand-brick' : 'text-brand-dark' }} tabular-nums leading-none">
+                    {{ $unpaidInvoices->count() }}
                 </div>
-                <p class="text-[0.6875rem] text-brand-slate mt-1">
-                    Invoice siap dibayar untuk proses kirim
-                </p>
+                <span class="text-xs font-semibold text-brand-slate mt-1 block">tagihan siap dibayar</span>
             </div>
+
+            <a href="{{ route('umkm.orders.index') }}" class="text-xs font-bold {{ $unpaidInvoices->count() > 0 ? 'text-brand-brick' : 'text-brand-primary' }} hover:underline pt-3 border-t border-brand-line flex items-center justify-between">
+                <span>Lihat Tagihan</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </div>
 
@@ -107,25 +134,25 @@
                     </span>
                 </span>
                 <div>
-                    <h3 class="font-bold text-sm sm:text-base">Pengiriman Sedang Berjalan Menuju Lokasimu</h3>
-                    <p class="text-xs text-white/75 mt-0.5">
-                        {{ $activeCourierCount }} kurir &bull; {{ $activeShipments->count() }} paket aktif. Pantau pergerakan kurir secara realtime.
+                    <h3 class="font-bold text-sm sm:text-base text-white">Pengiriman Sedang Berjalan Menuju Lokasimu</h3>
+                    <p class="text-xs text-white/80 mt-0.5">
+                        {{ $activeCourierCount }} kurir &bull; {{ $activeShipments->count() }} paket aktif. Pantau pergerakan kurir secara realtime di peta.
                     </p>
                 </div>
             </div>
-            <a href="{{ route('umkm.tracking.live') }}" class="btn-accent text-xs font-bold px-4 py-2.5 rounded-xl shrink-0 text-center">
+            <a href="{{ route('umkm.tracking.live') }}" class="btn-accent text-xs font-bold px-4 py-2.5 rounded-xl shrink-0 text-center text-brand-dark">
                 Buka Peta Live &rarr;
             </a>
         </div>
     @endif
 
-    <!-- Action Needed: Fallback Requests (Gagal Kuota) -->
+    <!-- Action Needed: Fallback Requests (Gagal Kuota Sebelum Deadline) -->
     @if ($fallbackRequests->isNotEmpty())
         <section class="bg-white rounded-2xl border border-brand-accent/40 p-5 sm:p-6 mb-6 shadow-xs">
             <div class="flex items-center gap-2.5 mb-4">
                 <span class="w-2.5 h-2.5 rounded-full bg-brand-accent"></span>
                 <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wide">
-                    Tenggat Berakhir &bull; Butuh Keputusanmu ({{ $fallbackRequests->count() }})
+                    Tenggat Berakhir &bull; Butuh Tindakan Anda ({{ $fallbackRequests->count() }})
                 </h2>
             </div>
             <div class="space-y-3">
@@ -206,7 +233,7 @@
         <div class="flex items-center justify-between gap-3 mb-4">
             <div>
                 <h2 class="font-display font-bold text-lg text-brand-dark">Aktivitas Pengadaan Terbaru</h2>
-                <p class="text-xs text-brand-slate mt-0.5">Catatan transaksi dan pengadaan bahan baku bisnismu</p>
+                <p class="text-xs text-brand-slate mt-0.5">Catatan pesanan dan pengadaan bahan baku bisnismu</p>
             </div>
             <a href="{{ route('umkm.orders.index') }}" class="text-xs font-bold text-brand-primary hover:underline">
                 Lihat Semua &rarr;
@@ -218,8 +245,8 @@
                 @foreach ($orderItems->take(6) as $item)
                     @php $shipment = $item->order->shipments->first(); @endphp
                     <div class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-brand-cream/40 -mx-2 px-2 rounded-xl transition-colors">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-10 h-10 rounded-xl bg-brand-mint text-brand-primary flex items-center justify-center font-bold text-sm shrink-0">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <div class="w-11 h-11 rounded-xl bg-brand-mint text-brand-primary flex items-center justify-center font-display font-bold text-base shrink-0">
                                 {{ strtoupper(substr($item->product->name, 0, 1)) }}
                             </div>
                             <div class="min-w-0">
@@ -240,11 +267,11 @@
                             </div>
                             @if ($shipment)
                                 <a href="{{ route('umkm.tracking.show', $shipment) }}" class="btn-ghost text-xs py-1.5 px-3 font-semibold rounded-lg text-brand-primary border-brand-primary/20">
-                                    Lacak
+                                    Lacak Kurir
                                 </a>
                             @elseif ($item->payment_status->value === 'UNPAID')
                                 <a href="{{ route('payment.show', $item) }}" class="btn-primary text-xs py-1.5 px-3 font-semibold rounded-lg">
-                                    Bayar
+                                    Bayar Tagihan
                                 </a>
                             @endif
                         </div>
