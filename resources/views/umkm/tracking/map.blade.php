@@ -39,7 +39,7 @@
             // Custom Courier Icon
             const courierIcon = L.divIcon({
                 className: 'custom-courier-pin',
-                html: `<div class='w-10 h-10 rounded-full bg-[#2D6A4F] text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-sm ring-4 ring-[#2D6A4F]/20'>K</div>`,
+                html: `<div class='w-10 h-10 rounded-full bg-brand-primary text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-sm ring-4 ring-brand-primary/20'>K</div>`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20]
             });
@@ -47,7 +47,7 @@
             // Custom Destination Icon
             const destIcon = L.divIcon({
                 className: 'custom-dest-pin',
-                html: `<div class='w-10 h-10 rounded-full bg-[#D4A017] text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-sm ring-4 ring-[#D4A017]/20'>T</div>`,
+                html: `<div class='w-10 h-10 rounded-full bg-brand-accent text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-sm ring-4 ring-brand-accent/20'>T</div>`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20]
             });
@@ -122,6 +122,35 @@
         </div>
 
         <!-- Main Map & Info Grid -->
+        @php
+            $orderStatus = $shipment->order->status->value;
+            $step = match (true) {
+                in_array($orderStatus, ['DELIVERED', 'COMPLETED'], true) => 4,
+                $orderStatus === 'IN_TRANSIT' || $shipment->status === 'IN_TRANSIT' => 3,
+                in_array($orderStatus, ['CONFIRMED', 'PREPARING', 'READY_TO_SHIP', 'ASSIGNED_TO_COURIER'], true) => 2,
+                in_array($orderStatus, ['PAID'], true) => 1,
+                default => 0,
+            };
+            $steps = ['Dipesan', 'Dibayar', 'Diproses', 'Dikirim', 'Sampai'];
+        @endphp
+        <ol class="bg-white rounded-[20px] border border-brand-line px-5 sm:px-7 py-5 flex items-start" aria-label="Status pengiriman">
+            @foreach ($steps as $i => $label)
+                <li class="flex-1 flex flex-col items-center gap-2 min-w-0 {{ $i < count($steps) - 1 ? 'relative' : '' }}">
+                    <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 {{ $i < $step ? 'bg-brand-primary text-white' : ($i === $step ? 'bg-brand-accent text-brand-primary-hover ring-4 ring-brand-accent/20' : 'bg-brand-cream text-brand-slate border border-black/[0.06]') }}">
+                        @if ($i < $step)
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        @else
+                            {{ $i + 1 }}
+                        @endif
+                    </span>
+                    <span class="text-[0.625rem] sm:text-[0.6875rem] font-bold text-center leading-tight {{ $i <= $step ? 'text-brand-dark' : 'text-brand-slate' }}">{{ $label }}</span>
+                    @if ($i < count($steps) - 1)
+                        <span class="hidden sm:block absolute top-3.5 left-[calc(50%+1.25rem)] right-[calc(-50%+1.25rem)] h-0.5 rounded {{ $i < $step ? 'bg-brand-primary' : 'bg-black/[0.08]' }}" aria-hidden="true"></span>
+                    @endif
+                </li>
+            @endforeach
+        </ol>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <!-- Map Container (Double-Bezel) -->
             <div class="lg:col-span-8 card-shell">

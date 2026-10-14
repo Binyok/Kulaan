@@ -6,7 +6,7 @@
             <div>
                 <span class="eyebrow">Decision Support Engine</span>
                 <h1 class="font-display font-semibold text-[1.75rem] sm:text-4xl text-brand-dark tracking-tight text-balance mt-2">Sistem Pendukung Keputusan (AHP + TOPSIS + SAW)</h1>
-                <p class="text-[0.8125rem] text-brand-slate mt-1">Kelola kriteria dan kalkulasi bobot AHP (Analytical Hierarchy Process) untuk penentuan distributor terbaik.</p>
+                <p class="text-[0.8125rem] text-brand-slate mt-1">Kelola kriteria dan kalkulasi bobot AHP (Analytical Hierarchy Process) untuk rekomendasi distributor terbaik pilihan UMKM.</p>
             </div>
             <a href="{{ route('admin.spk.sensitivity') }}" class="btn-primary text-xs py-2.5 px-4 font-bold w-full sm:w-auto justify-center">
                 Analisis Sensitivitas
@@ -109,7 +109,7 @@
                         </div>
 
                         @if ($errors->any())
-                            <div class="p-3.5 rounded-xl bg-red-50 border border-brand-brick/20 text-[0.75rem] text-brand-brick space-y-1" role="alert">
+                            <div class="p-3.5 rounded-xl bg-brand-brick/10 border border-brand-brick/20 text-[0.75rem] text-brand-brick space-y-1" role="alert">
                                 @foreach ($errors->all() as $error)
                                     <p>{{ $error }}</p>
                                 @endforeach
@@ -141,7 +141,7 @@
                                     <th>ID / Waktu</th>
                                     <th>Grup Pengadaan</th>
                                     <th>Komoditas Bahan</th>
-                                    <th>Distributor Terpilih (TOPSIS)</th>
+                                    <th>Rekomendasi #1 (TOPSIS)</th>
                                     <th class="text-center">Skor V<sub>i</sub></th>
                                     <th class="text-right">Aksi</th>
                                 </tr>
@@ -205,7 +205,7 @@
                                     </p>
                                     <p class="font-bold text-brand-dark">{{ $hist->matchingGroup?->product?->name ?? 'Pengadaan Multi-Bahan' }}</p>
                                     <p class="text-brand-slate">
-                                        Terpilih: <span class="font-bold text-brand-dark">{{ $topTopsis['name'] ?? 'N/A' }}</span>
+                                        Rekomendasi #1: <span class="font-bold text-brand-dark">{{ $topTopsis['name'] ?? 'N/A' }}</span>
                                     </p>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -222,7 +222,7 @@
                 @else
                     <div class="py-10 text-center border-t border-black/[0.04]">
                         <p class="font-bold text-brand-dark text-sm">Belum ada riwayat kalkulasi SPK yang tersimpan.</p>
-                        <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Riwayat muncul setelah Anda menghitung bobot AHP atau memproses auto-matching distributor.</p>
+                        <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Riwayat muncul setelah Anda menghitung bobot AHP atau setelah grup pengadaan UMKM terbentuk.</p>
                     </div>
                 @endif
             </div>

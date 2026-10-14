@@ -21,14 +21,12 @@ class PurchaseRequestController extends Controller
             abort(403, 'Profil UMKM tidak ditemukan.');
         }
 
-        $requests = PurchaseRequest::with('product.category', 'matchingGroup')
+        $requests = PurchaseRequest::with('product.category', 'matchingGroup', 'preferredDistributor')
             ->where('umkm_id', $umkm->id)
             ->latest()
             ->paginate(10);
 
-        $products = Product::with('category')->where('is_active', true)->get();
-
-        return view('umkm.requests.index', compact('requests', 'products', 'umkm'));
+        return view('umkm.requests.index', compact('requests', 'umkm'));
     }
 
     public function store(StorePurchaseRequest $request, MatchingEngineService $matchingEngine): RedirectResponse
@@ -51,13 +49,14 @@ class PurchaseRequestController extends Controller
             'delivery_address' => $validated['delivery_address'],
             'notes' => $validated['notes'] ?? null,
             'status' => PurchaseRequestStatus::PENDING_MATCH->value,
+            'preferred_distributor_id' => $validated['preferred_distributor_id'] ?? null,
         ]);
 
         // Proactively trigger matching check for compatible pending requests
         $matchingEngine->processMatchingForProduct($product->id);
 
         return redirect()->route('umkm.requests.index')
-            ->with('success', 'Pengajuan kebutuhan '.$product->name.' berhasil dibuat. Sistem sedang mencari UMKM pasangan di area sekitar.');
+            ->with('success', 'Pengajuan kebutuhan '.$product->name.' ke '.$purchaseRequest->preferredDistributor->company_name.' berhasil dibuat. Sistem sedang mengumpulkan kuota dari UMKM lain.');
     }
 
     public function cancel(Request $request, PurchaseRequest $purchaseRequest): RedirectResponse

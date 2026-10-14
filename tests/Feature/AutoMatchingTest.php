@@ -57,7 +57,7 @@ class AutoMatchingTest extends TestCase
             'base_retail_price' => 8000,
         ]);
 
-        // Create 3 UMKM Users & Requests: 4 kg + 3 kg + 3 kg = 10 kg
+        // Create 3 UMKM Users & Requests: 4 kg + 3 kg + 3 kg = 10 kg (semua pilih distributor yang sama via katalog)
         $umkm1 = Umkm::create([
             'user_id' => User::factory()->create()->id,
             'business_name' => 'UMKM A',
@@ -92,6 +92,7 @@ class AutoMatchingTest extends TestCase
             'delivery_district' => 'Banjarmasin Utara',
             'delivery_address' => 'Jl. Kayu Tangi 1',
             'status' => PurchaseRequestStatus::PENDING_MATCH->value,
+            'preferred_distributor_id' => $distributor->id,
         ]);
 
         $req2 = PurchaseRequest::create([
@@ -104,6 +105,7 @@ class AutoMatchingTest extends TestCase
             'delivery_district' => 'Banjarmasin Utara',
             'delivery_address' => 'Jl. Kayu Tangi 2',
             'status' => PurchaseRequestStatus::PENDING_MATCH->value,
+            'preferred_distributor_id' => $distributor->id,
         ]);
 
         $req3 = PurchaseRequest::create([
@@ -116,6 +118,7 @@ class AutoMatchingTest extends TestCase
             'delivery_district' => 'Banjarmasin Utara',
             'delivery_address' => 'Jl. Kayu Tangi 3',
             'status' => PurchaseRequestStatus::PENDING_MATCH->value,
+            'preferred_distributor_id' => $distributor->id,
         ]);
 
         // Process matching
@@ -129,6 +132,7 @@ class AutoMatchingTest extends TestCase
         $this->assertEquals(MatchingGroupStatus::ORDERED, $group->status);
         $this->assertEquals(10.0, (float) $group->total_quantity);
         $this->assertEquals(3, $group->members()->count());
+        $this->assertEquals($distributor->id, (int) $group->selected_distributor_id);
 
         // Verify request statuses updated to ORDERED
         $this->assertEquals(PurchaseRequestStatus::ORDERED, $req1->fresh()->status);

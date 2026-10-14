@@ -25,12 +25,14 @@ class CollectiveOrderService
     public function createOrderFromMatchingGroup(MatchingGroup $group): Order
     {
         return DB::transaction(function () use ($group) {
-            // 1. Run SPK Recommendation (AHP + TOPSIS) to pick the best distributor
-            $spkResult = $this->spkRecommendationService->recommendDistributor($group);
-
+            // Distributor selalu berasal dari pilihan UMKM via katalog.
+            // SPK hanya dicatat sebagai history/advisory, bukan pengambil keputusan.
             $distributorId = $group->selected_distributor_id;
-            if (! $distributorId && ! empty($spkResult['selected_distributor'])) {
-                $distributorId = $spkResult['selected_distributor']['id'];
+
+            $this->spkRecommendationService->recommendDistributor($group);
+
+            if (! $distributorId) {
+                throw new \RuntimeException('Tidak ada distributor yang dapat dipilih untuk grup '.$group->id);
             }
 
             // 2. Fetch agreed wholesale unit price from distributor price tiers
@@ -82,7 +84,10 @@ class CollectiveOrderService
                 }
             }
 
-            $group->update(['status' => MatchingGroupStatus::ORDERED->value]);
+            $group->update([
+                'status' => MatchingGroupStatus::ORDERED->value,
+                'agreed_unit_price' => $wholesaleUnitPrice,
+            ]);
 
             return $order;
         });

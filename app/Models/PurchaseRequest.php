@@ -24,6 +24,7 @@ class PurchaseRequest extends Model
         'notes',
         'status',
         'matching_group_id',
+        'preferred_distributor_id',
     ];
 
     protected function casts(): array
@@ -49,6 +50,11 @@ class PurchaseRequest extends Model
     public function matchingGroup(): BelongsTo
     {
         return $this->belongsTo(MatchingGroup::class, 'matching_group_id');
+    }
+
+    public function preferredDistributor(): BelongsTo
+    {
+        return $this->belongsTo(Distributor::class, 'preferred_distributor_id');
     }
 
     /**

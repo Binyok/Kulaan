@@ -22,8 +22,11 @@
     --color-brand-dark: #22302A;
     --color-brand-slate: #686E63;
     --color-brand-cream: #FAF7F1;
+    --color-brand-sand: #F1EBDD;
+    --color-brand-line: #E6E3D9;
     --color-brand-soft-grey: #E2E8F0;
     --color-brand-brick: #C0392B;
+    --color-brand-info: #2563EB;
 }
 
 body {

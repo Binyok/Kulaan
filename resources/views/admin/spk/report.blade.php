@@ -10,8 +10,8 @@
             .page-break { page-break-before: always; }
         }
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #1e293b;
+            font-family: 'Plus Jakarta Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #22302A;
             line-height: 1.5;
             padding: 30px;
             max-width: 900px;
@@ -19,26 +19,26 @@
             background: #fff;
         }
         .header {
-            border-bottom: 2px solid #2d6a4f;
+            border-bottom: 2px solid #2D6A4F;
             padding-bottom: 12px;
             margin-bottom: 20px;
         }
         .title {
             font-size: 20pt;
             font-weight: 800;
-            color: #2d6a4f;
+            color: #2D6A4F;
             margin: 0;
         }
         .subtitle {
             font-size: 10pt;
-            color: #64748b;
+            color: #686E63;
             margin-top: 4px;
         }
         .meta-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
-            background: #f8fafc;
+            background: #FAF7F1;
             padding: 12px 16px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -47,8 +47,8 @@
         .section-title {
             font-size: 12pt;
             font-weight: 700;
-            color: #0f172a;
-            border-left: 4px solid #2d6a4f;
+            color: #22302A;
+            border-left: 4px solid #2D6A4F;
             padding-left: 8px;
             margin: 20px 0 10px 0;
         }
@@ -59,24 +59,24 @@
             font-size: 9pt;
         }
         th, td {
-            border: 1px solid #cbd5e1;
+            border: 1px solid #E2E8F0;
             padding: 7px 10px;
             text-align: left;
         }
         th {
-            background-color: #f1f5f9;
+            background-color: #FAF7F1;
             font-weight: 700;
-            color: #334155;
+            color: #22302A;
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .font-mono { font-family: monospace; }
         .highlight {
-            background-color: #d8f3dc;
+            background-color: #E8F5E9;
             font-weight: bold;
         }
         .btn-print {
-            background: #2d6a4f;
+            background: #2D6A4F;
             color: #fff;
             padding: 8px 18px;
             border: none;
@@ -89,7 +89,7 @@
 </head>
 <body>
     <div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-        <a href="{{ route('admin.spk.index') }}" style="color: #2d6a4f; text-decoration: none; font-size: 13px; font-weight: bold;">&larr; Kembali ke Dashboard SPK</a>
+        <a href="{{ route('admin.spk.index') }}" style="color: #2D6A4F; text-decoration: none; font-size: 13px; font-weight: bold;">&larr; Kembali ke Dashboard SPK</a>
         <button onclick="window.print()" class="btn-print">Cetak / Simpan sebagai PDF</button>
     </div>
 

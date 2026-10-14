@@ -85,6 +85,7 @@ class CollectiveOrderTest extends TestCase
             'total_quantity' => 10.00,
             'target_moq' => 10.00,
             'status' => 'COMPLETED',
+            'selected_distributor_id' => $distributor->id,
         ]);
 
         MatchingMember::create(['matching_group_id' => $group->id, 'purchase_request_id' => $req1->id, 'umkm_id' => $umkm1->id, 'quantity' => 4]);

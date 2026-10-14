@@ -276,7 +276,7 @@
                             <div class="p-3 rounded-xl border border-black/[0.06] bg-brand-cream/50">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-[0.6875rem] font-bold text-brand-slate uppercase tracking-wide" x-text="`Tier ${index + 1}`"></span>
-                                    <button type="button" @click="tiers.splice(index, 1)" class="btn-icon min-w-11 min-h-11 text-brand-brick hover:bg-red-50" :aria-label="`Hapus tier ${index + 1}`">&times;</button>
+                                    <button type="button" @click="tiers.splice(index, 1)" class="btn-icon min-w-11 min-h-11 text-brand-brick hover:bg-brand-brick/10" :aria-label="`Hapus tier ${index + 1}`">&times;</button>
                                 </div>
                                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     <div>

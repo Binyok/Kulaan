@@ -64,8 +64,8 @@
 
                     <p class="text-base sm:text-lg text-brand-slate max-w-xl leading-relaxed mt-5">
                         Kula'an menggabungkan kebutuhan bahan baku pelaku UMKM di sekitar Anda,
-                        mencocokkan kuantitas secara otomatis, dan memilih distributor terbaik
-                        dengan sistem pendukung keputusan <strong class="font-semibold text-brand-dark">AHP + TOPSIS</strong>.
+                        mencocokkan kuantitas secara otomatis, dan Anda yang memilih distributor terbaik
+                        berbekal rekomendasi sistem pendukung keputusan <strong class="font-semibold text-brand-dark">AHP + TOPSIS</strong>.
                     </p>
 
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-7">
@@ -254,8 +254,8 @@
             <ol class="mt-10 border-t border-brand-primary/15">
                 <li class="grid grid-cols-[auto_1fr] sm:grid-cols-[7rem_1fr_1fr] gap-x-5 gap-y-2 py-7 border-b border-brand-primary/15 items-baseline" data-reveal>
                     <span class="font-display font-semibold text-brand-primary/30 text-4xl sm:text-5xl leading-none tnum">01</span>
-                    <h3 class="font-bold text-lg text-brand-dark">Ajukan Kebutuhan</h3>
-                    <p class="col-start-2 sm:col-start-3 text-sm text-brand-slate leading-relaxed">Tentukan jenis bahan baku, jumlah kilogram/liter, dan batas maksimal menunggu (deadline).</p>
+                    <h3 class="font-bold text-lg text-brand-dark">Pilih di Katalog</h3>
+                    <p class="col-start-2 sm:col-start-3 text-sm text-brand-slate leading-relaxed">Buka katalog, bandingkan penawaran distributor, dan ajukan ke pilihanmu beserta jumlah dan deadline.</p>
                 </li>
                 <li class="grid grid-cols-[auto_1fr] sm:grid-cols-[7rem_1fr_1fr] gap-x-5 gap-y-2 py-7 border-b border-brand-primary/15 items-baseline" data-reveal>
                     <span class="font-display font-semibold text-brand-primary/30 text-4xl sm:text-5xl leading-none tnum">02</span>
@@ -265,7 +265,7 @@
                 <li class="grid grid-cols-[auto_1fr] sm:grid-cols-[7rem_1fr_1fr] gap-x-5 gap-y-2 py-7 border-b border-brand-primary/15 items-baseline" data-reveal>
                     <span class="font-display font-semibold text-brand-primary/30 text-4xl sm:text-5xl leading-none tnum">03</span>
                     <h3 class="font-bold text-lg text-brand-dark">Rekomendasi SPK</h3>
-                    <p class="col-start-2 sm:col-start-3 text-sm text-brand-slate leading-relaxed">Metode AHP dan TOPSIS menilai harga, rating kualitas, dan lead time untuk memilih distributor terbaik.</p>
+                    <p class="col-start-2 sm:col-start-3 text-sm text-brand-slate leading-relaxed">Metode AHP dan TOPSIS menilai harga, rating kualitas, dan lead time sebagai bahan rekomendasi — keputusan akhir tetap di tanganmu.</p>
                 </li>
                 <li class="grid grid-cols-[auto_1fr] sm:grid-cols-[7rem_1fr_1fr] gap-x-5 gap-y-2 py-7 border-b border-brand-primary/15 items-baseline" data-reveal>
                     <span class="font-display font-semibold text-brand-primary/30 text-4xl sm:text-5xl leading-none tnum">04</span>

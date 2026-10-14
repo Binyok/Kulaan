@@ -37,8 +37,8 @@
                 <li class="flex gap-4">
                     <span class="font-display font-semibold text-brand-accent text-lg leading-none tnum">02</span>
                     <div>
-                        <p class="font-bold text-white text-sm">Distributor dipilih transparan</p>
-                        <p class="text-white/65 text-xs mt-1 leading-relaxed">Metode AHP + TOPSIS menilai harga, kualitas, dan kecepatan pengiriman.</p>
+                        <p class="font-bold text-white text-sm">Kamu yang pilih distributor</p>
+                        <p class="text-white/65 text-xs mt-1 leading-relaxed">Metode AHP + TOPSIS memberi rekomendasi harga, kualitas, dan kecepatan pengiriman.</p>
                     </div>
                 </li>
                 <li class="flex gap-4">

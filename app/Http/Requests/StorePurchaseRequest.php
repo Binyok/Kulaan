@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\DistributorOffersProduct;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePurchaseRequest extends FormRequest
@@ -21,6 +22,7 @@ class StorePurchaseRequest extends FormRequest
             'delivery_district' => ['required', 'string'],
             'delivery_address' => ['required', 'string'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'preferred_distributor_id' => ['required', 'exists:distributors,id', new DistributorOffersProduct($this->input('product_id'), $this->input('quantity'))],
         ];
     }
 
@@ -35,6 +37,7 @@ class StorePurchaseRequest extends FormRequest
             'urgency.required' => 'Pilih tingkat urgensi kebutuhan Anda.',
             'delivery_district.required' => 'Kecamatan pengiriman wajib diisi.',
             'delivery_address.required' => 'Alamat pengiriman wajib diisi.',
+            'preferred_distributor_id.required' => 'Pilih distributor dari katalog terlebih dahulu.',
         ];
     }
 }

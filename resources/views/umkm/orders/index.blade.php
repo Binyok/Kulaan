@@ -61,14 +61,14 @@
                                         </div>
                                         <div class="flex items-center gap-2 shrink-0">
                                             @if ($item->review)
-                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200" title="{{ $item->review->comment }}">
+                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-brand-brass bg-brand-ochre-soft px-2.5 py-1 rounded-full border border-brand-accent/30" title="{{ $item->review->comment }}">
                                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
                                                     {{ $item->review->rating }}/5
                                                 </span>
                                             @elseif (in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true))
                                                 <button type="button"
                                                     @click="openRatingModal({{ $item->id }}, '{{ addslashes($item->order->distributor->company_name) }}', '{{ route('umkm.orders.review', $item) }}')"
-                                                    class="min-h-11 px-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition-colors cursor-pointer">
+                                                    class="min-h-11 px-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-brass hover:text-brand-dark bg-brand-ochre-soft hover:bg-brand-ochre-soft rounded-lg border border-brand-accent/30 transition-colors cursor-pointer">
                                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
                                                     Beri Ulasan
                                                 </button>
@@ -95,7 +95,7 @@
                     </span>
                     <p class="font-bold text-brand-dark mt-4">Belum ada riwayat pesanan kolektif.</p>
                     <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Setelah pengajuanmu ter-matching dan dibayar, invoice dan ulasan mitra tampil di sini.</p>
-                    <a href="{{ route('umkm.requests.index') }}" class="btn-primary text-sm mt-5">Ajukan Kebutuhan</a>
+                    <a href="{{ route('umkm.catalog.index') }}" class="btn-primary text-sm mt-5">Buka Katalog</a>
                 </section>
             @endif
 
@@ -112,7 +112,7 @@
                                 <button type="button" @click="rating = star"
                                     class="min-w-11 min-h-11 flex items-center justify-center transition-transform hover:scale-110 rounded-lg cursor-pointer"
                                     :aria-label="star + ' bintang'">
-                                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" :class="star <= rating ? 'text-amber-400' : 'text-slate-300'"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
+                                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" :class="star <= rating ? 'text-brand-accent' : 'text-brand-slate/30'"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
                                 </button>
                             </template>
                             <span class="text-xs font-bold text-brand-slate ml-2" x-text="rating + ' / 5 Bintang'"></span>

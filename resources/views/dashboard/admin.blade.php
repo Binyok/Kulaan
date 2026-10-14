@@ -63,6 +63,28 @@
 
         {{-- Management shortcuts --}}
         <section data-reveal>
+            <h2 class="text-base font-bold text-brand-dark tracking-tight mb-1">Aktivitas perdagangan</h2>
+            <p class="text-[0.75rem] text-brand-slate mb-4">Volume dan pesanan kolektif yang berjalan di ekosistem.</p>
+            <div class="grid grid-cols-2 gap-4 sm:gap-5 mb-6 sm:mb-8">
+                <div class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-6 flex items-center gap-4">
+                    <span class="w-11 h-11 rounded-full bg-brand-mint text-brand-primary flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1 2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 8h6M9 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <div class="min-w-0">
+                        <dd class="font-display font-extrabold text-2xl sm:text-3xl text-brand-dark tabular-nums leading-none">{{ $totalOrders }}</dd>
+                        <dt class="text-[0.6875rem] text-brand-slate font-medium mt-1.5">Pesanan kolektif</dt>
+                    </div>
+                </div>
+                <div class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-6 flex items-center gap-4">
+                    <span class="w-11 h-11 rounded-full bg-brand-mint text-brand-primary flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    <div class="min-w-0">
+                        <dd class="font-display font-extrabold text-2xl sm:text-3xl text-brand-dark tabular-nums leading-none">{{ number_format($totalCollectiveVolume, 0, ',', '.') }}</dd>
+                        <dt class="text-[0.6875rem] text-brand-slate font-medium mt-1.5">Total volume (unit)</dt>
+                    </div>
+                </div>
+            </div>
             <h2 class="text-base font-bold text-brand-dark tracking-tight mb-4">Kelola ekosistem</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 <a href="{{ route('admin.categories.index') }}" class="group bg-white rounded-[20px] border border-brand-line p-6 flex gap-4 items-start hover:border-brand-primary/40 hover:-translate-y-0.5 transition-all">

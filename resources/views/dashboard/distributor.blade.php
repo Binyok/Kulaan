@@ -43,7 +43,7 @@
                 </div>
             </div>
             <div class="p-5 sm:p-6 flex items-center gap-4">
-                <span class="w-11 h-11 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shrink-0 border border-amber-200/60">
+                <span class="w-11 h-11 rounded-full bg-brand-ochre-soft text-brand-brass flex items-center justify-center shrink-0 border border-brand-accent/25">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
                 </span>
                 <div class="min-w-0">
@@ -63,7 +63,7 @@
             <div class="flex items-center justify-between gap-3 mb-2">
                 <div>
                     <h2 class="text-base font-bold text-brand-dark tracking-tight">Pesanan kolektif masuk</h2>
-                    <p class="text-[0.75rem] text-brand-slate mt-0.5">Pesanan terbaru dari grup auto-matching UMKM</p>
+                    <p class="text-[0.75rem] text-brand-slate mt-0.5">Pesanan terbaru dari grup pilihan UMKM</p>
                 </div>
                 <a href="{{ route('distributor.orders.index') }}" class="btn-ghost text-xs py-2 px-4 font-bold text-brand-primary shrink-0">
                     Lihat Semua

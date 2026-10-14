@@ -29,9 +29,13 @@
                         </a>
 
                         @hasrole('umkm')
+                            <a href="{{ route('umkm.catalog.index') }}"
+                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.catalog*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
+                                Katalog
+                            </a>
                             <a href="{{ route('umkm.requests.index') }}"
                                class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.requests*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                               Ajukan Kebutuhan
+                                Pengajuan Saya
                             </a>
                             <a href="{{ route('umkm.orders.index') }}"
                                class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.orders*') || request()->routeIs('payment.show') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
@@ -109,7 +113,7 @@
                             </a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="flex items-center w-full text-left min-h-11 px-3 text-brand-brick hover:bg-red-50 rounded-xl font-medium transition-colors cursor-pointer">
+                                <button type="submit" class="flex items-center w-full text-left min-h-11 px-3 text-brand-brick hover:bg-brand-brick/10 rounded-xl font-medium transition-colors cursor-pointer">
                                     Keluar
                                 </button>
                             </form>
@@ -130,14 +134,14 @@
         @endif
 
         @if (session('error'))
-            <div role="alert" class="mb-6 p-4 rounded-2xl bg-red-50 text-brand-brick border border-brand-brick/15 text-[0.8125rem] font-medium flex items-center gap-2.5">
+            <div role="alert" class="mb-6 p-4 rounded-2xl bg-brand-brick/10 text-brand-brick border border-brand-brick/15 text-[0.8125rem] font-medium flex items-center gap-2.5">
                 <span class="w-2 h-2 rounded-full bg-brand-brick"></span>
                 <span>{{ session('error') }}</span>
             </div>
         @endif
 
         @if (session('info'))
-            <div role="status" class="mb-6 p-4 rounded-2xl bg-blue-50 text-brand-info border border-brand-info/15 text-[0.8125rem] font-medium flex items-center gap-2.5">
+            <div role="status" class="mb-6 p-4 rounded-2xl bg-brand-info/10 text-brand-info border border-brand-info/15 text-[0.8125rem] font-medium flex items-center gap-2.5">
                 <span class="w-2 h-2 rounded-full bg-brand-info"></span>
                 <span>{{ session('info') }}</span>
             </div>
@@ -162,9 +166,13 @@
                 Dashboard
             </a>
             @hasrole('umkm')
+                <a href="{{ route('umkm.catalog.index') }}"
+                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('umkm.catalog*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
+                    Katalog
+                </a>
                 <a href="{{ route('umkm.requests.index') }}"
                    class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('umkm.requests*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Ajukan
+                    Pengajuan
                 </a>
                 <a href="{{ route('umkm.orders.index') }}"
                    class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('umkm.orders*') || request()->routeIs('payment.show') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">

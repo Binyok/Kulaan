@@ -84,11 +84,11 @@
                     <div class="pt-4 border-t border-black/[0.06] text-xs text-brand-slate space-y-1">
                         <p class="font-bold text-brand-dark">Kesimpulan Stabilitas:</p>
                         @if ($isRankingStable)
-                            <div class="p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 font-medium">
+                            <div class="p-3 bg-brand-mint text-brand-emerald rounded-xl border border-brand-primary/20 font-medium">
                                 <strong>Model Stabil (Robust):</strong> Pergeseran bobot tidak mengubah pemenang peringkat 1.
                             </div>
                         @else
-                            <div class="p-3 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 font-medium">
+                            <div class="p-3 bg-brand-ochre-soft text-brand-brass rounded-xl border border-brand-accent/25 font-medium">
                                 <strong>Peka terhadap Bobot (Sensitive):</strong> Terjadi pergeseran peringkat pada alternatif distributor.
                             </div>
                         @endif
@@ -101,7 +101,7 @@
                 <div class="card-core p-6 space-y-5">
                     <div class="flex flex-wrap justify-between items-center gap-2">
                         <h2 class="text-base font-bold text-brand-dark tracking-tight">Perbandingan Peringkat (Baseline vs Skenario)</h2>
-                        <span class="badge {{ $isRankingStable ? 'bg-brand-mint text-brand-emerald' : 'bg-amber-100 text-amber-800' }}">
+                        <span class="badge {{ $isRankingStable ? 'bg-brand-mint text-brand-emerald' : 'bg-brand-ochre-soft text-brand-brass' }}">
                             {{ $isRankingStable ? 'Peringkat Konsisten' : 'Peringkat Bergeser' }}
                         </span>
                     </div>
@@ -140,15 +140,15 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($row['rank_diff'] > 0)
-                                                    <span class="badge bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                                    <span class="badge bg-brand-mint text-brand-emerald text-[10px] font-bold">
                                                         Naik {{ $row['rank_diff'] }}
                                                     </span>
                                                 @elseif ($row['rank_diff'] < 0)
-                                                    <span class="badge bg-red-100 text-red-800 text-[10px] font-bold">
+                                                    <span class="badge bg-brand-brick/10 text-brand-brick text-[10px] font-bold">
                                                         Turun {{ abs($row['rank_diff']) }}
                                                     </span>
                                                 @else
-                                                    <span class="badge bg-slate-100 text-slate-600 text-[10px]">
+                                                    <span class="badge bg-brand-cream text-brand-slate text-[10px]">
                                                         Tetap (Rank {{ $row['new_rank'] }})
                                                     </span>
                                                 @endif
@@ -166,11 +166,11 @@
                                     <div class="flex justify-between items-start gap-3">
                                         <p class="font-bold text-brand-dark text-sm min-w-0">{{ $row['name'] }}</p>
                                         @if ($row['rank_diff'] > 0)
-                                            <span class="badge bg-emerald-100 text-emerald-800 text-[10px] font-bold shrink-0">Naik {{ $row['rank_diff'] }}</span>
+                                            <span class="badge bg-brand-mint text-brand-emerald text-[10px] font-bold shrink-0">Naik {{ $row['rank_diff'] }}</span>
                                         @elseif ($row['rank_diff'] < 0)
-                                            <span class="badge bg-red-100 text-red-800 text-[10px] font-bold shrink-0">Turun {{ abs($row['rank_diff']) }}</span>
+                                            <span class="badge bg-brand-brick/10 text-brand-brick text-[10px] font-bold shrink-0">Turun {{ abs($row['rank_diff']) }}</span>
                                         @else
-                                            <span class="badge bg-slate-100 text-slate-600 text-[10px] shrink-0">Tetap</span>
+                                            <span class="badge bg-brand-cream text-brand-slate text-[10px] shrink-0">Tetap</span>
                                         @endif
                                     </div>
                                     <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[0.75rem] pt-2 border-t border-black/[0.04]">

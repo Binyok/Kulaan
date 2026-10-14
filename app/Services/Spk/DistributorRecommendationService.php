@@ -17,8 +17,12 @@ class DistributorRecommendationService
     ) {}
 
     /**
-     * Select the best distributor for a completed matching group using AHP + TOPSIS.
+     * Build SPK recommendation (advisory-only) for a completed matching group using AHP + TOPSIS.
      * SAW is run as a supporting calculation for reference.
+     *
+     * Side-effect free regarding distributor selection: this method MUST NOT update
+     * selected_distributor_id / agreed_unit_price on the group. Distributor choice
+     * belongs to UMKM (see CollectiveOrderService). Only history is persisted.
      *
      * Criteria: [Harga, Kualitas, Waktu Pengiriman, Jarak, MOQ]
      */
@@ -43,32 +47,15 @@ class DistributorRecommendationService
             ];
         }
 
-        $alternatives = [];
-        foreach ($supplierProducts as $sp) {
-            $unitPrice = $sp->getPriceForQuantity((float) $group->total_quantity);
-            $distanceKm = $this->calculateGroupDistance($sp->distributor, $group);
+        $alternatives = $this->buildAlternativesFromSupplierProducts(
+            $supplierProducts,
+            (float) $group->total_quantity,
+            fn (Distributor $distributor): float => $this->calculateGroupDistance($distributor, $group)
+        );
 
-            $alternatives[] = [
-                'id' => $sp->distributor->id,
-                'name' => $sp->distributor->company_name,
-                'supplier_product_id' => $sp->id,
-                'criteria_values' => [
-                    $unitPrice,                                     // C1: Harga (cost - lower is better)
-                    $sp->distributor->rating,                       // C2: Kualitas/Rating (benefit)
-                    1 / (1 + (int) $sp->distributor->delivery_lead_time_days), // C3: Waktu (inverted, benefit)
-                    $distanceKm,                                    // C4: Jarak Haversine ke UMKM (km, cost - lower is better)
-                    $sp->moq,                                       // C5: MOQ (cost - lower is better)
-                ],
-            ];
-        }
+        [$topsisRankings, $sawRankings] = $this->runRankings($alternatives, $weights, $criteriaTypes);
 
-        // TOPSIS Ranking
-        $topsisRankings = $this->topsisService->calculate($alternatives, $weights, $criteriaTypes);
-
-        // SAW Ranking (supporting calculation)
-        $sawRankings = $this->sawService->calculate($alternatives, $weights, $criteriaTypes);
-
-        // Save calculation history
+        // Save calculation history (advisory record only)
         $history = SpkCalculationHistory::create([
             'matching_group_id' => $group->id,
             'method' => 'AHP_TOPSIS',
@@ -80,20 +67,7 @@ class DistributorRecommendationService
             ],
         ]);
 
-        // Apply selected distributor to matching group
         $bestDistributor = $topsisRankings[0] ?? null;
-        if ($bestDistributor) {
-            $bestSP = SupplierProduct::with('priceTiers')->where('distributor_id', $bestDistributor['id'])
-                ->where('product_id', $group->product_id)
-                ->first();
-
-            $agreedPrice = $bestSP ? $bestSP->getPriceForQuantity((float) $group->total_quantity) : 0;
-
-            $group->update([
-                'selected_distributor_id' => $bestDistributor['id'],
-                'agreed_unit_price' => $agreedPrice,
-            ]);
-        }
 
         return [
             'success' => true,
@@ -104,6 +78,99 @@ class DistributorRecommendationService
             'selected_distributor' => $bestDistributor,
             'history_id' => $history->id,
         ];
+    }
+
+    /**
+     * Rank distributors for the marketplace catalog (advisory-only).
+     * Side-effect free: no group update, no history persisted.
+     */
+    public function rankDistributorsForCatalog(int $productId, float $quantity, ?float $lat, ?float $lng): array
+    {
+        $weights = $this->loadActiveWeights();
+        $criteriaTypes = ['cost', 'benefit', 'benefit', 'cost', 'cost'];
+
+        $supplierProducts = SupplierProduct::with(['distributor', 'priceTiers'])
+            ->where('product_id', $productId)
+            ->where('is_available', true)
+            ->where('moq', '<=', $quantity)
+            ->get();
+
+        if ($supplierProducts->isEmpty()) {
+            return [
+                'topsis_rankings' => [],
+                'saw_rankings' => [],
+                'weights' => $weights,
+            ];
+        }
+
+        $alternatives = $this->buildAlternativesFromSupplierProducts(
+            $supplierProducts,
+            $quantity,
+            function (Distributor $distributor) use ($lat, $lng): float {
+                if ($lat === null || $lng === null) {
+                    return 5.0;
+                }
+
+                if ($distributor->latitude === null || $distributor->longitude === null) {
+                    return 5.0;
+                }
+
+                return round($this->calculateHaversineDistance(
+                    (float) $distributor->latitude,
+                    (float) $distributor->longitude,
+                    (float) $lat,
+                    (float) $lng
+                ), 2);
+            }
+        );
+
+        [$topsisRankings, $sawRankings] = $this->runRankings($alternatives, $weights, $criteriaTypes);
+
+        return [
+            'topsis_rankings' => $topsisRankings,
+            'saw_rankings' => $sawRankings,
+            'weights' => $weights,
+        ];
+    }
+
+    /**
+     * Build SPK alternatives from supplier products with identical criteria definition.
+     *
+     * @param  iterable<int, SupplierProduct>  $supplierProducts
+     */
+    private function buildAlternativesFromSupplierProducts(iterable $supplierProducts, float $quantity, callable $resolveDistanceKm): array
+    {
+        $alternatives = [];
+        foreach ($supplierProducts as $sp) {
+            $unitPrice = $sp->getPriceForQuantity($quantity);
+            $distanceKm = $resolveDistanceKm($sp->distributor);
+
+            $alternatives[] = [
+                'id' => $sp->distributor->id,
+                'name' => $sp->distributor->company_name,
+                'supplier_product_id' => $sp->id,
+                'criteria_values' => [
+                    $unitPrice,                                     // C1: Harga (cost - lower is better)
+                    $sp->distributor->rating,                       // C2: Kualitas/Rating (benefit)
+                    1 / (1 + (int) $sp->distributor->delivery_lead_time_days), // C3: Waktu (inverted, benefit)
+                    $distanceKm,                                    // C4: Jarak Haversine (km, cost - lower is better)
+                    $sp->moq,                                       // C5: MOQ (cost - lower is better)
+                ],
+            ];
+        }
+
+        return $alternatives;
+    }
+
+    /**
+     * Run TOPSIS + SAW rankings with identical inputs.
+     */
+    private function runRankings(array $alternatives, array $weights, array $criteriaTypes): array
+    {
+        $topsisRankings = $this->topsisService->calculate($alternatives, $weights, $criteriaTypes);
+        $sawRankings = $this->sawService->calculate($alternatives, $weights, $criteriaTypes);
+
+        return [$topsisRankings, $sawRankings];
     }
 
     /**

@@ -16,6 +16,7 @@ use App\Http\Controllers\Distributor\SupplierProductController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Umkm\CatalogController;
 use App\Http\Controllers\Umkm\OrderController;
 use App\Http\Controllers\Umkm\PurchaseRequestController;
 use App\Http\Controllers\Umkm\TrackingController;
@@ -60,6 +61,9 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
 
     // UMKM Routes
     Route::middleware('role:umkm')->prefix('umkm')->name('umkm.')->group(function () {
+        Route::get('catalog', [CatalogController::class, 'index'])->name('catalog.index');
+        Route::get('catalog/{product}', [CatalogController::class, 'show'])->name('catalog.show');
+
         Route::get('requests', [PurchaseRequestController::class, 'index'])->name('requests.index');
         Route::post('requests', [PurchaseRequestController::class, 'store'])->name('requests.store');
         Route::post('requests/{purchaseRequest}/cancel', [PurchaseRequestController::class, 'cancel'])->name('requests.cancel');

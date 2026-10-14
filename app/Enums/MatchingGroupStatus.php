@@ -22,10 +22,10 @@ enum MatchingGroupStatus: string
     public function badgeClass(): string
     {
         return match ($this) {
-            self::MATCHING => 'bg-[#FEF9E7] text-[#D4A017]',
-            self::COMPLETED => 'bg-[#E8F5E9] text-[#16A34A]',
-            self::EXPIRED_FALLBACK => 'bg-amber-100 text-amber-800',
-            self::ORDERED => 'bg-emerald-100 text-emerald-800',
+            self::MATCHING => 'bg-brand-ochre-soft text-brand-brass',
+            self::COMPLETED => 'bg-brand-mint text-brand-emerald',
+            self::EXPIRED_FALLBACK => 'bg-brand-ochre-soft text-brand-brass',
+            self::ORDERED => 'bg-brand-mint text-brand-emerald',
         };
     }
 }

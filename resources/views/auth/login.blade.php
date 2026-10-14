@@ -13,7 +13,7 @@
     @endif
 
     @if (session('error'))
-        <div class="mb-5 text-[0.8125rem] font-medium text-brand-brick bg-red-50 p-3.5 rounded-xl border border-brand-brick/20" role="alert">
+        <div class="mb-5 text-[0.8125rem] font-medium text-brand-brick bg-brand-brick/10 p-3.5 rounded-xl border border-brand-brick/20" role="alert">
             {{ session('error') }}
         </div>
     @endif

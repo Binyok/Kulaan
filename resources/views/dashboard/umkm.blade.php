@@ -18,8 +18,8 @@
                             Ajukan kebutuhan, gabung kuota grosir, dan pantau semuanya dari sini.
                         </p>
                     </div>
-                    <a href="{{ route('umkm.requests.index') }}" class="btn-accent text-sm py-3.5 px-7 justify-center shadow-lg shadow-black/20 shrink-0 w-full lg:w-auto">
-                        Ajukan Kebutuhan Baru
+                    <a href="{{ route('umkm.catalog.index') }}" class="btn-accent text-sm py-3.5 px-7 justify-center shadow-lg shadow-black/20 shrink-0 w-full lg:w-auto">
+                        Pilih di Katalog
                     </a>
                 </div>
             </div>
@@ -39,7 +39,7 @@
                 </div>
             </div>
             <div class="p-5 sm:p-6 flex items-center gap-4 border-b sm:border-b-0 border-brand-line/60">
-                <span class="w-11 h-11 rounded-full {{ $unpaidInvoices->count() > 0 ? 'bg-red-50 text-brand-brick' : 'bg-brand-mint text-brand-primary' }} flex items-center justify-center shrink-0">
+                <span class="w-11 h-11 rounded-full {{ $unpaidInvoices->count() > 0 ? 'bg-brand-brick/10 text-brand-brick' : 'bg-brand-mint text-brand-primary' }} flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4m0 5v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5m18 0H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
                 <div class="min-w-0">
@@ -125,12 +125,12 @@
                         <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wide">Jalur pembelian cepat</h2>
                         <p class="text-[0.75rem] text-brand-slate mt-1">Kuota kolektif belum tercapai sebelum tenggat. Ajukan ulang dengan deadline baru biar kembali di-matching.</p>
                     </div>
-                    <a href="{{ route('umkm.requests.index') }}" class="btn-ghost text-xs py-2 px-4 font-bold shrink-0 self-start sm:self-auto">Ajukan Ulang</a>
+                    <a href="{{ route('umkm.catalog.index') }}" class="btn-ghost text-xs py-2 px-4 font-bold shrink-0 self-start sm:self-auto">Ajukan Ulang via Katalog</a>
                 </div>
                 <div class="divide-y divide-black/[0.05]">
                     @foreach ($fallbackRequests as $request)
                         <div class="py-3.5 flex items-center gap-4">
-                            <span class="w-10 h-10 rounded-full bg-red-50 text-brand-brick flex items-center justify-center shrink-0">
+                            <span class="w-10 h-10 rounded-full bg-brand-brick/10 text-brand-brick flex items-center justify-center shrink-0">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                             </span>
                             <div class="min-w-0 flex-1">
@@ -190,8 +190,8 @@
                         <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </span>
                     <p class="font-bold text-brand-dark mt-4">Belum ada riwayat pesanan kolektif.</p>
-                    <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Ajukan kebutuhan pertamamu dan hemat bareng UMKM lain.</p>
-                    <a href="{{ route('umkm.requests.index') }}" class="btn-primary text-xs mt-5">Ajukan Kebutuhan Pertama</a>
+                    <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Pilih distributor di katalog dan hemat bareng UMKM lain.</p>
+                    <a href="{{ route('umkm.catalog.index') }}" class="btn-primary text-xs mt-5">Buka Katalog</a>
                 </div>
             @endif
         </section>

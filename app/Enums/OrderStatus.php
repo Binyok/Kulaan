@@ -38,12 +38,12 @@ enum OrderStatus: string
     public function badgeClass(): string
     {
         return match ($this) {
-            self::CREATED, self::WAITING_PAYMENT => 'bg-[#FEF9E7] text-[#D4A017]',
-            self::PAID, self::CONFIRMED => 'bg-[#E8F5E9] text-[#16A34A]',
-            self::PREPARING, self::READY_TO_SHIP => 'bg-blue-50 text-blue-700',
-            self::ASSIGNED_TO_COURIER, self::IN_TRANSIT => 'bg-indigo-50 text-indigo-700',
-            self::DELIVERED, self::COMPLETED => 'bg-[#2D6A4F] text-white',
-            self::CANCELLED, self::EXPIRED => 'bg-red-50 text-[#C0392B]',
+            self::CREATED, self::WAITING_PAYMENT => 'bg-brand-ochre-soft text-brand-brass',
+            self::PAID, self::CONFIRMED => 'bg-brand-mint text-brand-emerald',
+            self::PREPARING, self::READY_TO_SHIP => 'bg-brand-primary/10 text-brand-primary',
+            self::ASSIGNED_TO_COURIER, self::IN_TRANSIT => 'bg-brand-accent/15 text-brand-brass',
+            self::DELIVERED, self::COMPLETED => 'bg-brand-primary text-white',
+            self::CANCELLED, self::EXPIRED => 'bg-brand-brick/10 text-brand-brick',
         };
     }
 }

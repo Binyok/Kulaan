@@ -34,12 +34,72 @@ Platform **Smart Collective Procurement** yang menghubungkan UMKM dengan distrib
 5. **Realtime GPS Tracking & Maps:**
    - Peta interaktif Leaflet.js (OpenStreetMap).
    - Pengiriman lokasi GPS realtime oleh kurir armada saat pengiriman berjalan.
+   - Riwayat pengiriman dengan filter status (berjalan/selesai) dan pencarian nomor, distributor, tanggal.
+
+6. **Usulan Produk Custom:**
+   - Distributor dapat mengusulkan produk di luar katalog master.
+   - Admin mereview (setujui/tolak beralasan); produk yang disetujui otomatis masuk katalog master beserta listing pengusul.
+
+7. **Wilayah Dinamis (Sidoarjo & Nasional):**
+   - Pilih provinsi → kota/kabupaten → kecamatan → desa bertingkat via API wilayah Indonesia, default Jawa Timur – Sidoarjo.
+   - Tersimpan di profil UMKM/distributor dan dipakai sebagai area pengiriman pengajuan.
+
+---
+
+## 🔄 Alur Sistem End-to-End
+
+1. **UMKM mengajukan kebutuhan** (`umkm/requests`): pilih produk, kuantitas, deadline, area pengiriman.
+2. **Auto-matching** (`MatchingEngineService::processMatchingForProduct`): permintaan seproduk dengan total kuantitas ≥ MOQ terkecil digabung jadi satu grup (`matching_groups` + `matching_members`).
+3. **SPK memilih distributor** (`DistributorRecommendationService::recommendDistributor`): AHP + TOPSIS (+ SAW sebagai validasi silang) → distributor terbaik dicatat di grup + riwayat `spk_calculation_histories`.
+4. **Order kolektif dibuat** (`CollectiveOrderService::createOrderFromMatchingGroup`): satu order + invoice individual per UMKM.
+5. **UMKM membayar** via QRIS/VA (Midtrans, webhook HMAC SHA512) → item Lunas; kalau semua lunas, order jadi PAID.
+6. **Distributor memproses**: PAID → CONFIRMED → PREPARING → READY_TO_SHIP (transisi dikunci, tak bisa loncat/mundur), lalu assign kurir → shipment PENDING.
+7. **Kurir mengantar**: start → IN_TRANSIT (GPS realtime tiap detik) → complete → DELIVERED + order COMPLETED.
+8. **UMKM memberi ulasan** (hanya setelah DELIVERED/COMPLETED): rating merata-rata otomatis memperbaiki reputasi distributor.
+
+Peran lain: **admin** mengelola kategori, katalog master, kriteria SPK (bobot AHP + uji sensitivitas + ekspor PDF), dan moderasi usulan produk. **Kurir** hanya melihat tugasnya sendiri.
+
+---
+
+## 🧮 SPK di Dalam Kode
+
+| Metode | File | Peran |
+| :--- | :--- | :--- |
+| AHP (bobot + uji konsistensi CR) | `app/Services/Spk/AhpService.php` | Hitung bobot dari matriks pairwise; dipakai `SpkCriteriaController` (halaman `/admin/spk`) dan sebagai bobot aktif rekomendasi |
+| Jarak Haversine | `DistributorRecommendationService::calculateHaversineDistance()` | Kriteria C4: jarak distributor → rata-rata titik UMKM grup |
+| TOPSIS (rekomendasi utama) | `app/Services/Spk/TopsisService.php` | Ranking alternatif vs solusi ideal positif/negatif |
+| SAW (validasi silang) | `app/Services/Spk/SawService.php` | Ranking pembanding tiap kalkulasi |
+| Orkestrasi + riwayat | `app/Services/Spk/DistributorRecommendationService.php` | Susun matriks keputusan, jalankan TOPSIS+SAW, simpan `spk_calculation_histories`, tetapkan pemenang ke grup |
+| Uji sensitivitas | `SpkCriteriaController@sensitivity` (halaman `/admin/spk/sensitivity`) | Hitung ulang ranking dengan skenario bobot (fokus biaya/kualitas/jarak/bobot rata) untuk menguji stabilitas pemenang |
+
+Lima kriteria default: C1 Harga (cost), C2 Kualitas rating (benefit), C3 Waktu kirim (benefit, diinvers), C4 Jarak (cost), C5 MOQ (cost).
+
+---
+
+## 🔒 Jaminan ACID (Transaksi Database)
+
+Setiap alur yang menulis ke ≥2 tabel dibungkus `DB::transaction()` sehingga gagal di tengah = rollback total, tidak ada data setengah jalan:
+
+| Alur | Lokasi |
+| :--- | :--- |
+| Webhook Midtrans (payment + item + order + event) | `MidtransService::handleWebhookNotification()` |
+| Pembuatan Snap payment | `MidtransService::createSnapPayment()` |
+| Pembuatan order kolektif | `CollectiveOrderService::createOrderFromMatchingGroup()` |
+| Pembentukan grup matching | `MatchingEngineService::processMatchingForProduct()` |
+| Registrasi + Google OAuth | `RegisteredUserController@store`, `GoogleController` |
+| Kurir mulai antar (shipment + order) | `CourierShipmentController@startDelivery()` |
+| Kurir posting GPS (titik + posisi kurir) | `CourierShipmentController@postGpsLocation()` |
+| Kurir selesai antar (shipment + order) | `CourierShipmentController@completeDelivery()` |
+| Assign kurir (shipment + order) | `OrderManagementController@assignCourier()` |
+| Kadaluarsa order terpusat | `ExpireOrdersCommand` |
+| Simpan tier harga (hapus + tulis ulang) | `SupplierProductController@updateTiers()` |
+| Approve usulan produk (master + listing) | `ProductProposalController@approve()` |
 
 ---
 
 ## 🛠️ Stack Teknologi
 
-- **Backend:** Laravel 12 (PHP 8.3)
+- **Backend:** Laravel 13 (PHP 8.3)
 - **Database:** MySQL (`kulaan_db`)
 - **Frontend:** Blade, Tailwind CSS v4, Alpine.js, Leaflet.js
 - **Payment Gateway:** Midtrans (Sandbox & Webhook Validation)
@@ -58,7 +118,7 @@ Platform **Smart Collective Procurement** yang menghubungkan UMKM dengan distrib
 ### 2. Langkah Instalasi
 ```bash
 # Clone repository & masuk ke direktori
-git clone <repository-url>
+git clone https://github.com/Binyok/Kulaan.git
 cd Kulaan
 
 # Install dependensi PHP & JavaScript
@@ -105,11 +165,12 @@ Total 10 akun dari `RoleAndUserSeeder`. Semua akun menggunakan kata sandi: `pass
 ## 🧪 Menjalankan Pengujian (Testing)
 
 ```bash
-# Menjalankan seluruh unit & feature test suite
+# Menjalankan seluruh unit & feature test suite (85 test:
+# fungsional, SPK, keamanan webhook, otorisasi, dan regresi UI)
 php artisan test
 ```
 
 ---
 
 ## 📜 Lisensi & Hak Cipta
-Hak Cipta &copy; {{ date('Y') }} Kula'an. Platform Smart Collective Procurement untuk UMKM.
+Hak Cipta &copy; 2026 Kula'an. Platform Smart Collective Procurement untuk UMKM.

@@ -29,7 +29,7 @@
 
             const destIcon = L.divIcon({
                 className: 'custom-dest-pin',
-                html: `<div class='w-10 h-10 rounded-full bg-[#D4A017] text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-sm ring-4 ring-[#D4A017]/20'>T</div>`,
+                html: `<div class='w-10 h-10 rounded-full bg-brand-accent text-white border-2 border-white shadow-xl flex items-center justify-center font-bold text-sm ring-4 ring-brand-accent/20'>T</div>`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20]
             });

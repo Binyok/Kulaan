@@ -22,49 +22,71 @@ class MatchingEngineService
 
     /**
      * Process auto-matching for pending purchase requests of a given product.
-     * Automatically aggregates compatible requests, evaluates MOQ, and generates collective orders.
+     * All requests must carry preferred_distributor_id (chosen via catalog).
+     * Requests are grouped per distributor; requests without a choice are
+     * skipped and will expire to the fast-purchase fallback path.
      */
     public function processMatchingForProduct(int $productId): array
     {
         $product = Product::findOrFail($productId);
 
-        // Minimum MOQ across suppliers offering this product
-        $minMoq = SupplierProduct::where('product_id', $productId)
-            ->where('is_available', true)
-            ->min('moq') ?? 10.0;
+        $pendingRequests = PurchaseRequest::where('product_id', $productId)
+            ->where('status', PurchaseRequestStatus::PENDING_MATCH->value)
+            ->where('deadline', '>', now())
+            ->whereNotNull('preferred_distributor_id')
+            ->get();
 
-        // Group pending requests across city / delivery area
-        // Allows matching across all Banjarmasin sub-districts within distribution radius
+        // Kelompokkan per distributor pilihan UMKM (jalur auto sudah dimatikan).
+        $grouped = $pendingRequests->groupBy(fn ($r) => $r->preferred_distributor_id);
+
         $createdGroups = [];
 
-        $createdGroup = DB::transaction(function () use ($productId, $minMoq, $product) {
-            // Lock all active pending requests for this product that haven't expired
-            $pendingRequests = PurchaseRequest::where('product_id', $productId)
-                ->where('status', PurchaseRequestStatus::PENDING_MATCH->value)
-                ->where('deadline', '>', now())
-                ->lockForUpdate()
-                ->get();
+        foreach ($grouped as $key => $requests) {
+            // Distributor sudah dipilih UMKM via katalog:
+            $sp = SupplierProduct::where('distributor_id', $key)
+                ->where('product_id', $productId)
+                ->where('is_available', true)
+                ->first();
+            if (! $sp) {
+                continue; // safety net; seharusnya tidak terjadi karena validasi saat pengajuan
+            }
+            $minMoq = (float) $sp->moq;
+            $distributorId = (int) $key;
 
-            $totalQuantity = (float) $pendingRequests->sum('quantity');
+            $totalQuantity = (float) $requests->sum('quantity');
+            if ($requests->isEmpty() || $totalQuantity < $minMoq) {
+                continue;
+            }
 
-            // Check if total aggregated quantity meets or exceeds target MOQ
-            if ($totalQuantity >= $minMoq && $pendingRequests->count() > 0) {
-                // Determine primary district from majority or first request
-                $primaryDistrict = $pendingRequests->first()->delivery_district ?? 'Banjarmasin';
+            $createdGroup = DB::transaction(function () use ($productId, $product, $requests, $minMoq, $distributorId) {
+                // Lock UDAH di dalam transaksi (jangan lock di luar transaksi):
+                $locked = PurchaseRequest::whereIn('id', $requests->pluck('id'))
+                    ->where('status', PurchaseRequestStatus::PENDING_MATCH->value)
+                    ->lockForUpdate()
+                    ->get();
+                if ($locked->isEmpty()) {
+                    return null;
+                }
+                // Hitung ulang total setelah lock (data bisa berubah antar proses):
+                $totalQuantity = (float) $locked->sum('quantity');
+                if ($totalQuantity < $minMoq) {
+                    return null;
+                }
 
                 $matchingGroup = MatchingGroup::create([
                     'group_code' => 'GRP-'.strtoupper(Str::random(8)),
                     'product_id' => $productId,
-                    'district' => $primaryDistrict,
+                    'district' => $locked->first()->delivery_district ?? 'Banjarmasin',
                     'total_quantity' => $totalQuantity,
                     'target_moq' => $minMoq,
                     'status' => MatchingGroupStatus::COMPLETED->value,
                     'matched_at' => now(),
+                    'selected_distributor_id' => $distributorId, // null untuk jalur 'auto'
                 ]);
 
                 $benchmarkPrice = $product->benchmark_retail_price > 0 ? (float) $product->benchmark_retail_price : 9000.0;
 
-                foreach ($pendingRequests as $req) {
+                foreach ($locked as $req) {
                     $req->update([
                         'status' => PurchaseRequestStatus::MATCHED->value,
                         'matching_group_id' => $matchingGroup->id,
@@ -91,13 +113,11 @@ class MatchingEngineService
                 }
 
                 return $matchingGroup;
+            });
+
+            if ($createdGroup) {
+                $createdGroups[] = $createdGroup;
             }
-
-            return null;
-        });
-
-        if ($createdGroup) {
-            $createdGroups[] = $createdGroup;
         }
 
         return [

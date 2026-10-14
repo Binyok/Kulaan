@@ -24,11 +24,11 @@ enum PurchaseRequestStatus: string
     public function badgeClass(): string
     {
         return match ($this) {
-            self::PENDING_MATCH => 'bg-[#FEF9E7] text-[#D4A017]',
-            self::MATCHED => 'bg-[#E8F5E9] text-[#16A34A]',
-            self::FAILED_MATCH_FALLBACK => 'bg-amber-100 text-amber-800',
-            self::CANCELLED => 'bg-red-50 text-[#C0392B]',
-            self::ORDERED => 'bg-emerald-100 text-emerald-800',
+            self::PENDING_MATCH => 'bg-brand-ochre-soft text-brand-brass',
+            self::MATCHED => 'bg-brand-mint text-brand-emerald',
+            self::FAILED_MATCH_FALLBACK => 'bg-brand-ochre-soft text-brand-brass',
+            self::CANCELLED => 'bg-brand-brick/10 text-brand-brick',
+            self::ORDERED => 'bg-brand-mint text-brand-emerald',
         };
     }
 }
