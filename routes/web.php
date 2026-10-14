@@ -76,6 +76,8 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::get('requests', [PurchaseRequestController::class, 'index'])->name('requests.index');
         Route::post('requests', [PurchaseRequestController::class, 'store'])->name('requests.store');
         Route::post('requests/{purchaseRequest}/cancel', [PurchaseRequestController::class, 'cancel'])->name('requests.cancel');
+        Route::post('requests/{purchaseRequest}/direct-buy', [PurchaseRequestController::class, 'directBuy'])->name('requests.direct-buy');
+        Route::post('requests/{purchaseRequest}/retry-matching', [PurchaseRequestController::class, 'retryMatching'])->name('requests.retry-matching');
 
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
         Route::post('orders/{orderItem}/review', [OrderController::class, 'storeReview'])->name('orders.review');

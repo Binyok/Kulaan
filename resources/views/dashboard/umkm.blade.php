@@ -117,27 +117,48 @@
             </section>
         @endif
 
-        {{-- Fallback requests --}}
         @if ($fallbackRequests->isNotEmpty())
-            <section class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-7" data-reveal>
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+            <section class="bg-white rounded-[20px] border border-brand-accent/30 p-5 sm:p-7" data-reveal>
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="w-8 h-8 rounded-lg bg-brand-ochre-soft text-brand-brass flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
                     <div>
-                        <h2 class="text-sm font-bold text-brand-dark uppercase tracking-wide">Jalur pembelian cepat</h2>
-                        <p class="text-[0.75rem] text-brand-slate mt-1">Kuota kolektif belum tercapai sebelum tenggat. Ajukan ulang dengan deadline baru biar kembali di-matching.</p>
+                        <h2 class="text-sm font-bold text-brand-dark">Perlu tindakanmu</h2>
+                        <p class="text-[0.6875rem] text-brand-slate">Kuota urunan belum terkumpul sebelum tenggat — pilih langkah selanjutnya.</p>
                     </div>
-                    <a href="{{ route('umkm.catalog.index') }}" class="btn-ghost text-xs py-2 px-4 font-bold shrink-0 self-start sm:self-auto">Ajukan Ulang via Katalog</a>
                 </div>
-                <div class="divide-y divide-black/[0.05]">
+                <div class="space-y-3">
                     @foreach ($fallbackRequests as $request)
-                        <div class="py-3.5 flex items-center gap-4">
-                            <span class="w-10 h-10 rounded-full bg-brand-brick/10 text-brand-brick flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="font-bold text-brand-dark text-sm">{{ $request->product?->name ?? 'Produk' }}</p>
-                                <p class="text-[0.6875rem] text-brand-slate mt-0.5">{{ number_format((float) $request->quantity, 0) }} {{ $request->unit }} &bull; Tenggat {{ $request->deadline?->format('d M Y, H:i') }}</p>
+                        <div class="p-4 rounded-xl bg-brand-ochre-soft border border-brand-accent/20">
+                            <div class="flex items-start justify-between gap-3 flex-wrap">
+                                <div>
+                                    <p class="font-bold text-brand-dark text-sm">{{ $request->product?->name ?? 'Produk' }}</p>
+                                    <p class="text-[0.6875rem] text-brand-slate mt-0.5">
+                                        {{ number_format((float) $request->quantity, 0) }} {{ $request->unit }}
+                                        &bull; ke <strong>{{ $request->preferredDistributor?->company_name ?? '-' }}</strong>
+                                        &bull; Tenggat {{ $request->deadline?->format('d M, H:i') }}
+                                    </p>
+                                </div>
+                                <span class="badge {{ $request->status->badgeClass() }} shrink-0">{{ $request->status->label() }}</span>
                             </div>
-                            <span class="badge {{ $request->status->badgeClass() }} shrink-0">{{ $request->status->label() }}</span>
+                            <div class="flex items-center gap-2 mt-3 flex-wrap">
+                                <form method="POST" action="{{ route('umkm.requests.direct-buy', $request) }}">
+                                    @csrf
+                                    <button type="submit" class="px-3.5 py-2 rounded-lg bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition-colors">
+                                        Bayar Langsung &rarr;
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('umkm.requests.retry-matching', $request) }}">
+                                    @csrf
+                                    <button type="submit" class="px-3.5 py-2 rounded-lg bg-white hover:bg-black/[0.03] text-brand-dark border border-brand-line text-xs font-bold transition-colors">
+                                        Ulangi Matching
+                                    </button>
+                                </form>
+                                <span class="text-[0.625rem] text-brand-slate ml-auto">
+                                    Bayar langsung = harga eceran (qty kamu sendiri)
+                                </span>
+                            </div>
                         </div>
                     @endforeach
                 </div>

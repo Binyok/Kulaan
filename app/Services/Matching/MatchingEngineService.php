@@ -142,10 +142,12 @@ class MatchingEngineService
                 'status' => PurchaseRequestStatus::FAILED_MATCH_FALLBACK->value,
             ]);
 
+            $productName = $req->product?->name ?? 'Bahan baku';
+            $qty = number_format((float) $req->quantity, 0).' '.$req->unit;
+
             $req->umkm?->user?->notify(new KulaanNotification(
-                title: 'Kebutuhan melewati tenggat matching',
-                message: 'Pengajuan '.$req->product?->name.' ('.number_format((float) $req->quantity, 0).' '.$req->unit.
-                    ') tidak terkumpul sebelum deadline. Pengajuan dipindahkan ke jalur pembelian cepat — Anda bisa mengajukan ulang dengan deadline baru.',
+                title: 'Kuota belum terkumpul — tentukan pilihanmu',
+                message: "Pengajuan {$productName} ({$qty}) belum mencapai kuota grup sebelum batas waktu. Anda bisa bayar langsung dengan harga eceran atau perpanjang waktu pencarian grup.",
                 actionUrl: route('umkm.requests.index'),
                 type: 'warning',
             ));

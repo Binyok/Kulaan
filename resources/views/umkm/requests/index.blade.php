@@ -71,6 +71,29 @@
                                         </form>
                                     @endif
                                 </div>
+
+                                @if ($req->status->value === 'FAILED_MATCH_FALLBACK')
+                                    <div class="mt-3 p-3.5 rounded-xl bg-brand-ochre-soft border border-brand-accent/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                        <div>
+                                            <p class="text-xs font-bold text-brand-dark">Kuota urunan belum terkumpul sebelum tenggat</p>
+                                            <p class="text-[0.6875rem] text-brand-slate mt-0.5">Pilih: lanjutkan bayar langsung dengan harga eceran atau perpanjang pencarian pasangan grup.</p>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                                            <form method="POST" action="{{ route('umkm.requests.direct-buy', $req) }}" class="flex-1 sm:flex-initial">
+                                                @csrf
+                                                <button type="submit" class="w-full sm:w-auto px-3.5 py-2 rounded-lg bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition-colors">
+                                                    Bayar Langsung &rarr;
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('umkm.requests.retry-matching', $req) }}" class="flex-1 sm:flex-initial">
+                                                @csrf
+                                                <button type="submit" class="w-full sm:w-auto px-3.5 py-2 rounded-lg bg-white hover:bg-black/[0.04] text-brand-dark border border-brand-line text-xs font-bold transition-colors">
+                                                    Ulangi Matching
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     @endforeach
