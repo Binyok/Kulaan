@@ -13,7 +13,7 @@ use Illuminate\View\View;
 
 class CatalogController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, DistributorRecommendationService $recommendationService): View
     {
         $umkm = $request->user()->umkm;
         if (! $umkm) {
@@ -22,14 +22,41 @@ class CatalogController extends Controller
 
         $search = trim((string) $request->query('q', ''));
 
-        $products = Product::with(['category', 'supplierProducts'])
+        $products = Product::with(['category', 'supplierProducts.distributor', 'supplierProducts.priceTiers'])
             ->where('is_active', true)
             ->when($search !== '', fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
             ->orderBy('name')
             ->paginate(12)
             ->withQueryString();
 
-        return view('umkm.catalog.index', compact('products', 'umkm', 'search'));
+        $topRatingByProduct = [];
+        foreach ($products as $prod) {
+            $available = $prod->supplierProducts->where('is_available', true);
+            if ($available->isEmpty()) {
+                continue;
+            }
+            $ranking = $recommendationService->rankDistributorsForCatalog(
+                $prod->id,
+                10.0,
+                $umkm->latitude !== null ? (float) $umkm->latitude : null,
+                $umkm->longitude !== null ? (float) $umkm->longitude : null
+            );
+            $top = $ranking['topsis_rankings'][0] ?? null;
+            if ($top) {
+                $topRatingByProduct[$prod->id] = [
+                    'rating' => null,
+                    'name' => $top['name'] ?? '',
+                ];
+                foreach ($available as $sp) {
+                    if ($sp->distributor && $sp->distributor->id === ($top['id'] ?? null)) {
+                        $topRatingByProduct[$prod->id]['rating'] = (float) $sp->distributor->rating;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return view('umkm.catalog.index', compact('products', 'umkm', 'search', 'topRatingByProduct'));
     }
 
     public function show(Request $request, Product $product, DistributorRecommendationService $recommendationService): View

@@ -16,6 +16,7 @@ use App\Http\Controllers\Distributor\SupplierProductController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Umkm\CartController;
 use App\Http\Controllers\Umkm\CatalogController;
 use App\Http\Controllers\Umkm\OrderController;
 use App\Http\Controllers\Umkm\PurchaseRequestController;
@@ -63,6 +64,14 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::middleware('role:umkm')->prefix('umkm')->name('umkm.')->group(function () {
         Route::get('catalog', [CatalogController::class, 'index'])->name('catalog.index');
         Route::get('catalog/{product}', [CatalogController::class, 'show'])->name('catalog.show');
+
+        // Marketplace Cart Routes
+        Route::get('keranjang', [CartController::class, 'index'])->name('cart.index');
+        Route::post('keranjang/add', [CartController::class, 'add'])->name('cart.add');
+        Route::post('keranjang/buy-now', [CartController::class, 'buyNow'])->name('cart.buy-now');
+        Route::post('keranjang/update', [CartController::class, 'updateItem'])->name('cart.update');
+        Route::post('keranjang/remove', [CartController::class, 'removeItem'])->name('cart.remove');
+        Route::post('keranjang/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 
         Route::get('requests', [PurchaseRequestController::class, 'index'])->name('requests.index');
         Route::post('requests', [PurchaseRequestController::class, 'store'])->name('requests.store');

@@ -33,6 +33,12 @@ class DistributorOffersProduct implements ValidationRule
 
         if ((float) $this->quantity < (float) $sp->moq) {
             $fail('Jumlah pembelian ('.$this->quantity.') di bawah MOQ distributor ini ('.$sp->moq.').');
+
+            return;
+        }
+
+        if ($sp->stock_available !== null && (float) $this->quantity > (float) $sp->stock_available) {
+            $fail('Jumlah pembelian ('.$this->quantity.') melebihi stok tersedia distributor ('.$sp->stock_available.').');
         }
     }
 }

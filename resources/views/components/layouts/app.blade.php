@@ -33,6 +33,16 @@
                                class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.catalog*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
                                 Katalog
                             </a>
+                            <a href="{{ route('umkm.cart.index') }}"
+                               class="px-3 min-h-11 inline-flex items-center gap-1.5 rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.cart*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
+                                <span>Keranjang</span>
+                                @php $cartCount = app(\App\Services\CartService::class)->count(); @endphp
+                                @if ($cartCount > 0)
+                                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[0.625rem] font-extrabold rounded-full bg-brand-primary text-white tabular-nums">
+                                        {{ $cartCount }}
+                                    </span>
+                                @endif
+                            </a>
                             <a href="{{ route('umkm.requests.index') }}"
                                class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.requests*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
                                 Pengajuan Saya
@@ -169,6 +179,16 @@
                 <a href="{{ route('umkm.catalog.index') }}"
                    class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('umkm.catalog*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
                     Katalog
+                </a>
+                <a href="{{ route('umkm.cart.index') }}"
+                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors relative {{ request()->routeIs('umkm.cart*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
+                    Keranjang
+                    @php $cartCount = app(\App\Services\CartService::class)->count(); @endphp
+                    @if ($cartCount > 0)
+                        <span class="absolute top-0.5 right-1 inline-flex items-center justify-center min-w-4 h-4 px-1 text-[0.5625rem] font-bold rounded-full bg-brand-accent text-brand-dark tabular-nums">
+                            {{ $cartCount }}
+                        </span>
+                    @endif
                 </a>
                 <a href="{{ route('umkm.requests.index') }}"
                    class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('umkm.requests*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">

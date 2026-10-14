@@ -5,7 +5,7 @@
         <div class="texture-grain bg-brand-forest text-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
                 <div class="max-w-2xl" data-reveal>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/10 text-[#D8E8DD] uppercase tracking-[0.14em">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/10 text-[#D8E8DD] uppercase tracking-[0.14em]">
                         Marketplace Kula'an
                     </span>
                     <h1 class="font-display font-semibold tracking-tight text-balance text-4xl sm:text-5xl mt-4">
@@ -31,7 +31,9 @@
                 @foreach ($products as $prod)
                     @php
                         $available = $prod->supplierProducts->where('is_available', true);
-                        $minPrice = $available->min('base_retail_price') ?? $prod->benchmark_retail_price;
+                        $availablePrices = $available->flatMap(fn ($supplierProduct) => collect([$supplierProduct->base_retail_price])->merge($supplierProduct->priceTiers->pluck('unit_price')));
+                        $minPrice = $availablePrices->min() ?? $prod->benchmark_retail_price;
+                        $topRating = $topRatingByProduct[$prod->id] ?? null;
                     @endphp
                     <a href="{{ route('umkm.catalog.show', $prod) }}"
                         class="bg-white rounded-2xl border border-brand-line overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all block">
@@ -41,6 +43,12 @@
                         <div class="p-4 sm:p-5">
                             <p class="font-display font-bold text-brand-dark text-base leading-snug">{{ $prod->name }}</p>
                             <span class="badge bg-brand-cream text-brand-slate mt-2">{{ $prod->category->name ?? 'Tanpa kategori' }}</span>
+                            @if ($topRating && $topRating['rating'] !== null)
+                                <p class="text-[0.6875rem] text-brand-slate mt-2">
+                                    <span class="font-bold text-brand-accent">&#9733; {{ number_format($topRating['rating'], 1) }}</span>
+                                    — rating distributor rekomendasi
+                                </p>
+                            @endif
                             <div class="mt-3 flex items-end justify-between gap-2">
                                 <div>
                                     <p class="text-[0.6875rem] text-brand-slate">mulai dari</p>
