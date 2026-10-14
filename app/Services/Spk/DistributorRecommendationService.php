@@ -92,7 +92,6 @@ class DistributorRecommendationService
         $supplierProducts = SupplierProduct::with(['distributor', 'priceTiers'])
             ->where('product_id', $productId)
             ->where('is_available', true)
-            ->where('moq', '<=', $quantity)
             ->get();
 
         if ($supplierProducts->isEmpty()) {

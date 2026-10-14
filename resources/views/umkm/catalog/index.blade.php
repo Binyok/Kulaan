@@ -1,72 +1,115 @@
 <x-layouts.app>
-    <x-slot name="title">Katalog Distributor</x-slot>
+    <x-slot name="title">Katalog Bahan Baku</x-slot>
 
-    <div class="-mx-3 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-8 mb-6 sm:mb-8">
-        <div class="texture-grain bg-brand-forest text-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-                <div class="max-w-2xl" data-reveal>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/10 text-[#D8E8DD] uppercase tracking-[0.14em]">
-                        Marketplace Kula'an
-                    </span>
-                    <h1 class="font-display font-semibold tracking-tight text-balance text-4xl sm:text-5xl mt-4">
-                        Katalog
-                    </h1>
-                    <p class="text-sm text-white/70 leading-relaxed mt-3">
-                        Pilih bahan baku, bandingkan penawaran distributor, dan ajukan pembelian ke pilihanmu. Sistem hanya memberi rekomendasi.
-                    </p>
-                </div>
-                <form method="GET" action="{{ route('umkm.catalog.index') }}" class="mt-6 max-w-xl" data-reveal>
-                    <div class="flex gap-2">
-                        <input type="search" name="q" value="{{ $search }}" placeholder="Cari bahan baku..." class="input-field bg-white/95 flex-1">
-                        <button type="submit" class="btn-accent text-sm px-6 shrink-0">Cari</button>
-                    </div>
-                </form>
+    <div class="mb-6">
+        <div class="bg-gradient-to-r from-brand-forest to-brand-primary text-white rounded-2xl p-5 sm:p-7 shadow-sm">
+            <div class="max-w-2xl">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold bg-white/15 text-white">
+                    Pengadaan Bersama UMKM
+                </span>
+                <h1 class="font-display font-bold text-2xl sm:text-3xl mt-2 tracking-tight">
+                    Katalog Bahan Baku
+                </h1>
+                <p class="text-xs sm:text-sm text-white/80 mt-1">
+                    Beli eceran dapat harga grosir melalui urunan kuota dengan UMKM lain.
+                </p>
             </div>
+
+            <form method="GET" action="{{ route('umkm.catalog.index') }}" class="mt-4 flex gap-2 max-w-xl">
+                <div class="relative flex-1">
+                    <input type="search"
+                           name="q"
+                           value="{{ $search }}"
+                           placeholder="Cari beras, minyak, tepung, gula..."
+                           class="w-full bg-white text-brand-dark placeholder-brand-slate/60 text-sm rounded-xl px-4 py-3 pl-10 border-0 focus:ring-2 focus:ring-brand-accent shadow-sm">
+                    <svg class="w-4 h-4 text-brand-slate absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <button type="submit" class="btn-accent px-5 py-3 text-sm font-bold shrink-0 rounded-xl">
+                    Cari
+                </button>
+            </form>
         </div>
     </div>
 
-    <div class="space-y-6 sm:space-y-8">
-        @if ($products->isNotEmpty())
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-reveal>
-                @foreach ($products as $prod)
-                    @php
-                        $available = $prod->supplierProducts->where('is_available', true);
-                        $availablePrices = $available->flatMap(fn ($supplierProduct) => collect([$supplierProduct->base_retail_price])->merge($supplierProduct->priceTiers->pluck('unit_price')));
-                        $minPrice = $availablePrices->min() ?? $prod->benchmark_retail_price;
-                        $topRating = $topRatingByProduct[$prod->id] ?? null;
-                    @endphp
-                    <a href="{{ route('umkm.catalog.show', $prod) }}"
-                        class="bg-white rounded-2xl border border-brand-line overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all block">
-                        <div class="aspect-[4/3] bg-brand-mint flex items-center justify-center">
-                            <span class="font-display font-semibold text-4xl text-brand-primary">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
-                        </div>
-                        <div class="p-4 sm:p-5">
-                            <p class="font-display font-bold text-brand-dark text-base leading-snug">{{ $prod->name }}</p>
-                            <span class="badge bg-brand-cream text-brand-slate mt-2">{{ $prod->category->name ?? 'Tanpa kategori' }}</span>
-                            @if ($topRating && $topRating['rating'] !== null)
-                                <p class="text-[0.6875rem] text-brand-slate mt-2">
-                                    <span class="font-bold text-brand-accent">&#9733; {{ number_format($topRating['rating'], 1) }}</span>
-                                    — rating distributor rekomendasi
-                                </p>
+    @if ($products->isNotEmpty())
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4">
+            @foreach ($products as $prod)
+                @php
+                    $available = $prod->supplierProducts->where('is_available', true);
+                    $availablePrices = $available->flatMap(fn ($sp) => collect([(float) $sp->base_retail_price])->merge($sp->priceTiers->pluck('unit_price')->map(fn ($p) => (float) $p)));
+                    $minPrice = $availablePrices->min() ?? (float) $prod->benchmark_retail_price;
+                    $topRating = $topRatingByProduct[$prod->id] ?? null;
+                    $distributorCount = $available->pluck('distributor_id')->unique()->count();
+                @endphp
+                <a href="{{ route('umkm.catalog.show', $prod) }}"
+                   class="group bg-white rounded-2xl border border-brand-line/70 overflow-hidden shadow-sm hover:shadow-md hover:border-brand-primary/40 transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="aspect-square bg-gradient-to-br from-brand-mint/60 to-brand-cream flex flex-col items-center justify-center p-4 relative overflow-hidden">
+                            <span class="font-display font-extrabold text-5xl text-brand-primary/25 group-hover:scale-110 group-hover:text-brand-primary/40 transition-all">
+                                {{ strtoupper(substr($prod->name, 0, 1)) }}
+                            </span>
+                            <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-white/90 text-brand-dark shadow-xs backdrop-blur-xs">
+                                {{ $prod->category->name ?? 'Bahan Baku' }}
+                            </span>
+                            @if ($distributorCount > 0)
+                                <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[0.625rem] font-bold bg-brand-forest text-white">
+                                    {{ $distributorCount }} distributor
+                                </span>
                             @endif
-                            <div class="mt-3 flex items-end justify-between gap-2">
-                                <div>
-                                    <p class="text-[0.6875rem] text-brand-slate">mulai dari</p>
-                                    <p class="font-extrabold text-brand-primary tabular-nums text-lg">Rp {{ number_format($minPrice, 0, ',', '.') }}</p>
+                        </div>
+
+                        <div class="p-3 sm:p-4">
+                            <h3 class="font-display font-bold text-brand-dark text-sm sm:text-base line-clamp-2 leading-snug group-hover:text-brand-primary transition-colors">
+                                {{ $prod->name }}
+                            </h3>
+
+                            <div class="flex items-center gap-1.5 mt-1.5 text-[0.6875rem] text-brand-slate">
+                                @if ($topRating && $topRating['rating'] !== null)
+                                    <span class="font-bold text-brand-brass flex items-center gap-0.5">
+                                        &#9733; {{ number_format($topRating['rating'], 1) }}
+                                    </span>
+                                    <span>&bull;</span>
+                                @endif
+                                <span>per {{ $prod->unit }}</span>
+                            </div>
+
+                            <div class="mt-3 pt-2.5 border-t border-brand-line/50">
+                                <span class="text-[0.625rem] uppercase tracking-wider text-brand-slate font-medium block">Harga Mulai</span>
+                                <div class="flex items-baseline gap-1 mt-0.5">
+                                    <span class="font-extrabold text-brand-primary text-base sm:text-lg tabular-nums">
+                                        Rp {{ number_format($minPrice, 0, ',', '.') }}
+                                    </span>
                                 </div>
-                                <span class="text-xs font-bold text-brand-primary shrink-0">Lihat Penawaran &rarr;</span>
+                                @if ($prod->benchmark_retail_price > $minPrice)
+                                    <div class="text-[0.625rem] text-brand-slate/70 line-through tabular-nums mt-0.5">
+                                        Eceran Rp {{ number_format($prod->benchmark_retail_price, 0, ',', '.') }}
+                                    </div>
+                                @endif
                             </div>
                         </div>
-                    </a>
-                @endforeach
-            </div>
-            <div class="pt-2">{{ $products->links() }}</div>
-        @else
-            <section class="bg-white rounded-[20px] border border-brand-line px-6 py-12 text-center" data-reveal>
-                <p class="font-bold text-brand-dark mt-2">Belum ada produk tersedia.</p>
-                <p class="text-[0.8125rem] text-brand-slate mt-1.5">Coba kata kunci lain atau kembali lagi nanti.</p>
-                <a href="{{ route('umkm.catalog.index') }}" class="btn-primary text-sm mt-5">Lihat Semua</a>
-            </section>
-        @endif
-    </div>
+                    </div>
+
+                    <div class="p-3 sm:p-4 pt-0">
+                        <div class="w-full py-2 px-3 rounded-xl bg-brand-cream group-hover:bg-brand-primary group-hover:text-white text-brand-primary font-bold text-xs text-center transition-colors">
+                            Lihat Penawaran &rarr;
+                        </div>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+
+        <div class="pt-6">
+            {{ $products->links() }}
+        </div>
+    @else
+        <div class="bg-white rounded-2xl border border-brand-line p-10 text-center max-w-md mx-auto my-12">
+            <h3 class="font-display font-bold text-brand-dark text-lg">Produk tidak ditemukan</h3>
+            <p class="text-xs text-brand-slate mt-1">Coba kata kunci lain atau lihat semua produk.</p>
+            <a href="{{ route('umkm.catalog.index') }}" class="btn-primary text-xs font-bold px-4 py-2 mt-4 inline-flex">
+                Tampilkan Semua
+            </a>
+        </div>
+    @endif
 </x-layouts.app>

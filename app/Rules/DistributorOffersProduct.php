@@ -20,7 +20,7 @@ class DistributorOffersProduct implements ValidationRule
             return;
         }
 
-        $sp = SupplierProduct::where('distributor_id', $value)
+        $sp = SupplierProduct::with('product')->where('distributor_id', $value)
             ->where('product_id', $this->productId)
             ->where('is_available', true)
             ->first();
@@ -31,14 +31,8 @@ class DistributorOffersProduct implements ValidationRule
             return;
         }
 
-        if ((float) $this->quantity < (float) $sp->moq) {
-            $fail('Jumlah pembelian ('.$this->quantity.') di bawah MOQ distributor ini ('.$sp->moq.').');
-
-            return;
-        }
-
         if ($sp->stock_available !== null && (float) $this->quantity > (float) $sp->stock_available) {
-            $fail('Jumlah pembelian ('.$this->quantity.') melebihi stok tersedia distributor ('.$sp->stock_available.').');
+            $fail('Stok '.$sp->stock_available.' '.($sp->product->unit ?? 'unit').' tidak mencukupi untuk permintaan '.$this->quantity.'.');
         }
     }
 }

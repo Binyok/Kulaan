@@ -274,12 +274,17 @@ class MarketplaceSelectionTest extends TestCase
         $response->assertSessionHasErrors('preferred_distributor_id');
         $this->assertDatabaseMissing('purchase_requests', ['umkm_id' => $umkm->id, 'preferred_distributor_id' => $inactive->id]);
 
-        // Case 3: quantity below MOQ.
+        // Case 3: quantity below MOQ is allowed for collective pooling (status PENDING_MATCH).
         $winnerId = $setup['winner']->id;
         $response = $this->actingAs($user)->post(route('umkm.requests.store'), $payload($winnerId, 5));
         $response->assertStatus(302);
-        $response->assertSessionHasErrors('preferred_distributor_id');
-        $this->assertDatabaseMissing('purchase_requests', ['umkm_id' => $umkm->id, 'quantity' => 5]);
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('purchase_requests', [
+            'umkm_id' => $umkm->id,
+            'quantity' => 5,
+            'preferred_distributor_id' => $winnerId,
+            'status' => PurchaseRequestStatus::PENDING_MATCH->value,
+        ]);
     }
 
     public function test_catalog_authorization_and_inactive_product(): void

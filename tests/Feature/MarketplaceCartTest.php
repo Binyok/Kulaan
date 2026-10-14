@@ -241,4 +241,26 @@ class MarketplaceCartTest extends TestCase
             'status' => PurchaseRequestStatus::ORDERED->value,
         ]);
     }
+
+    public function test_checkout_with_qty_below_moq_is_allowed_for_collective_pooling(): void
+    {
+        [$user, $umkm] = $this->createUmkmUser();
+        [$prod, $dist] = $this->createProductWithDistributor('Beras Pandan', 10000, 50, 500);
+
+        $cart = app(CartService::class);
+        $cart->clear();
+        $cart->add($prod->id, $dist->id, 5);
+
+        $response = $this->actingAs($user)->post(route('umkm.cart.checkout'));
+
+        $response->assertRedirect(route('umkm.requests.index'));
+
+        $this->assertDatabaseHas('purchase_requests', [
+            'umkm_id' => $umkm->id,
+            'product_id' => $prod->id,
+            'preferred_distributor_id' => $dist->id,
+            'quantity' => 5,
+            'status' => PurchaseRequestStatus::PENDING_MATCH->value,
+        ]);
+    }
 }

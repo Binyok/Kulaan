@@ -1,26 +1,5 @@
 <x-layouts.app>
-    <x-slot name="title">{{ $product->name }} — Penawaran Distributor</x-slot>
-
-    <div class="-mx-3 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-8 mb-6 sm:mb-8">
-        <div class="texture-grain bg-brand-forest text-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-                <div class="max-w-2xl" data-reveal>
-                    <a href="{{ route('umkm.catalog.index') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-white/70 hover:text-white transition-colors">
-                        &larr; Kembali ke Katalog
-                    </a>
-                    <h1 class="font-display font-semibold tracking-tight text-balance text-4xl sm:text-5xl mt-4">
-                        {{ $product->name }}
-                    </h1>
-                    <div class="flex flex-wrap items-center gap-2 mt-3">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/10 text-[#D8E8DD] uppercase tracking-[0.14em]">
-                            {{ $product->category->name ?? 'Tanpa kategori' }}
-                        </span>
-                        <span class="text-xs text-white/70">per {{ $product->unit }} &bull; Patokan eceran Rp {{ number_format($product->benchmark_retail_price, 0, ',', '.') }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <x-slot name="title">{{ $product->name }} — Detail & Penawaran Distributor</x-slot>
 
     @php
         $maxStock = 9999;
@@ -29,7 +8,6 @@
             $maxStock = max($stocks) > 0 ? max($stocks) : 9999;
         }
 
-        // Prepare tiers data for JS live calculation
         $tiersDataByDistributor = [];
         foreach ($offers as $offer) {
             $sp = $offer['supplier_product'];
@@ -48,246 +26,252 @@
                 'tiers' => $tiers,
             ];
         }
+
+        $defaultQty = max(1, (int) round($quantity));
     @endphp
 
-    <div class="space-y-6 sm:space-y-8"
-         x-data="catalogDetail({
-             initialQty: {{ $quantity }},
-             benchmark: {{ (float) $product->benchmark_retail_price }},
-             unit: '{{ $product->unit }}',
-             minQty: 0.1,
-             stepQty: 0.5,
-             maxQty: {{ $maxStock }},
-             tiersData: {{ Js::from($tiersDataByDistributor) }}
-         })">
+    <div x-data="marketplaceDetail({
+            qty: {{ $defaultQty }},
+            benchmark: {{ (float) $product->benchmark_retail_price }},
+            unit: '{{ $product->unit }}',
+            maxQty: {{ $maxStock }},
+            tiersData: {{ Js::from($tiersDataByDistributor) }}
+         })" class="space-y-6">
 
-        <section class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-7 shadow-sm" data-reveal>
-            @php
-                $topOffer = $offers[0] ?? null;
-            @endphp
-            @if ($topOffer && $topOffer['supplier_product']->priceTiers->isNotEmpty())
-                <div class="mb-4 pb-4 border-b border-brand-line">
-                    <p class="text-[0.6875rem] font-bold uppercase tracking-wider text-brand-slate">Skema Harga Distributor Rekomendasi (Estimasi)</p>
-                    <p class="text-xs text-brand-dark mt-1 font-medium">
-                        Estimasi eceran Rp {{ number_format($topOffer['supplier_product']->base_retail_price, 0, ',', '.') }}/{{ $product->unit }}
-                        @foreach ($topOffer['supplier_product']->priceTiers as $pt)
-                            &middot; &ge;{{ number_format($pt->min_quantity, 0) }} {{ $product->unit }} Rp {{ number_format($pt->unit_price, 0, ',', '.') }}/{{ $product->unit }}
-                        @endforeach
-                    </p>
-                </div>
-            @endif
+        <div class="flex items-center gap-2 text-xs text-brand-slate">
+            <a href="{{ route('umkm.catalog.index') }}" class="hover:text-brand-primary font-semibold flex items-center gap-1">
+                &larr; Katalog Bahan Baku
+            </a>
+            <span>/</span>
+            <span class="text-brand-dark font-medium truncate max-w-xs">{{ $product->name }}</span>
+        </div>
 
-            <form id="recalcForm" method="GET" action="{{ route('umkm.catalog.show', $product) }}" class="flex flex-col sm:flex-row sm:items-end gap-4">
-                <div class="flex-1">
-                    <label for="quantityInput" class="field-label">Jumlah kebutuhan ({{ $product->unit }})</label>
-                    <div class="flex items-center gap-2 mt-1">
-                        <button type="button" @click="dec()" class="w-11 h-11 rounded-xl border border-brand-line bg-brand-cream hover:bg-black/[0.04] text-brand-dark font-bold text-lg flex items-center justify-center transition-colors">
-                            &minus;
-                        </button>
-                        <input type="number"
-                               id="quantityInput"
-                               name="quantity"
-                               x-model.number="qty"
-                               @input="onQtyChange()"
-                               :min="minQty"
-                               :step="stepQty"
-                               :max="maxQty"
-                               required
-                               class="input-field text-center font-bold text-lg max-w-[8rem] tabular-nums">
-                        <button type="button" @click="inc()" class="w-11 h-11 rounded-xl border border-brand-line bg-brand-cream hover:bg-black/[0.04] text-brand-dark font-bold text-lg flex items-center justify-center transition-colors">
-                            &plus;
-                        </button>
-                        <span class="text-sm font-semibold text-brand-slate ml-2">{{ $product->unit }}</span>
+        <div class="bg-white rounded-2xl border border-brand-line p-5 sm:p-7 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div class="md:col-span-4 flex flex-col items-center justify-center bg-gradient-to-br from-brand-mint/50 to-brand-cream rounded-xl p-8 border border-brand-line/50 aspect-square text-center">
+                <span class="font-display font-extrabold text-7xl text-brand-primary/30">
+                    {{ strtoupper(substr($product->name, 0, 1)) }}
+                </span>
+                <span class="mt-4 px-3 py-1 rounded-full text-xs font-bold bg-white text-brand-dark shadow-xs border border-brand-line">
+                    {{ $product->category->name ?? 'Bahan Baku' }}
+                </span>
+                <span class="text-[0.6875rem] text-brand-slate mt-2">Satuan: per {{ $product->unit }}</span>
+            </div>
+
+            <div class="md:col-span-8 flex flex-col justify-between">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="badge bg-brand-cream text-brand-slate">
+                            Kulaan Kolektif
+                        </span>
+                        <span class="text-xs text-brand-slate">
+                            Patokan eceran: <strong class="text-brand-dark">Rp {{ number_format($product->benchmark_retail_price, 0, ',', '.') }}/{{ $product->unit }}</strong>
+                        </span>
+                    </div>
+
+                    <h1 class="font-display font-bold text-2xl sm:text-3xl text-brand-dark mt-2 tracking-tight leading-snug">
+                        {{ $product->name }}
+                    </h1>
+
+                    @if ($product->standard_specification)
+                        <p class="text-xs sm:text-sm text-brand-slate mt-2 leading-relaxed">
+                            {{ $product->standard_specification }}
+                        </p>
+                    @endif
+
+                    <div class="mt-6 pt-5 border-t border-brand-line">
+                        <label class="block text-xs font-bold text-brand-dark uppercase tracking-wider">
+                            Tentukan Kebutuhan Anda ({{ $product->unit }})
+                        </label>
+                        <p class="text-[0.6875rem] text-brand-slate mt-0.5">
+                            Beli berapa pun tetap bisa pesan — kuota akan diurunkan bersama UMKM lain sampai tembus grosir.
+                        </p>
+
+                        <div class="flex items-center gap-3 mt-3">
+                            <button type="button"
+                                    @click="dec()"
+                                    class="w-10 h-10 rounded-xl border border-brand-line bg-brand-cream hover:bg-black/[0.04] text-brand-dark font-extrabold text-lg flex items-center justify-center transition-colors">
+                                &minus;
+                            </button>
+                            <input type="number"
+                                   x-model.number="qty"
+                                   @input="normalizeQty()"
+                                   min="1"
+                                   step="1"
+                                   :max="maxQty"
+                                   class="w-24 text-center font-bold text-lg rounded-xl border border-brand-line py-2 tabular-nums focus:ring-2 focus:ring-brand-primary">
+                            <button type="button"
+                                    @click="inc()"
+                                    class="w-10 h-10 rounded-xl border border-brand-line bg-brand-cream hover:bg-black/[0.04] text-brand-dark font-extrabold text-lg flex items-center justify-center transition-colors">
+                                &plus;
+                            </button>
+                            <span class="text-sm font-bold text-brand-slate">{{ $product->unit }}</span>
+                        </div>
                     </div>
                 </div>
-                <button type="submit" class="btn-ghost text-sm px-6 shrink-0 min-h-11">
-                    Hitung Ulang Rekomendasi
-                </button>
-            </form>
 
-            <div class="mt-4 p-3 rounded-xl bg-brand-mint text-brand-primary text-xs font-semibold flex items-center justify-between flex-wrap gap-2"
-                 x-show="savingsAmount > 0">
-                <span x-text="savingsText"></span>
-                <span class="text-[0.6875rem] font-normal text-brand-dark/70">vs patokan eceran</span>
+                <div class="mt-6 p-4 rounded-xl bg-brand-mint/80 border border-brand-primary/20 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <span class="text-[0.6875rem] font-bold uppercase tracking-wider text-brand-primary block">Estimasi Keuntungan Kulaan</span>
+                        <p class="text-xs sm:text-sm font-extrabold text-brand-primary mt-0.5" x-text="savingsText"></p>
+                    </div>
+                    <span class="text-[0.6875rem] text-brand-slate">
+                        Harga final dihitung saat grup kulaan terpenuhi
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex items-baseline justify-between mb-3">
+                <div>
+                    <h2 class="font-display font-bold text-lg sm:text-xl text-brand-dark">
+                        Pilihan Distributor Penyedia ({{ count($offers) }})
+                    </h2>
+                    <p class="text-xs text-brand-slate">
+                        Pilih distributor yang Anda inginkan. Harga dan kuota di bawah otomatis menyesuaikan <strong class="text-brand-dark" x-text="qty + ' ' + unit"></strong>.
+                    </p>
+                </div>
             </div>
 
-            <p class="text-[0.6875rem] text-brand-slate mt-3 leading-relaxed">
-                <strong>Disclaimer wajib:</strong> Semua harga tier berlabel <em>Estimasi</em>. Harga final mengikuti total quantity kelompok kulaan — bisa lebih murah dari estimasi ini. Peringkat rekomendasi dihitung ulang via form di atas.
-            </p>
-        </section>
-
-        @if (! empty($offers))
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" data-reveal>
-                @foreach ($offers as $offer)
-                    @php
-                        $sp = $offer['supplier_product'];
-                        $d = $offer['distributor'];
-                        $isTop = ($offer['rank'] ?? null) === 1;
-                        $pct = $sp->moq > 0 ? min(100, ($offer['pooled_quantity'] / (float) $sp->moq) * 100) : 100;
-                        $remaining = max(0, (float) $sp->moq - $offer['pooled_quantity']);
-                    @endphp
-                    <article class="bg-white rounded-2xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between {{ $isTop ? 'ring-2 ring-brand-accent border-brand-accent/40 shadow-md' : 'border-brand-line' }}">
-                        <div>
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <p class="font-bold text-brand-dark text-base">{{ $d->company_name }}</p>
-                                    @if ($isTop)
-                                        <p class="text-[0.6875rem] text-brand-accent font-bold mt-0.5">
-                                            &#9733; {{ number_format((float) $d->rating, 1) }} — rating distributor rekomendasi
+            @if (! empty($offers))
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach ($offers as $offer)
+                        @php
+                            $sp = $offer['supplier_product'];
+                            $d = $offer['distributor'];
+                            $isTop = ($offer['rank'] ?? null) === 1;
+                            $pct = $sp->moq > 0 ? min(100, ($offer['pooled_quantity'] / (float) $sp->moq) * 100) : 100;
+                            $remaining = max(0, (float) $sp->moq - $offer['pooled_quantity']);
+                        @endphp
+                        <article class="bg-white rounded-2xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all {{ $isTop ? 'border-brand-accent/50 ring-2 ring-brand-accent/20' : 'border-brand-line' }}">
+                            <div>
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h3 class="font-bold text-brand-dark text-base leading-tight">
+                                            {{ $d->company_name }}
+                                        </h3>
+                                        <p class="text-[0.6875rem] text-brand-slate mt-1 flex items-center gap-1.5">
+                                            <span class="font-bold text-brand-brass">&#9733; {{ number_format((float) $d->rating, 1) }}</span>
+                                            <span>&bull;</span>
+                                            <span>Kirim &plusmn;{{ $d->delivery_lead_time_days ?? 2 }} hari</span>
+                                            <span>&bull;</span>
+                                            <span>Jarak {{ $offer['distance_km'] !== null ? number_format($offer['distance_km'], 1).' km' : '±5 km' }}</span>
                                         </p>
+                                    </div>
+                                    @if ($isTop)
+                                        <span class="px-2.5 py-1 rounded-full text-[0.625rem] font-bold bg-brand-ochre-soft text-brand-brass border border-brand-accent/30 shrink-0">
+                                            Rekomendasi #1
+                                        </span>
                                     @endif
                                 </div>
-                                @if ($isTop)
-                                    <span class="badge bg-brand-ochre-soft text-brand-brass border border-brand-accent/30 shrink-0">Rekomendasi #1 Sistem</span>
-                                @elseif (! empty($offer['rank']))
-                                    <span class="badge bg-brand-cream text-brand-slate shrink-0">Peringkat #{{ $offer['rank'] }}</span>
-                                @endif
-                            </div>
 
-                            <p class="text-xs text-brand-slate mt-2">
-                                <span class="font-bold text-brand-accent">&#9733; {{ number_format((float) $d->rating, 1) }}</span>
-                                <span class="mx-1">&bull;</span> Estimasi tiba {{ $d->delivery_lead_time_days ?? '-' }} hari
-                            </p>
-
-                            <dl class="grid grid-cols-3 gap-2 mt-4 text-xs">
-                                <div class="p-2.5 bg-brand-cream/70 rounded-xl">
-                                    <dt class="text-[0.6875rem] text-brand-slate">Jarak</dt>
-                                    <dd class="font-bold text-brand-dark mt-0.5 tabular-nums">{{ $offer['distance_km'] !== null ? number_format($offer['distance_km'], 1).' km' : '±5 km' }}</dd>
-                                </div>
-                                <div class="p-2.5 bg-brand-cream/70 rounded-xl">
-                                    <dt class="text-[0.6875rem] text-brand-slate">MOQ</dt>
-                                    <dd class="font-bold text-brand-dark mt-0.5 tabular-nums">{{ number_format($sp->moq, 0) }} {{ $product->unit }}</dd>
-                                </div>
-                                <div class="p-2.5 bg-brand-cream/70 rounded-xl">
-                                    <dt class="text-[0.6875rem] text-brand-slate">Stok</dt>
-                                    <dd class="font-bold text-brand-dark mt-0.5 tabular-nums">{{ number_format($sp->stock_available, 0) }} {{ $product->unit }}</dd>
-                                </div>
-                            </dl>
-
-                            <div class="mt-4">
-                                <p class="text-[0.6875rem] text-brand-slate">
-                                    Terkumpul {{ number_format($offer['pooled_quantity'], 1) }}/{{ number_format($sp->moq, 0) }} {{ $product->unit }} &mdash; kurang {{ number_format($remaining, 1) }} {{ $product->unit }} lagi menuju minimum pemesanan (MOQ)
-                                </p>
-                                <div class="h-2 rounded-full bg-brand-cream mt-1.5 overflow-hidden">
-                                    <div class="h-full bg-brand-emerald rounded-full transition-all" style="width: {{ $pct }}%"></div>
-                                </div>
-                            </div>
-
-                            <div class="mt-4 pt-3 border-t border-brand-line">
-                                <p class="text-[0.6875rem] uppercase tracking-wider text-brand-slate font-bold">Harga Satuan (Estimasi)</p>
-                                <div class="flex items-baseline gap-2 mt-0.5">
-                                    <p class="font-extrabold text-brand-primary text-2xl tabular-nums">
-                                        Rp <span x-text="formatNumber(getPrice({{ $d->id }}))">{{ number_format($offer['unit_price'], 0, ',', '.') }}</span>
+                                <div class="mt-4 p-3 rounded-xl bg-brand-cream/60 border border-brand-line/60">
+                                    <div class="flex items-baseline justify-between text-[0.6875rem]">
+                                        <span class="text-brand-slate">Kuota Urunan Terkumpul:</span>
+                                        <span class="font-bold text-brand-dark tabular-nums">
+                                            {{ number_format($offer['pooled_quantity'], 0) }} / {{ number_format($sp->moq, 0) }} {{ $product->unit }}
+                                        </span>
+                                    </div>
+                                    <div class="h-2 rounded-full bg-brand-line/50 mt-1.5 overflow-hidden">
+                                        <div class="h-full bg-brand-emerald rounded-full transition-all" style="width: {{ $pct }}%"></div>
+                                    </div>
+                                    <p class="text-[0.625rem] text-brand-slate mt-1">
+                                        @if ($remaining > 0)
+                                            Kurang {{ number_format($remaining, 0) }} {{ $product->unit }} lagi untuk pesanan kolektif dikirim distributor
+                                        @else
+                                            Kuota terpenuhi! Pesanan langsung diproses saat checkout.
+                                        @endif
                                     </p>
-                                    <span class="text-xs text-brand-slate">/{{ $product->unit }}</span>
                                 </div>
-                                <p class="text-[0.6875rem] text-brand-slate mt-0.5">
-                                    Subtotal: Rp <span x-text="formatNumber(getPrice({{ $d->id }}) * qty)">{{ number_format($offer['unit_price'] * $quantity, 0, ',', '.') }}</span>
-                                </p>
+
+                                <div class="mt-4 pt-3 border-t border-brand-line/70 flex items-baseline justify-between">
+                                    <div>
+                                        <span class="text-[0.625rem] uppercase tracking-wider text-brand-slate font-medium block">
+                                            Harga Satuan Tier (Estimasi)
+                                        </span>
+                                        <div class="flex items-baseline gap-1 mt-0.5">
+                                            <span class="text-xl sm:text-2xl font-extrabold text-brand-primary tabular-nums">
+                                                Rp <span x-text="formatNumber(getPrice({{ $d->id }}))">{{ number_format($offer['unit_price'], 0, ',', '.') }}</span>
+                                            </span>
+                                            <span class="text-xs text-brand-slate">/{{ $product->unit }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-[0.625rem] text-brand-slate block">Subtotal Kebutuhan</span>
+                                        <span class="font-extrabold text-brand-dark text-sm sm:text-base tabular-nums">
+                                            Rp <span x-text="formatNumber(getPrice({{ $d->id }}) * qty)">{{ number_format($offer['unit_price'] * $defaultQty, 0, ',', '.') }}</span>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-5">
-                            <form method="POST" action="{{ route('umkm.cart.add') }}">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <input type="hidden" name="distributor_id" value="{{ $d->id }}">
-                                <input type="hidden" name="quantity" :value="qty">
-                                <button type="submit" class="btn-ghost w-full justify-center py-2.5 text-xs font-bold min-h-11">
-                                    + Keranjang
-                                </button>
-                            </form>
+                            <div class="grid grid-cols-2 gap-2 mt-5 pt-3 border-t border-brand-line/60">
+                                <form method="POST" action="{{ route('umkm.cart.add') }}">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                    <input type="hidden" name="distributor_id" value="{{ $d->id }}">
+                                    <input type="hidden" name="quantity" :value="qty">
+                                    <button type="submit" class="w-full py-2.5 px-3 rounded-xl border border-brand-line hover:border-brand-primary/50 bg-white hover:bg-brand-mint text-brand-primary font-bold text-xs transition-colors flex items-center justify-center gap-1.5 min-h-10">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        + Keranjang
+                                    </button>
+                                </form>
 
-                            <form method="POST" action="{{ route('umkm.cart.buy-now') }}">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <input type="hidden" name="distributor_id" value="{{ $d->id }}">
-                                <input type="hidden" name="quantity" :value="qty">
-                                <button type="submit" class="btn-primary w-full justify-center py-2.5 text-xs font-bold min-h-11">
-                                    Beli Sekarang &rarr;
-                                </button>
-                            </form>
-                        </div>
-                    </article>
-                @endforeach
-            </div>
-
-            <section class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-7 overflow-x-auto shadow-sm" data-reveal>
-                <h2 class="text-sm font-bold text-brand-dark mb-3">Perbandingan Ringkas Distributor</h2>
-                <table class="table-premium min-w-[560px]">
-                    <thead>
-                        <tr>
-                            <th>Distributor</th>
-                            <th class="text-right">Harga Satuan (Estimasi)</th>
-                            <th class="text-right">Rating</th>
-                            <th class="text-right">Jarak</th>
-                            <th class="text-right">MOQ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($offers as $offer)
-                            <tr>
-                                <td class="font-bold text-brand-dark">{{ $offer['distributor']->company_name }}</td>
-                                <td class="text-right tabular-nums">Rp {{ number_format($offer['unit_price'], 0, ',', '.') }}</td>
-                                <td class="text-right tabular-nums">&#9733; {{ number_format((float) $offer['distributor']->rating, 1) }}</td>
-                                <td class="text-right tabular-nums">{{ $offer['distance_km'] !== null ? number_format($offer['distance_km'], 1).' km' : '-' }}</td>
-                                <td class="text-right tabular-nums">{{ number_format($offer['supplier_product']->moq, 0) }} {{ $product->unit }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </section>
-        @else
-            <section class="bg-white rounded-[20px] border border-brand-line px-6 py-12 text-center" data-reveal>
-                <p class="font-bold text-brand-dark">Belum ada distributor untuk jumlah ini.</p>
-                <p class="text-[0.8125rem] text-brand-slate mt-1.5">Coba naikkan jumlah kebutuhan atau kembali lagi nanti.</p>
-                <a href="{{ route('umkm.catalog.index') }}" class="btn-ghost text-sm mt-5">Kembali ke Katalog</a>
-            </section>
-        @endif
+                                <form method="POST" action="{{ route('umkm.cart.buy-now') }}">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                    <input type="hidden" name="distributor_id" value="{{ $d->id }}">
+                                    <input type="hidden" name="quantity" :value="qty">
+                                    <button type="submit" class="w-full py-2.5 px-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white font-bold text-xs transition-colors shadow-sm flex items-center justify-center gap-1 min-h-10">
+                                        Beli Sekarang &rarr;
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            @else
+                <div class="bg-white rounded-2xl border border-brand-line p-8 text-center">
+                    <p class="font-bold text-brand-dark">Belum ada distributor aktif untuk produk ini.</p>
+                    <a href="{{ route('umkm.catalog.index') }}" class="btn-ghost text-xs mt-3 inline-flex">Kembali ke Katalog</a>
+                </div>
+            @endif
+        </div>
     </div>
 
     <script>
-        function catalogDetail(config) {
+        function marketplaceDetail(config) {
             return {
-                qty: config.initialQty,
+                qty: config.qty,
                 benchmark: config.benchmark,
                 unit: config.unit,
-                minQty: config.minQty,
-                stepQty: config.stepQty,
                 maxQty: config.maxQty,
                 tiersData: config.tiersData,
-                debounceTimer: null,
 
                 inc() {
-                    const next = Math.round((this.qty + this.stepQty) * 10) / 10;
-                    if (next <= this.maxQty) {
-                        this.qty = next;
-                        this.triggerDebounceRecalc();
+                    if (this.qty < this.maxQty) {
+                        this.qty = Math.round(this.qty + 1);
                     }
                 },
                 dec() {
-                    const next = Math.round((this.qty - this.stepQty) * 10) / 10;
-                    if (next >= this.minQty) {
-                        this.qty = next;
-                        this.triggerDebounceRecalc();
+                    if (this.qty > 1) {
+                        this.qty = Math.round(this.qty - 1);
                     }
                 },
-                onQtyChange() {
-                    if (this.qty < this.minQty) this.qty = this.minQty;
-                    if (this.qty > this.maxQty) this.qty = this.maxQty;
-                    this.triggerDebounceRecalc();
-                },
-                triggerDebounceRecalc() {
-                    clearTimeout(this.debounceTimer);
-                    this.debounceTimer = setTimeout(() => {
-                        const form = document.getElementById('recalcForm');
-                        if (form) form.submit();
-                    }, 500);
+                normalizeQty() {
+                    if (!this.qty || this.qty < 1) {
+                        this.qty = 1;
+                    }
+                    if (this.qty > this.maxQty) {
+                        this.qty = this.maxQty;
+                    }
                 },
                 getPrice(distId) {
                     const data = this.tiersData[distId];
                     if (!data) return 0;
-                    const q = parseFloat(this.qty) || 0;
+                    const q = parseFloat(this.qty) || 1;
                     let bestPrice = data.base;
                     if (Array.isArray(data.tiers)) {
                         for (const t of data.tiers) {
@@ -306,13 +290,16 @@
                     const firstDistId = Object.keys(this.tiersData)[0];
                     if (!firstDistId) return 0;
                     const price = this.getPrice(firstDistId);
-                    const q = parseFloat(this.qty) || 0;
+                    const q = parseFloat(this.qty) || 1;
                     const retailTotal = this.benchmark * q;
                     const actualTotal = price * q;
                     return Math.max(0, retailTotal - actualTotal);
                 },
                 get savingsText() {
-                    return `Beli ${this.qty} ${this.unit} hemat Rp ${this.formatNumber(this.savingsAmount)} dibanding eceran`;
+                    if (this.savingsAmount <= 0) {
+                        return `Pesan ${this.qty} ${this.unit} — gabung kuota untuk harga grosir termurah`;
+                    }
+                    return `Hemat ~Rp ${this.formatNumber(this.savingsAmount)} dibanding harga eceran biasa (${this.qty} ${this.unit})`;
                 },
                 formatNumber(val) {
                     return Math.round(val || 0).toLocaleString('id-ID');

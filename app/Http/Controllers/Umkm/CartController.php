@@ -9,6 +9,7 @@ use App\Models\PurchaseRequest;
 use App\Rules\DistributorOffersProduct;
 use App\Services\CartService;
 use App\Services\Matching\MatchingEngineService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,7 +67,7 @@ class CartController extends Controller
         return redirect()->route('umkm.cart.index')->with('success', 'Produk ditambahkan. Lanjutkan ke pembayaran.');
     }
 
-    public function updateItem(Request $request): RedirectResponse
+    public function updateItem(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer'],
@@ -79,6 +80,21 @@ class CartController extends Controller
             (int) $validated['distributor_id'],
             (float) $validated['quantity']
         );
+
+        if ($request->expectsJson()) {
+            $key = $this->cart->itemKey((int) $validated['product_id'], (int) $validated['distributor_id']);
+            $items = $this->cart->items();
+            $updatedItem = $items[$key] ?? null;
+
+            return response()->json([
+                'success' => true,
+                'removed' => $updatedItem === null,
+                'item' => $updatedItem,
+                'total' => $this->cart->total(),
+                'total_savings' => $this->cart->totalSavings(),
+                'count' => $this->cart->count(),
+            ]);
+        }
 
         return back()->with('success', 'Keranjang diperbarui.');
     }
@@ -120,10 +136,8 @@ class CartController extends Controller
             );
 
             if (! empty($messages)) {
-                $this->cart->clear();
-
                 return redirect()->route('umkm.cart.index')
-                    ->with('error', 'Keranjang dibatalkan: '.implode('; ', $messages).' Silakan pesan ulang.');
+                    ->with('error', 'Gagal checkout: '.implode('; ', $messages));
             }
         }
 

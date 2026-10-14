@@ -68,7 +68,7 @@ class CatalogController extends Controller
             abort(403, 'Profil UMKM tidak ditemukan.');
         }
 
-        $quantity = max(0.1, (float) $request->query('quantity', 10));
+        $quantity = max(1.0, (float) $request->query('quantity', 1));
 
         $ranking = $recommendationService->rankDistributorsForCatalog(
             $product->id,
