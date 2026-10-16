@@ -111,9 +111,18 @@
                                         </span>
                                     </div>
                                 </div>
-                                <form method="POST" action="{{ route('umkm.requests.cancel', $req) }}" onsubmit="return confirm('Batalkan pengajuan ini?');" class="shrink-0">
+                                <form method="POST" action="{{ route('umkm.requests.cancel', $req) }}" id="cancel-form-{{ $req->id }}" class="shrink-0">
                                     @csrf
-                                    <button type="submit" class="text-xs text-brand-brick hover:underline font-semibold min-h-9">
+                                    <button type="button"
+                                            @click="kulaanConfirm({
+                                                title: 'Batalkan Pengajuan?',
+                                                message: 'Apakah Anda yakin ingin membatalkan pengajuan {{ addslashes($req->product->name) }} ini? Kuota Anda akan ditarik dari grup pengadaan.',
+                                                confirmText: 'Ya, Batalkan',
+                                                cancelText: 'Kembali',
+                                                isDanger: true,
+                                                onConfirm: () => document.getElementById('cancel-form-{{ $req->id }}').submit()
+                                            })"
+                                            class="text-xs text-brand-brick hover:underline font-semibold min-h-9 cursor-pointer">
                                         Batalkan
                                     </button>
                                 </form>

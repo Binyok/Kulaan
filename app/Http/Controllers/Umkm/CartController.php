@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Umkm;
 
+use App\Enums\PaymentStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Enums\UrgencyLevel;
 use App\Http\Controllers\Controller;
+use App\Models\OrderItem;
 use App\Models\PurchaseRequest;
 use App\Rules\DistributorOffersProduct;
 use App\Services\CartService;
@@ -142,10 +144,11 @@ class CartController extends Controller
         }
 
         $createdProductIds = [];
+        $createdRequestIds = [];
 
-        DB::transaction(function () use ($items, $umkm, &$createdProductIds) {
+        DB::transaction(function () use ($items, $umkm, &$createdProductIds, &$createdRequestIds) {
             foreach ($items as $item) {
-                PurchaseRequest::create([
+                $req = PurchaseRequest::create([
                     'umkm_id' => $umkm->id,
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
@@ -160,13 +163,31 @@ class CartController extends Controller
                 ]);
 
                 $createdProductIds[] = $item['product_id'];
+                $createdRequestIds[] = $req->id;
             }
         });
 
         $this->cart->clear();
 
+        $groupsCreated = 0;
         foreach (array_unique($createdProductIds) as $productId) {
-            $matchingEngine->processMatchingForProduct($productId);
+            $res = $matchingEngine->processMatchingForProduct($productId);
+            $groupsCreated += ($res['groups_created'] ?? 0);
+        }
+
+        // Cek apakah ada purchase request baru yang langsung ORDERED (MOQ terpenuhi)
+        $unpaidOrderItem = null;
+        if (! empty($createdRequestIds)) {
+            $unpaidOrderItem = OrderItem::whereIn('purchase_request_id', $createdRequestIds)
+                ->where('umkm_id', $umkm->id)
+                ->where('payment_status', PaymentStatus::UNPAID)
+                ->latest()
+                ->first();
+        }
+
+        if ($unpaidOrderItem) {
+            return redirect()->route('payment.show', $unpaidOrderItem)
+                ->with('success', 'Selamat! Kuota minimum (MOQ) langsung terpenuhi dan pesanan kolektif terbentuk. Silakan lakukan pembayaran tagihan Anda di bawah ini.');
         }
 
         return redirect()->route('umkm.requests.index')

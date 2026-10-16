@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Courier;
+use App\Models\Distributor;
 use App\Models\Umkm;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -72,7 +74,7 @@ class ProfileCompletionTest extends TestCase
         $response = $this->actingAs($user)->get(route('profile.complete'));
 
         $response->assertStatus(200);
-        $response->assertSee('Lengkapi Profilmu');
+        $response->assertSee('Informasi Akun');
         $response->assertSee($user->phone);
     }
 
@@ -121,6 +123,65 @@ class ProfileCompletionTest extends TestCase
         $this->assertEquals('KABUPATEN SIDOARJO', $umkm->city);
         $this->assertEquals('Waru', $umkm->district);
         $this->assertEquals('Kedungrejo', $umkm->village);
+    }
+
+    public function test_profile_update_can_update_email_and_lead_time_for_distributor(): void
+    {
+        $user = User::factory()->create(['email' => 'old_dist@example.com']);
+        $user->assignRole('distributor');
+        $distributor = Distributor::create([
+            'user_id' => $user->id,
+            'company_name' => 'PT Lama Jaya',
+            'address' => 'Jl. Lama 12',
+            'district' => 'Waru',
+            'city' => 'Sidoarjo',
+            'delivery_lead_time_days' => 2,
+        ]);
+
+        $this->actingAs($user)->post(route('profile.complete.update'), [
+            'name' => 'PT Baru Sukses',
+            'email' => 'new_dist@example.com',
+            'phone' => '081298765432',
+            'address' => 'Jl. Baru No. 88',
+            'province' => 'JAWA TIMUR',
+            'city' => 'Sidoarjo',
+            'district' => 'Waru',
+            'village' => 'Tropodo',
+            'business_name' => 'PT Baru Sukses Distributor',
+            'delivery_lead_time_days' => 4,
+        ])->assertRedirect(route('dashboard'));
+
+        $user->refresh();
+        $distributor->refresh();
+
+        $this->assertEquals('new_dist@example.com', $user->email);
+        $this->assertEquals('PT Baru Sukses Distributor', $distributor->company_name);
+        $this->assertEquals(4, $distributor->delivery_lead_time_days);
+    }
+
+    public function test_profile_update_persists_courier_vehicle_details(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('kurir');
+        $courier = Courier::create([
+            'user_id' => $user->id,
+            'vehicle_type' => 'Motor',
+            'vehicle_number' => 'DA 1111 XX',
+        ]);
+
+        $this->actingAs($user)->post(route('profile.complete.update'), [
+            'name' => 'Budi Kurir',
+            'phone' => '081234567899',
+            'address' => 'Jl. Kurir No. 1',
+            'city' => 'Banjarmasin',
+            'district' => 'Banjarmasin Tengah',
+            'vehicle_type' => 'Mobil Box',
+            'vehicle_number' => 'DA 9999 ZZ',
+        ])->assertRedirect(route('dashboard'));
+
+        $courier->refresh();
+        $this->assertEquals('Mobil Box', $courier->vehicle_type);
+        $this->assertEquals('DA 9999 ZZ', $courier->vehicle_number);
     }
 
     private function mockSocialiteCallback(): void

@@ -117,7 +117,7 @@
                         <div x-show="selectedMethod === 'qris'" class="mt-5 text-center">
                             <div class="p-4 bg-white border border-brand-line rounded-2xl inline-block shadow-xs">
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode('QRIS:KULAAN-MIDTRANS-'. $payment->payment_reference .'-RP'. (int)$orderItem->subtotal) }}"
-                                     alt="QRIS Code Kula'an" class="w-44 h-44 mx-auto rounded-lg">
+                                     alt="QRIS Code Kula'an" loading="lazy" class="w-44 h-44 mx-auto rounded-lg">
                                 <p class="text-[10px] font-mono text-brand-slate mt-2 font-bold">NMID: ID1020038921820 &bull; KULAAN</p>
                             </div>
                             <ol class="text-left text-xs text-brand-slate space-y-1.5 bg-brand-cream/60 p-4 rounded-xl border border-brand-line/60 mt-4 list-decimal list-inside">

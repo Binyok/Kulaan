@@ -100,11 +100,20 @@
                                 </span>
                             </div>
 
-                            <form method="POST" action="{{ route('umkm.cart.remove') }}">
+                            <form method="POST" action="{{ route('umkm.cart.remove') }}" id="remove-cart-{{ $item['key'] }}">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $item['product_id'] }}">
                                 <input type="hidden" name="distributor_id" value="{{ $item['distributor_id'] }}">
-                                <button type="submit" class="text-xs text-brand-brick hover:underline font-semibold" onclick="return confirm('Hapus item ini dari keranjang?')">
+                                <button type="button"
+                                        @click="kulaanConfirm({
+                                            title: 'Hapus dari Keranjang?',
+                                            message: 'Apakah Anda yakin ingin menghapus {{ addslashes($prod->name) }} dari keranjang belanja?',
+                                            confirmText: 'Ya, Hapus',
+                                            cancelText: 'Batal',
+                                            isDanger: true,
+                                            onConfirm: () => document.getElementById('remove-cart-{{ $item['key'] }}').submit()
+                                        })"
+                                        class="text-xs text-brand-brick hover:underline font-semibold cursor-pointer">
                                     Hapus
                                 </button>
                             </form>
@@ -192,10 +201,23 @@
             const nextQty = Math.max(0, Math.round(current + delta));
 
             if (nextQty <= 0) {
-                if (!confirm('Hapus item ini dari keranjang?')) {
+                if (window.kulaanConfirm) {
+                    window.kulaanConfirm({
+                        title: 'Hapus dari Keranjang?',
+                        message: 'Jumlah menjadi 0. Apakah Anda ingin menghapus item ini dari keranjang belanja?',
+                        confirmText: 'Ya, Hapus',
+                        cancelText: 'Batal',
+                        isDanger: true,
+                        onConfirm: () => performCartQtyChange(productId, distributorId, key, nextQty)
+                    });
                     return;
                 }
             }
+
+            await performCartQtyChange(productId, distributorId, key, nextQty);
+        }
+
+        async function performCartQtyChange(productId, distributorId, key, nextQty) {
 
             try {
                 const response = await fetch("{{ route('umkm.cart.update') }}", {

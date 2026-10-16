@@ -84,9 +84,18 @@
                                             </button>
                                         </form>
                                     @elseif ($shipment->status === 'IN_TRANSIT')
-                                        <form method="POST" action="{{ route('kurir.shipments.complete', $shipment) }}" onsubmit="return confirm('Konfirmasi seluruh barang telah sampai di lokasi UMKM?');">
+                                        <form method="POST" action="{{ route('kurir.shipments.complete', $shipment) }}" id="complete-shipment-{{ $shipment->id }}">
                                             @csrf
-                                            <button type="submit" class="btn-accent text-sm font-bold shadow-sm w-full sm:w-auto justify-center py-3 px-6">
+                                            <button type="button"
+                                                    @click="kulaanConfirm({
+                                                        title: 'Selesaikan Pengantaran?',
+                                                        message: 'Konfirmasi seluruh barang telah sampai dan diterima dengan baik di lokasi UMKM?',
+                                                        confirmText: 'Ya, Selesai',
+                                                        cancelText: 'Kembali',
+                                                        isDanger: false,
+                                                        onConfirm: () => document.getElementById('complete-shipment-{{ $shipment->id }}').submit()
+                                                    })"
+                                                    class="btn-accent text-sm font-bold shadow-sm w-full sm:w-auto justify-center py-3 px-6 cursor-pointer">
                                                 Selesaikan Pengantaran
                                             </button>
                                         </form>

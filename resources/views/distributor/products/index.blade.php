@@ -150,10 +150,19 @@
                                     </div>
                                 </div>
                                 @if ($proposal->status->value === 'PENDING')
-                                    <form method="POST" action="{{ route('distributor.products.proposals.destroy', $proposal) }}" onsubmit="return confirm('Tarik kembali usulan ini?');">
+                                    <form method="POST" action="{{ route('distributor.products.proposals.destroy', $proposal) }}" id="delete-proposal-{{ $proposal->id }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="min-h-11 px-3 text-xs font-semibold text-brand-brick hover:underline cursor-pointer shrink-0">
+                                        <button type="button"
+                                                @click="kulaanConfirm({
+                                                    title: 'Tarik Usulan Produk?',
+                                                    message: 'Apakah Anda yakin ingin menarik kembali usulan produk ini dari antrean verifikasi admin?',
+                                                    confirmText: 'Ya, Tarik Usulan',
+                                                    cancelText: 'Kembali',
+                                                    isDanger: true,
+                                                    onConfirm: () => document.getElementById('delete-proposal-{{ $proposal->id }}').submit()
+                                                })"
+                                                class="min-h-11 px-3 text-xs font-semibold text-brand-brick hover:underline cursor-pointer shrink-0">
                                             Tarik
                                         </button>
                                     </form>

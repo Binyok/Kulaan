@@ -9,6 +9,9 @@
         }
 
         $tiersDataByDistributor = [];
+        $initialQuantities = [];
+        $defaultQty = max(1, (int) round($quantity));
+
         foreach ($offers as $offer) {
             $sp = $offer['supplier_product'];
             $tiers = [];
@@ -25,17 +28,16 @@
                 'stock' => (float) $sp->stock_available,
                 'tiers' => $tiers,
             ];
+            $initialQuantities[$offer['distributor']->id] = $defaultQty;
         }
-
-        $defaultQty = max(1, (int) round($quantity));
     @endphp
 
     <div x-data="marketplaceDetail({
-            qty: {{ $defaultQty }},
             benchmark: {{ (float) $product->benchmark_retail_price }},
             unit: '{{ $product->unit }}',
             maxQty: {{ $maxStock }},
-            tiersData: {{ Js::from($tiersDataByDistributor) }}
+            tiersData: {{ Js::from($tiersDataByDistributor) }},
+            quantities: {{ Js::from($initialQuantities) }}
          })" class="space-y-6">
 
         <div class="flex items-center gap-2 text-xs text-brand-slate">
@@ -77,45 +79,17 @@
                             {{ $product->standard_specification }}
                         </p>
                     @endif
-
-                    <div class="mt-6 pt-5 border-t border-brand-line">
-                        <label class="block text-xs font-bold text-brand-dark uppercase tracking-wider">
-                            Tentukan Kebutuhan Anda ({{ $product->unit }})
-                        </label>
-                        <p class="text-[0.6875rem] text-brand-slate mt-0.5">
-                            Beli berapa pun tetap bisa pesan — kuota akan diurunkan bersama UMKM lain sampai tembus grosir.
-                        </p>
-
-                        <div class="flex items-center gap-3 mt-3">
-                            <button type="button"
-                                    @click="dec()"
-                                    class="w-10 h-10 rounded-xl border border-brand-line bg-brand-cream hover:bg-black/[0.04] text-brand-dark font-extrabold text-lg flex items-center justify-center transition-colors">
-                                &minus;
-                            </button>
-                            <input type="number"
-                                   x-model.number="qty"
-                                   @input="normalizeQty()"
-                                   min="1"
-                                   step="1"
-                                   :max="maxQty"
-                                   class="w-24 text-center font-bold text-lg rounded-xl border border-brand-line py-2 tabular-nums focus:ring-2 focus:ring-brand-primary">
-                            <button type="button"
-                                    @click="inc()"
-                                    class="w-10 h-10 rounded-xl border border-brand-line bg-brand-cream hover:bg-black/[0.04] text-brand-dark font-extrabold text-lg flex items-center justify-center transition-colors">
-                                &plus;
-                            </button>
-                            <span class="text-sm font-bold text-brand-slate">{{ $product->unit }}</span>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="mt-6 p-4 rounded-xl bg-brand-mint/80 border border-brand-primary/20 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                        <span class="text-[0.6875rem] font-bold uppercase tracking-wider text-brand-primary block">Estimasi Keuntungan Kulaan</span>
-                        <p class="text-xs sm:text-sm font-extrabold text-brand-primary mt-0.5" x-text="savingsText"></p>
+                        <span class="text-[0.6875rem] font-bold uppercase tracking-wider text-brand-primary block">Keuntungan Kulaan Kolektif</span>
+                        <p class="text-xs sm:text-sm font-extrabold text-brand-primary mt-0.5">
+                            Beli berapa pun tetap bisa pesan — kuota akan diurunkan bersama UMKM lain untuk harga grosir termurah.
+                        </p>
                     </div>
                     <span class="text-[0.6875rem] text-brand-slate">
-                        Harga final dihitung saat grup kulaan terpenuhi
+                        Pilih distributor & atur kuantitas di bawah
                     </span>
                 </div>
             </div>
@@ -128,7 +102,7 @@
                         Pilihan Distributor Penyedia ({{ count($offers) }})
                     </h2>
                     <p class="text-xs text-brand-slate">
-                        Pilih distributor yang Anda inginkan. Harga dan kuota di bawah otomatis menyesuaikan <strong class="text-brand-dark" x-text="qty + ' ' + unit"></strong>.
+                        Tentukan jumlah pesanan ({{ $product->unit }}) pada distributor pilihan Anda di bawah. Harga & subtotal otomatis menyesuaikan.
                     </p>
                 </div>
             </div>
@@ -184,7 +158,34 @@
                                     </p>
                                 </div>
 
-                                <div class="mt-4 pt-3 border-t border-brand-line/70 flex items-baseline justify-between">
+                                {{-- Quantity Selector per distributor --}}
+                                <div class="mt-4 pt-3 border-t border-brand-line/70">
+                                    <label class="block text-[0.6875rem] uppercase tracking-wider font-bold text-brand-dark mb-1.5">
+                                        Jumlah Kebutuhan Anda ({{ $product->unit }})
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button"
+                                                @click="dec({{ $d->id }})"
+                                                class="w-9 h-9 rounded-xl border border-brand-line bg-brand-cream hover:bg-black/[0.04] text-brand-dark font-extrabold text-base flex items-center justify-center transition-colors shrink-0">
+                                            &minus;
+                                        </button>
+                                        <input type="number"
+                                               x-model.number="quantities[{{ $d->id }}]"
+                                               @input="normalizeQty({{ $d->id }})"
+                                               min="1"
+                                               step="1"
+                                               :max="maxQty"
+                                               class="w-20 text-center font-bold text-base rounded-xl border border-brand-line py-1.5 tabular-nums focus:ring-2 focus:ring-brand-primary">
+                                        <button type="button"
+                                                @click="inc({{ $d->id }})"
+                                                class="w-9 h-9 rounded-xl border border-brand-line bg-brand-cream hover:bg-black/[0.04] text-brand-dark font-extrabold text-base flex items-center justify-center transition-colors shrink-0">
+                                            &plus;
+                                        </button>
+                                        <span class="text-xs font-bold text-brand-slate ml-1">{{ $product->unit }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 pt-3 border-t border-brand-line/70 flex items-baseline justify-between">
                                     <div>
                                         <span class="text-[0.625rem] uppercase tracking-wider text-brand-slate font-medium block">
                                             Harga Satuan Tier (Estimasi)
@@ -199,9 +200,16 @@
                                     <div class="text-right">
                                         <span class="text-[0.625rem] text-brand-slate block">Subtotal Kebutuhan</span>
                                         <span class="font-extrabold text-brand-dark text-sm sm:text-base tabular-nums">
-                                            Rp <span x-text="formatNumber(getPrice({{ $d->id }}) * qty)">{{ number_format($offer['unit_price'] * $defaultQty, 0, ',', '.') }}</span>
+                                            Rp <span x-text="formatNumber(getSubtotal({{ $d->id }}))">{{ number_format($offer['unit_price'] * $defaultQty, 0, ',', '.') }}</span>
                                         </span>
                                     </div>
+                                </div>
+
+                                <div x-show="getSavings({{ $d->id }}) > 0" class="mt-2.5 p-2 rounded-lg bg-brand-mint/60 border border-brand-primary/20 flex items-center justify-between text-[0.6875rem]">
+                                    <span class="text-brand-primary font-bold">Estimasi Hemat Kulaan:</span>
+                                    <span class="font-extrabold text-brand-primary tabular-nums">
+                                        ~Rp <span x-text="formatNumber(getSavings({{ $d->id }}))"></span> vs eceran biasa
+                                    </span>
                                 </div>
                             </div>
 
@@ -210,7 +218,7 @@
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                                     <input type="hidden" name="distributor_id" value="{{ $d->id }}">
-                                    <input type="hidden" name="quantity" :value="qty">
+                                    <input type="hidden" name="quantity" :value="getQty({{ $d->id }})">
                                     <button type="submit" class="w-full py-2.5 px-3 rounded-xl border border-brand-line hover:border-brand-primary/50 bg-white hover:bg-brand-mint text-brand-primary font-bold text-xs transition-colors flex items-center justify-center gap-1.5 min-h-10">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -223,7 +231,7 @@
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                                     <input type="hidden" name="distributor_id" value="{{ $d->id }}">
-                                    <input type="hidden" name="quantity" :value="qty">
+                                    <input type="hidden" name="quantity" :value="getQty({{ $d->id }})">
                                     <button type="submit" class="w-full py-2.5 px-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white font-bold text-xs transition-colors shadow-sm flex items-center justify-center gap-1 min-h-10">
                                         Beli Sekarang &rarr;
                                     </button>
@@ -244,34 +252,35 @@
     <script>
         function marketplaceDetail(config) {
             return {
-                qty: config.qty,
                 benchmark: config.benchmark,
                 unit: config.unit,
                 maxQty: config.maxQty,
                 tiersData: config.tiersData,
+                quantities: config.quantities || {},
 
-                inc() {
-                    if (this.qty < this.maxQty) {
-                        this.qty = Math.round(this.qty + 1);
-                    }
+                getQty(distId) {
+                    const val = parseInt(this.quantities[distId], 10);
+                    return isNaN(val) || val < 1 ? 1 : Math.min(val, this.maxQty);
                 },
-                dec() {
-                    if (this.qty > 1) {
-                        this.qty = Math.round(this.qty - 1);
-                    }
+                setQty(distId, val) {
+                    let parsed = parseInt(val, 10);
+                    if (isNaN(parsed) || parsed < 1) parsed = 1;
+                    if (parsed > this.maxQty) parsed = this.maxQty;
+                    this.quantities[distId] = parsed;
                 },
-                normalizeQty() {
-                    if (!this.qty || this.qty < 1) {
-                        this.qty = 1;
-                    }
-                    if (this.qty > this.maxQty) {
-                        this.qty = this.maxQty;
-                    }
+                inc(distId) {
+                    this.setQty(distId, this.getQty(distId) + 1);
+                },
+                dec(distId) {
+                    this.setQty(distId, this.getQty(distId) - 1);
+                },
+                normalizeQty(distId) {
+                    this.setQty(distId, this.quantities[distId]);
                 },
                 getPrice(distId) {
                     const data = this.tiersData[distId];
                     if (!data) return 0;
-                    const q = parseFloat(this.qty) || 1;
+                    const q = this.getQty(distId);
                     let bestPrice = data.base;
                     if (Array.isArray(data.tiers)) {
                         for (const t of data.tiers) {
@@ -286,20 +295,14 @@
                     }
                     return bestPrice;
                 },
-                get savingsAmount() {
-                    const firstDistId = Object.keys(this.tiersData)[0];
-                    if (!firstDistId) return 0;
-                    const price = this.getPrice(firstDistId);
-                    const q = parseFloat(this.qty) || 1;
-                    const retailTotal = this.benchmark * q;
-                    const actualTotal = price * q;
-                    return Math.max(0, retailTotal - actualTotal);
+                getSubtotal(distId) {
+                    return this.getPrice(distId) * this.getQty(distId);
                 },
-                get savingsText() {
-                    if (this.savingsAmount <= 0) {
-                        return `Pesan ${this.qty} ${this.unit} — gabung kuota untuk harga grosir termurah`;
-                    }
-                    return `Hemat ~Rp ${this.formatNumber(this.savingsAmount)} dibanding harga eceran biasa (${this.qty} ${this.unit})`;
+                getSavings(distId) {
+                    const q = this.getQty(distId);
+                    const retailTotal = this.benchmark * q;
+                    const actualTotal = this.getSubtotal(distId);
+                    return Math.max(0, retailTotal - actualTotal);
                 },
                 formatNumber(val) {
                     return Math.round(val || 0).toLocaleString('id-ID');

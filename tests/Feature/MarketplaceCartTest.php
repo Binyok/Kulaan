@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\MatchingGroupStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Models\Distributor;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\SupplierPriceTier;
@@ -115,7 +116,8 @@ class MarketplaceCartTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('umkm.cart.checkout'));
 
-        $response->assertRedirect(route('umkm.requests.index'));
+        $unpaidItem = OrderItem::where('umkm_id', $umkm->id)->where('product_id', $prod1->id)->first();
+        $response->assertRedirect(route('payment.show', $unpaidItem));
         $this->assertEquals(0, $cart->count());
 
         $this->assertDatabaseHas('purchase_requests', [
@@ -225,7 +227,8 @@ class MarketplaceCartTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('umkm.cart.checkout'));
 
-        $response->assertRedirect(route('umkm.requests.index'));
+        $unpaidItem = OrderItem::where('umkm_id', $umkm->id)->where('product_id', $prod->id)->first();
+        $response->assertRedirect(route('payment.show', $unpaidItem));
 
         $this->assertDatabaseHas('matching_groups', [
             'product_id' => $prod->id,

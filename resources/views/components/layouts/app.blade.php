@@ -239,5 +239,66 @@
             @endhasrole
         </div>
     </nav>
+
+    <!-- Global App Confirmation Modal -->
+    <div x-data="{
+            open: false,
+            title: '',
+            message: '',
+            confirmText: 'Ya, Lanjutkan',
+            cancelText: 'Batal',
+            isDanger: true,
+            actionFn: null,
+            init() {
+                window.kulaanConfirm = ({ title, message, confirmText = 'Ya, Lanjutkan', cancelText = 'Batal', isDanger = true, onConfirm }) => {
+                    this.title = title || 'Konfirmasi Tindakan';
+                    this.message = message || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+                    this.confirmText = confirmText;
+                    this.cancelText = cancelText;
+                    this.isDanger = isDanger;
+                    this.actionFn = onConfirm;
+                    this.open = true;
+                };
+            },
+            proceed() {
+                this.open = false;
+                if (typeof this.actionFn === 'function') {
+                    this.actionFn();
+                }
+            }
+         }"
+         x-show="open"
+         x-cloak
+         @keydown.escape.window="open = false"
+         class="modal-overlay z-50 fixed inset-0 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity duration-200">
+        <div @click.away="open = false"
+             class="bg-white rounded-2xl border border-brand-line shadow-2xl max-w-sm w-full p-6 text-center transform transition-all">
+            <div class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center mb-4"
+                 :class="isDanger ? 'bg-red-50 text-brand-brick border border-red-100' : 'bg-brand-mint text-brand-primary border border-brand-primary/20'">
+                <svg x-show="isDanger" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <svg x-show="!isDanger" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h3 class="font-display font-bold text-lg text-brand-dark" x-text="title"></h3>
+            <p class="text-xs text-brand-slate mt-2 leading-relaxed" x-text="message"></p>
+
+            <div class="mt-6 flex items-center justify-center gap-3">
+                <button type="button"
+                        @click="open = false"
+                        class="btn-ghost flex-1 py-2.5 px-4 text-xs font-bold rounded-xl border border-brand-line"
+                        x-text="cancelText">
+                </button>
+                <button type="button"
+                        @click="proceed()"
+                        :class="isDanger ? 'bg-brand-brick hover:bg-brand-brick/90 text-white' : 'btn-primary'"
+                        class="flex-1 py-2.5 px-4 text-xs font-bold rounded-xl shadow-sm transition-colors text-center"
+                        x-text="confirmText">
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
