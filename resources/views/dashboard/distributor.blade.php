@@ -1,103 +1,300 @@
 <x-layouts.app>
     <x-slot name="title">Dashboard Distributor</x-slot>
 
-    {{-- Forest band: page header --}}
-    <div class="-mx-3 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-8 mb-6 sm:mb-8">
-        <div class="texture-grain bg-brand-forest text-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-                <div class="max-w-2xl" data-reveal>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/10 text-[#D8E8DD] uppercase tracking-[0.14em]">
-                        Distributor Ekosistem
-                    </span>
-                    <h1 class="font-display font-semibold tracking-tight text-balance text-4xl sm:text-5xl mt-4">
-                        {{ $distributor?->company_name ?? $user->name }}
-                    </h1>
-                    <p class="text-sm text-white/70 leading-relaxed mt-3">
-                        Area operasional: {{ $distributor?->district ?? 'Sidoarjo' }} &bull; Rata-rata kirim {{ $distributor?->delivery_lead_time_days ?? 1 }} hari.
-                        Kelola katalog, konfirmasi pesanan, dan tugaskan kurirmu dari sini.
-                    </p>
+    <div class="lg:hidden bg-cream min-h-screen">
+        <div class="pb-24">
+            <div class="px-4 pt-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="relative" x-data="{ menuOpen: false }">
+                        <button type="button" @click="menuOpen = !menuOpen" class="w-11 h-11 rounded-2xl bg-forest text-white flex items-center justify-center font-extrabold text-sm cursor-pointer">{{ strtoupper(substr($user->name, 0, 2)) }}</button>
+                        <div x-show="menuOpen" @click.away="menuOpen = false" x-cloak class="absolute left-0 mt-2 w-48 bg-white border border-line rounded-2xl shadow-xl p-2 z-40 text-xs">
+                            <a href="{{ route('profile.complete') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-ink hover:bg-cream font-medium">Profil Saya</a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-danger hover:bg-danger/10 font-bold transition text-left cursor-pointer">Keluar</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-muted">Selamat pagi,</p>
+                        <p class="text-[15px] font-extrabold leading-tight">{{ $distributor?->company_name ?? $user->name }}</p>
+                    </div>
+                </div>
+                <div class="relative" x-data="{ notifOpen: false }">
+                    <button type="button" @click="notifOpen = !notifOpen" class="w-10 h-10 rounded-2xl bg-white border border-line flex items-center justify-center text-ink relative cursor-pointer">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
+                    </button>
+                    <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
+                        <p class="text-sm font-extrabold text-ink">Notifikasi</p>
+                        <div class="mt-3 space-y-1">
+                            <a href="{{ route('distributor.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
+                                <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
+                                <span class="text-xs text-ink"><b>{{ $pendingOrdersCount }}</b> pesanan perlu diproses</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-4 mt-4">
+                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-forest-deep via-forest to-forest-dark text-white p-5">
+                    <div class="absolute -right-10 -top-12 w-44 h-44 rounded-full bg-white/10"></div>
+                    <div class="absolute right-16 -bottom-14 w-36 h-36 rounded-full bg-brass/20"></div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-brass-soft">Distributor Ekosistem</p>
+                    <h2 class="text-lg font-extrabold mt-1 leading-snug">{{ $distributor?->company_name ?? $user->name }}</h2>
+                    <p class="text-[11px] text-white/70 mt-1.5 leading-relaxed">Area operasional: {{ $distributor?->city ?? 'Sidoarjo' }} &bull; Rata-rata kirim {{ $distributor?->delivery_lead_time_days ?? 2 }} hari. Kelola katalog, konfirmasi pesanan, dan tugaskan kurirmu dari sini.</p>
+                    <div class="flex gap-2.5 mt-4 relative">
+                        <a href="{{ route('distributor.products.index') }}" class="flex-1 h-11 rounded-xl bg-white text-forest-dark text-xs font-bold flex items-center justify-center">Kelola Katalog</a>
+                        <a href="{{ route('distributor.orders.index') }}" class="flex-1 h-11 rounded-xl bg-white/10 border border-white/25 text-white text-xs font-bold flex items-center justify-center">Lihat Pesanan</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-4 mt-4">
+                <div class="bg-white rounded-3xl border-2 border-brass/40 p-5 relative overflow-hidden">
+                    <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-brass-soft"></div>
+                    <div class="flex items-center justify-between relative">
+                        <p class="text-xs font-bold uppercase tracking-wider text-muted">Total Penjualan</p>
+                        <span class="w-9 h-9 rounded-xl bg-brass-soft text-brass flex items-center justify-center text-xs font-extrabold">Rp</span>
+                    </div>
+                    <p class="text-[2rem] font-extrabold text-brass tabular-nums mt-2 relative">Rp {{ number_format($totalSalesAmount, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-muted mt-1 relative">{{ $totalOrdersCount }} pesanan tercatat</p>
+                </div>
+            </div>
+
+            <div class="px-4 mt-3 grid grid-cols-3 gap-2.5">
+                <div class="bg-white rounded-3xl border border-line p-3.5">
+                    <p class="text-2xl font-extrabold">{{ $catalogCount }}</p>
+                    <p class="text-[10px] text-muted font-semibold mt-1 leading-tight">Produk aktif di katalog</p>
+                    <span class="inline-block mt-2 bg-forest/10 text-forest text-[10px] font-bold px-2 py-0.5 rounded-full">+{{ $newProductsThisMonth }} bulan ini</span>
+                </div>
+                <div class="bg-white rounded-3xl border-2 border-brass/40 p-3.5">
+                    <p class="text-2xl font-extrabold text-brass">{{ $pendingOrdersCount }}</p>
+                    <p class="text-[10px] text-muted font-semibold mt-1 leading-tight">Pesanan perlu diproses</p>
+                    <span class="inline-block mt-2 bg-brass-soft text-brass text-[10px] font-bold px-2 py-0.5 rounded-full">Perlu aksi</span>
+                </div>
+                <div class="bg-white rounded-3xl border border-line p-3.5">
+                    <p class="text-2xl font-extrabold">{{ number_format($distributor?->rating ?? 0, 1) }}<span class="text-sm text-muted font-bold">/5</span></p>
+                    <p class="text-[10px] text-muted font-semibold mt-1 leading-tight">Rating dari UMKM</p>
+                    <span class="inline-block mt-2 bg-brass-soft text-brass text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $reviewCount }} ulasan</span>
+                </div>
+            </div>
+
+            <div class="px-4 mt-5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-extrabold">Pesanan kolektif masuk</h3>
+                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-brass">Lihat Semua</a>
+                </div>
+                <p class="text-[11px] text-muted mt-0.5">Pesanan terbaru dari grup pilihan UMKM</p>
+                <div class="mt-3 space-y-2.5">
+                    @forelse ($orders->take(5) as $order)
+                        @php
+                            $needsProcessing = in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING'], true);
+                        @endphp
+                        <div class="bg-white rounded-3xl {{ $needsProcessing ? 'border-2 border-brass/40' : 'border border-line' }} p-3.5">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="min-w-0">
+                                    <p class="font-mono text-[13px] font-bold">{{ $order->order_number }}</p>
+                                    <p class="text-[11px] text-muted mt-0.5 truncate">{{ number_format($order->total_quantity, 0) }} unit &bull; Rp {{ number_format($order->total_amount, 0, ',', '.') }} &bull; {{ $order->items->map(fn ($i) => $i->umkm?->business_name)->filter()->unique()->join(', ') }}</p>
+                                </div>
+                                @if ($needsProcessing)
+                                    <span class="shrink-0 bg-brass-soft text-brass text-[10px] font-bold px-2 py-1 rounded-full">Perlu diproses</span>
+                                @else
+                                    <span class="shrink-0 bg-success/10 text-success text-[10px] font-bold px-2 py-1 rounded-full">Siap kirim</span>
+                                @endif
+                            </div>
+                            <div class="flex items-center justify-between mt-2.5">
+                                <p class="text-sm font-extrabold tabular-nums">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
+                                @if ($needsProcessing)
+                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-forest bg-forest/10 px-3 py-2 rounded-xl">Konfirmasi</a>
+                                @else
+                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-muted px-3 py-2">Tugaskan kurir</a>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-xs text-muted py-4">Belum ada pesanan kolektif masuk.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
+
+        <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line px-2 pt-2 pb-5 flex items-start justify-around">
+            <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 w-14 text-forest">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m2.25 12 8.95-8.95a1.13 1.13 0 0 1 1.6 0l8.95 8.95M4.5 9.75V19.5a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75V9.75"/></svg>
+                <span class="text-[10px] font-bold">Beranda</span>
+            </a>
+            <a href="{{ route('distributor.products.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+                <span class="text-[10px] font-semibold">Katalog</span>
+            </a>
+            <a href="{{ route('distributor.orders.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted relative">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 8h6M9 12h4"/></svg>
+                <span class="text-[10px] font-semibold">Pesanan</span>
+                @if ($pendingOrdersCount > 0)
+                    <span class="absolute top-0 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-white text-[10px] font-bold flex items-center justify-center">{{ $pendingOrdersCount }}</span>
+                @endif
+            </a>
+            <a href="{{ route('profile.complete') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.98 18.72a6 6 0 0 0-8.46 0M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-9.75 8.25a9 9 0 1 1 13.5 0"/></svg>
+                <span class="text-[10px] font-semibold">Akun</span>
+            </a>
+        </div>
     </div>
 
-    <div class="space-y-6 sm:space-y-8">
-        {{-- Stat strip --}}
-        <dl class="bg-white rounded-[20px] border border-brand-line grid grid-cols-1 sm:grid-cols-3 sm:divide-x divide-brand-line/70 overflow-hidden" data-reveal>
-            <div class="p-5 sm:p-6 flex items-center gap-4 border-b sm:border-b-0 border-brand-line/60">
-                <span class="w-11 h-11 rounded-full bg-brand-mint text-brand-primary flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="hidden lg:flex min-h-screen">
+        <aside class="w-64 shrink-0 bg-white border-r border-line flex flex-col sticky top-0 h-screen">
+            <div class="flex items-center gap-2.5 px-6 h-[72px] border-b border-line">
+                <span class="w-10 h-10 rounded-2xl bg-forest flex items-center justify-center text-white">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
                 </span>
-                <div class="min-w-0">
-                    <dd class="font-display font-extrabold text-2xl sm:text-3xl text-brand-dark tabular-nums leading-none">{{ $catalogCount }}</dd>
-                    <dt class="text-[0.6875rem] text-brand-slate font-medium mt-1.5">Produk aktif di katalog</dt>
-                </div>
+                <span class="text-xl font-extrabold tracking-tight">Kulaan</span>
             </div>
-            <div class="p-5 sm:p-6 flex items-center gap-4 border-b sm:border-b-0 border-brand-line/60">
-                <span class="w-11 h-11 rounded-full {{ $pendingOrdersCount > 0 ? 'bg-brand-ochre-soft text-brand-brass' : 'bg-brand-mint text-brand-primary' }} flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 8h6M9 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                </span>
-                <div class="min-w-0">
-                    <dd class="font-display font-extrabold text-2xl sm:text-3xl tabular-nums leading-none {{ $pendingOrdersCount > 0 ? 'text-brand-brass' : 'text-brand-primary' }}">{{ $pendingOrdersCount }}</dd>
-                    <dt class="text-[0.6875rem] text-brand-slate font-medium mt-1.5">Pesanan perlu diproses</dt>
-                </div>
-            </div>
-            <div class="p-5 sm:p-6 flex items-center gap-4">
-                <span class="w-11 h-11 rounded-full bg-brand-ochre-soft text-brand-brass flex items-center justify-center shrink-0 border border-brand-accent/25">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
-                </span>
-                <div class="min-w-0">
-                    @if ($reviewCount > 0)
-                        <dd class="font-display font-extrabold text-2xl sm:text-3xl text-brand-dark tabular-nums leading-none">{{ number_format($distributor?->rating ?? 0, 1, ',', '') }}<span class="text-base text-brand-slate font-semibold">/5</span></dd>
-                        <dt class="text-[0.6875rem] text-brand-slate font-medium mt-1.5">Rating dari {{ $reviewCount }} ulasan UMKM</dt>
-                    @else
-                        <dd class="font-display font-extrabold text-2xl sm:text-3xl text-brand-slate leading-none">&ndash;</dd>
-                        <dt class="text-[0.6875rem] text-brand-slate font-medium mt-1.5">Belum ada ulasan UMKM</dt>
-                    @endif
-                </div>
-            </div>
-        </dl>
-
-        {{-- Recent orders: rich rows --}}
-        <section class="bg-white rounded-[20px] border border-brand-line p-5 sm:p-7" data-reveal>
-            <div class="flex items-center justify-between gap-3 mb-2">
-                <div>
-                    <h2 class="text-base font-bold text-brand-dark tracking-tight">Pesanan kolektif masuk</h2>
-                    <p class="text-[0.75rem] text-brand-slate mt-0.5">Pesanan terbaru dari grup pilihan UMKM</p>
-                </div>
-                <a href="{{ route('distributor.orders.index') }}" class="btn-ghost text-xs py-2 px-4 font-bold text-brand-primary shrink-0">
-                    Lihat Semua
+            <nav class="flex-1 px-4 py-6 space-y-1 text-sm font-semibold">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-forest text-white">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m2.25 12 8.95-8.95a1.13 1.13 0 0 1 1.6 0l8.95 8.95M4.5 9.75V19.5a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75V9.75"/></svg>
+                    Dashboard
                 </a>
+                <a href="{{ route('distributor.products.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+                    Katalog Produk
+                </a>
+                <a href="{{ route('distributor.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 8h6M9 12h4"/></svg>
+                    Pesanan
+                    @if ($pendingOrdersCount > 0)
+                        <span class="ml-auto bg-brass text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $pendingOrdersCount }}</span>
+                    @endif
+                </a>
+            </nav>
+            <div class="p-4 border-t border-line">
+                <a href="{{ route('profile.complete') }}" class="flex items-center gap-3 px-2">
+                    <span class="w-10 h-10 rounded-2xl bg-forest text-white flex items-center justify-center font-extrabold text-xs">{{ strtoupper(substr($user->name, 0, 2)) }}</span>
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold truncate">{{ $distributor?->company_name ?? $user->name }}</p>
+                        <p class="text-[11px] text-muted">{{ $distributor?->city ?? 'Sidoarjo' }}, {{ $distributor?->province ?? 'Jawa Timur' }}</p>
+                    </div>
+                </a>
+                <form method="POST" action="{{ route('logout') }}" class="mt-3">
+                    @csrf
+                    <button type="submit" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold text-danger bg-danger/10 hover:bg-danger/15 rounded-xl transition cursor-pointer">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg>
+                        Keluar
+                    </button>
+                </form>
             </div>
+        </aside>
 
-            @php $hasOrders = $orders->isNotEmpty(); @endphp
-
-            @if ($hasOrders)
-                <div class="divide-y divide-black/[0.05]">
-                    @foreach ($orders as $order)
-                        <a href="{{ route('distributor.orders.index') }}" class="py-4 flex gap-4 items-center hover:bg-brand-cream/60 -mx-2 px-2 sm:-mx-4 sm:px-4 rounded-xl transition-colors group">
-                            <span class="w-11 h-11 rounded-full bg-brand-mint text-brand-primary flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm6-4a3 3 0 1 1-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="font-mono font-bold text-brand-dark text-sm group-hover:text-brand-primary transition-colors">{{ $order->order_number }}</p>
-                                <p class="text-[0.6875rem] text-brand-slate mt-0.5 truncate">{{ $order->items->pluck('umkm.business_name')->join(', ') }} &bull; {{ number_format($order->total_quantity, 0) }} unit</p>
+        <div class="flex-1 min-w-0">
+            <header class="bg-white/70 backdrop-blur border-b border-line sticky top-0 z-10">
+                <div class="px-8 h-[72px] flex items-center gap-4">
+                    <div>
+                        <h1 class="text-lg font-extrabold leading-tight">Selamat pagi, {{ $distributor?->company_name ?? $user->name }}</h1>
+                        <p class="text-xs text-muted">{{ now()->translatedFormat('l, d F Y') }}</p>
+                    </div>
+                    <div class="ml-auto flex items-center gap-3">
+                        <div class="hidden lg:flex items-center gap-2 bg-white border border-line rounded-2xl pl-4 pr-2 py-2 w-72">
+                            <svg class="w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z"/></svg>
+                            <input class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" placeholder="Cari pesanan, produk...">
+                        </div>
+                        <div class="relative" x-data="{ notifOpen: false }">
+                            <button type="button" @click="notifOpen = !notifOpen" class="w-11 h-11 rounded-2xl bg-white border border-line flex items-center justify-center relative cursor-pointer">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
+                            </button>
+                            <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
+                                <p class="text-sm font-extrabold text-ink">Notifikasi</p>
+                                <div class="mt-3 space-y-1">
+                                    <a href="{{ route('distributor.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
+                                        <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
+                                        <span class="text-xs text-ink"><b>{{ $pendingOrdersCount }}</b> pesanan perlu diproses</span>
+                                    </a>
+                                </div>
                             </div>
-                            <p class="font-extrabold text-brand-primary tabular-nums text-sm shrink-0 hidden sm:block">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
-                            <span class="badge {{ $order->status->badgeClass() }} shrink-0">{{ $order->status->label() }}</span>
-                        </a>
-                    @endforeach
+                        </div>
+                    </div>
                 </div>
-            @else
-                <div class="py-10 text-center">
-                    <span class="w-14 h-14 rounded-full bg-brand-mint text-brand-primary inline-flex items-center justify-center">
-                        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </span>
-                    <p class="font-bold text-brand-dark mt-4">Belum ada pesanan kolektif masuk.</p>
-                    <p class="text-[0.8125rem] text-brand-slate mt-1.5 max-w-md mx-auto">Pastikan katalogmu lengkap biar gampang kepilih sistem.</p>
-                    <a href="{{ route('distributor.products.index') }}" class="btn-primary text-xs mt-5">Kelola Katalog Produk</a>
-                </div>
-            @endif
-        </section>
+            </header>
+
+            <main class="px-8 py-6 max-w-6xl">
+                <section class="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-forest-deep via-forest to-forest-dark text-white p-8">
+                    <div class="absolute -right-16 -top-20 w-72 h-72 rounded-full bg-white/10"></div>
+                    <div class="absolute right-40 -bottom-24 w-56 h-56 rounded-full bg-brass/20"></div>
+                    <div class="relative flex items-center justify-between gap-6 flex-wrap">
+                        <div class="max-w-xl">
+                            <p class="text-xs font-bold uppercase tracking-[0.16em] text-brass-soft">Distributor Ekosistem</p>
+                            <h2 class="text-2xl font-extrabold mt-1">{{ $distributor?->company_name ?? $user->name }}</h2>
+                            <p class="text-white/70 text-sm mt-2">Area operasional: {{ $distributor?->city ?? 'Sidoarjo' }} &bull; Rata-rata kirim {{ $distributor?->delivery_lead_time_days ?? 2 }} hari. Kelola katalog, konfirmasi pesanan, dan tugaskan kurirmu dari sini.</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="{{ route('distributor.products.index') }}" class="h-12 px-6 rounded-2xl bg-white text-forest-dark text-sm font-bold flex items-center justify-center">Kelola Katalog</a>
+                            <a href="{{ route('distributor.orders.index') }}" class="h-12 px-6 rounded-2xl bg-white/10 border border-white/25 text-white text-sm font-bold flex items-center justify-center">Lihat Pesanan</a>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
+                    <div class="bg-white rounded-3xl border-2 border-brass/40 p-6 relative overflow-hidden">
+                        <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-brass-soft"></div>
+                        <div class="flex items-center justify-between relative">
+                            <p class="text-xs font-bold uppercase tracking-wider text-muted">Total Penjualan</p>
+                            <span class="w-9 h-9 rounded-xl bg-brass-soft text-brass flex items-center justify-center text-xs font-extrabold">Rp</span>
+                        </div>
+                        <p class="text-3xl font-extrabold text-brass tabular-nums mt-2 relative">Rp {{ number_format($totalSalesAmount, 0, ',', '.') }}</p>
+                        <p class="text-[11px] text-muted mt-1 relative">{{ $totalOrdersCount }} pesanan tercatat</p>
+                    </div>
+                    <div class="bg-white rounded-3xl border border-line p-6">
+                        <p class="text-3xl font-extrabold tabular-nums">{{ $catalogCount }}</p>
+                        <p class="text-xs text-muted font-semibold mt-1">Produk aktif di katalog</p>
+                        <span class="inline-block mt-3 bg-forest/10 text-forest text-[11px] font-bold px-2.5 py-1 rounded-full">+{{ $newProductsThisMonth }} bulan ini</span>
+                    </div>
+                    <div class="bg-white rounded-3xl border-2 border-brass/40 p-6">
+                        <p class="text-3xl font-extrabold text-brass tabular-nums">{{ $pendingOrdersCount }}</p>
+                        <p class="text-xs text-muted font-semibold mt-1">Pesanan perlu diproses</p>
+                        <span class="inline-block mt-3 bg-brass-soft text-brass text-[11px] font-bold px-2.5 py-1 rounded-full">Perlu aksi</span>
+                    </div>
+                    <div class="bg-white rounded-3xl border border-line p-6">
+                        <p class="text-3xl font-extrabold tabular-nums">{{ number_format($distributor?->rating ?? 0, 1) }}<span class="text-base text-muted font-bold">/5</span></p>
+                        <p class="text-xs text-muted font-semibold mt-1">Rating dari UMKM</p>
+                        <span class="inline-block mt-3 bg-brass-soft text-brass text-[11px] font-bold px-2.5 py-1 rounded-full">{{ $reviewCount }} ulasan</span>
+                    </div>
+                </section>
+
+                <section class="bg-white rounded-[2rem] border border-line p-6 sm:p-8 mt-6">
+                    <div class="flex items-center justify-between mb-1">
+                        <div>
+                            <h2 class="text-lg font-extrabold tracking-tight">Pesanan kolektif masuk</h2>
+                            <p class="text-xs text-muted mt-0.5">Pesanan terbaru dari grup pilihan UMKM</p>
+                        </div>
+                        <a href="{{ route('distributor.orders.index') }}" class="text-sm font-bold text-brass">Lihat Semua</a>
+                    </div>
+                    <div class="divide-y divide-line/70">
+                        @forelse ($orders->take(5) as $order)
+                            @php
+                                $needsProcessing = in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING'], true);
+                            @endphp
+                            <div class="py-4 flex items-center gap-4">
+                                <span class="w-12 h-12 rounded-2xl {{ $needsProcessing ? 'bg-brass-soft text-brass' : 'bg-forest/10 text-forest' }} flex items-center justify-center shrink-0">
+                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 8h6M9 12h4"/></svg>
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-mono font-bold text-sm">{{ $order->order_number }}</p>
+                                    <p class="text-xs text-muted mt-0.5">{{ number_format($order->total_quantity, 0) }} unit &bull; Rp {{ number_format($order->total_amount, 0, ',', '.') }} &bull; {{ $order->items->map(fn ($i) => $i->umkm?->business_name)->filter()->unique()->join(', ') }}</p>
+                                </div>
+                                <p class="font-extrabold tabular-nums text-sm shrink-0">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
+                                @if ($needsProcessing)
+                                    <span class="bg-brass-soft text-brass text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0">Perlu diproses</span>
+                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-white bg-forest px-4 py-2.5 rounded-xl shrink-0">Konfirmasi</a>
+                                @else
+                                    <span class="bg-success/10 text-success text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0">Siap kirim</span>
+                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-muted px-4 py-2.5 shrink-0">Tugaskan kurir</a>
+                                @endif
+                            </div>
+                        @empty
+                            <p class="text-xs text-muted py-4">Belum ada pesanan kolektif masuk.</p>
+                        @endforelse
+                    </div>
+                </section>
+            </main>
+        </div>
     </div>
 </x-layouts.app>

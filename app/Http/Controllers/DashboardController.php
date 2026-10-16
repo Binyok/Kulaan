@@ -12,6 +12,7 @@ use App\Models\OrderItem;
 use App\Models\ProductProposal;
 use App\Models\PurchaseRequest;
 use App\Models\Shipment;
+use App\Models\SpkCalculationHistory;
 use App\Models\Umkm;
 
 class DashboardController extends Controller
@@ -28,6 +29,20 @@ class DashboardController extends Controller
             $totalCollectiveVolume = OrderItem::sum('quantity');
             $totalSavingsSystem = OrderItem::sum('savings_amount');
             $pendingProposals = ProductProposal::where('status', ProposalStatus::PENDING)->count();
+            $activeCouriers = Courier::where('is_available', true)->count();
+            $newUmkmThisWeek = Umkm::where('created_at', '>=', now()->subWeek())->count();
+            $newDistributorsThisMonth = Distributor::where('created_at', '>=', now()->subMonth())->count();
+            $recentDistributor = Distributor::latest()->first();
+            $latestSpk = SpkCalculationHistory::latest()->first();
+            $orderTrend = collect(range(6, 0))->map(function (int $daysAgo): array {
+                $date = now()->subDays($daysAgo);
+
+                return [
+                    'label' => $date->translatedFormat('D'),
+                    'count' => Order::whereDate('created_at', $date->toDateString())->count(),
+                ];
+            });
+            $orderTrendMax = max(1, (int) $orderTrend->max('count'));
 
             return view('dashboard.admin', compact(
                 'user',
@@ -37,7 +52,14 @@ class DashboardController extends Controller
                 'totalOrders',
                 'totalCollectiveVolume',
                 'totalSavingsSystem',
-                'pendingProposals'
+                'pendingProposals',
+                'activeCouriers',
+                'newUmkmThisWeek',
+                'newDistributorsThisMonth',
+                'recentDistributor',
+                'latestSpk',
+                'orderTrend',
+                'orderTrendMax'
             ));
         }
 
@@ -48,6 +70,9 @@ class DashboardController extends Controller
             $completedOrdersCount = $distributor ? Order::where('distributor_id', $distributor->id)->where('status', 'COMPLETED')->count() : 0;
             $reviewCount = $distributor ? $distributor->reviews()->count() : 0;
             $orders = $distributor ? Order::with('items.product', 'items.umkm')->where('distributor_id', $distributor->id)->latest()->take(5)->get() : collect();
+            $totalSalesAmount = $distributor ? Order::where('distributor_id', $distributor->id)->sum('total_amount') : 0;
+            $totalOrdersCount = $distributor ? Order::where('distributor_id', $distributor->id)->count() : 0;
+            $newProductsThisMonth = $distributor ? $distributor->supplierProducts()->where('created_at', '>=', now()->subMonth())->count() : 0;
 
             return view('dashboard.distributor', compact(
                 'user',
@@ -56,7 +81,10 @@ class DashboardController extends Controller
                 'pendingOrdersCount',
                 'completedOrdersCount',
                 'reviewCount',
-                'orders'
+                'orders',
+                'totalSalesAmount',
+                'totalOrdersCount',
+                'newProductsThisMonth'
             ));
         }
 
@@ -64,14 +92,18 @@ class DashboardController extends Controller
             $courier = $user->courier;
             $assignedShipmentsCount = $courier ? Shipment::where('courier_id', $courier->id)->where('status', 'PENDING')->count() : 0;
             $activeDelivery = $courier ? Shipment::with('order.items.product', 'order.items.umkm')->where('courier_id', $courier->id)->where('status', 'IN_TRANSIT')->first() : null;
+            $pendingShipment = $courier ? Shipment::with('order.items.product', 'order.items.umkm')->where('courier_id', $courier->id)->where('status', 'PENDING')->latest()->first() : null;
             $completedCount = $courier ? Shipment::where('courier_id', $courier->id)->where('status', 'DELIVERED')->count() : 0;
+            $completedThisWeek = $courier ? Shipment::where('courier_id', $courier->id)->where('status', 'DELIVERED')->where('delivered_at', '>=', now()->subWeek())->count() : 0;
 
             return view('dashboard.kurir', compact(
                 'user',
                 'courier',
                 'assignedShipmentsCount',
                 'activeDelivery',
-                'completedCount'
+                'pendingShipment',
+                'completedCount',
+                'completedThisWeek'
             ));
         }
 
@@ -84,6 +116,8 @@ class DashboardController extends Controller
         $activeRequestsCount = $pendingRequests->count();
         $unpaidInvoices = $orderItems->filter(fn ($item) => $item->payment_status->value === 'UNPAID');
         $totalSavings = $orderItems->sum('savings_amount');
+        $inTransitCount = $orderItems->filter(fn ($item) => $item->order?->shipments->contains(fn ($shipment) => $shipment->status === 'IN_TRANSIT'))->count();
+        $requestsThisWeek = $umkm ? PurchaseRequest::where('umkm_id', $umkm->id)->where('created_at', '>=', now()->subWeek())->count() : 0;
 
         return view('dashboard.umkm', compact(
             'user',
@@ -93,7 +127,9 @@ class DashboardController extends Controller
             'orderItems',
             'activeRequestsCount',
             'unpaidInvoices',
-            'totalSavings'
+            'totalSavings',
+            'inTransitCount',
+            'requestsThisWeek'
         ));
     }
 }

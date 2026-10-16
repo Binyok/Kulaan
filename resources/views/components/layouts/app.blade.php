@@ -5,240 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? "Dashboard" }} - Kula'an</title>
+    <title>{{ $title ?? "Kulaan" }} - Platform Pengadaan Kolektif</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <noscript><style>[data-reveal] { opacity: 1 !important; transform: none !important; }</style></noscript>
 </head>
-<body class="min-h-[100dvh] flex flex-col font-sans" style="background-color: var(--color-brand-cream);">
-    <!-- Floating Island Navigation -->
-    <header class="sticky top-0 z-30 pt-3 px-3 sm:px-6 lg:px-8">
-        <div class="max-w-7xl mx-auto">
-            <div class="bg-white/90 backdrop-blur-xl border border-black/[0.06] shadow-[0_2px_16px_-4px_rgba(0,0,0,0.06)] rounded-2xl min-h-16 px-4 sm:px-6 py-2 sm:py-0 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
-                <div class="flex items-center gap-4 sm:gap-8">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 group min-h-11">
-                        <span class="w-9 h-9 rounded-xl bg-brand-primary text-white flex items-center justify-center font-display font-semibold text-lg shadow-[0_2px_8px_-1px_rgba(45,106,79,0.3)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">K</span>
-                        <span class="font-display font-semibold text-[1.25rem] text-brand-dark tracking-tight">Kula'an</span>
-                    </a>
-
-                    <!-- Desktop Nav Links -->
-                    <nav class="hidden md:flex items-center gap-1.5 text-[0.8125rem] font-medium" aria-label="Navigasi utama">
-                        <a href="{{ route('dashboard') }}"
-                           class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('dashboard') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                           Dashboard
-                        </a>
-
-                        @hasrole('umkm')
-                            <a href="{{ route('umkm.catalog.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.catalog*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                                Katalog
-                            </a>
-                            <a href="{{ route('umkm.cart.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center gap-1.5 rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.cart*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                                <span>Keranjang</span>
-                                @php $cartCount = app(\App\Services\CartService::class)->count(); @endphp
-                                @if ($cartCount > 0)
-                                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[0.625rem] font-extrabold rounded-full bg-brand-primary text-white tabular-nums">
-                                        {{ $cartCount }}
-                                    </span>
-                                @endif
-                            </a>
-                            <a href="{{ route('umkm.requests.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.requests*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                                Pengajuan Saya
-                            </a>
-                            <a href="{{ route('umkm.orders.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.orders*') || request()->routeIs('payment.show') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                               Riwayat &amp; Tagihan
-                            </a>
-                            <a href="{{ route('umkm.tracking.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('umkm.tracking*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                               Pantau Live GPS
-                            </a>
-                        @endhasrole
-
-                        @hasrole('distributor')
-                            <a href="{{ route('distributor.products.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('distributor.products*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                               Katalog &amp; Harga Tier
-                            </a>
-                            <a href="{{ route('distributor.orders.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('distributor.orders*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                               Pesanan Kolektif
-                            </a>
-                        @endhasrole
-
-                        @hasrole('kurir')
-                            <a href="{{ route('kurir.shipments.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('kurir.shipments*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                               Tugas Pengiriman
-                            </a>
-                        @endhasrole
-
-                        @hasrole('admin')
-                            <a href="{{ route('admin.categories.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('admin.categories*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                               Kategori
-                            </a>
-                            <a href="{{ route('admin.products.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('admin.products*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                                Master Produk
-                            </a>
-                            <a href="{{ route('admin.proposals.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('admin.proposals*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                                Usulan Produk
-                            </a>
-                            <a href="{{ route('admin.spk.index') }}"
-                               class="px-3 min-h-11 inline-flex items-center rounded-full transition-colors duration-200 {{ request()->routeIs('admin.spk*') ? 'bg-brand-mint text-brand-primary font-bold' : 'text-brand-slate hover:text-brand-dark hover:bg-black/[0.02]' }}">
-                               Kriteria SPK
-                            </a>
-                        @endhasrole
-                    </nav>
-                </div>
-
-                <div class="flex items-center gap-3" x-data="{ open: false }">
-                    <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.6875rem] font-semibold bg-brand-ochre-soft text-brand-brass border border-brand-accent/15">
-                        <span class="w-1.5 h-1.5 rounded-full bg-brand-accent"></span>
-                        {{ Auth::user()->roles->first()?->name ? strtoupper(Auth::user()->roles->first()->name) : 'USER' }}
-                    </span>
-
-                    <div class="relative">
-                        <button @click="open = !open" type="button" aria-label="Menu akun" aria-haspopup="true" :aria-expanded="open" class="flex items-center gap-2 min-h-11 px-1.5 rounded-xl hover:bg-black/[0.03] transition-colors cursor-pointer">
-                            <div class="w-9 h-9 rounded-lg bg-brand-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                            </div>
-                            <div class="hidden sm:block text-left pr-1">
-                                <div class="text-[0.8125rem] font-semibold text-brand-dark leading-tight line-clamp-1 max-w-[10rem]">{{ Auth::user()->name }}</div>
-                            </div>
-                        </button>
-
-                        <div x-show="open" @click.away="open = false" x-cloak
-                             class="absolute right-0 mt-2 w-56 bg-white border border-black/[0.06] rounded-2xl shadow-[0_12px_32px_-8px_rgba(0,0,0,0.12)] p-1.5 z-40 text-[0.8125rem]">
-                            <div class="px-3 py-2 border-b border-black/[0.04]">
-                                <p class="font-semibold text-brand-dark">{{ Auth::user()->name }}</p>
-                                <p class="text-[0.6875rem] text-brand-slate truncate">{{ Auth::user()->email }}</p>
-                            </div>
-                            <a href="{{ route('profile.complete') }}" class="flex items-center min-h-11 px-3 text-brand-slate hover:bg-black/[0.03] rounded-xl font-medium transition-colors">
-                                Edit Profil
-                            </a>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="flex items-center w-full text-left min-h-11 px-3 text-brand-brick hover:bg-brand-brick/10 rounded-xl font-medium transition-colors cursor-pointer">
-                                    Keluar
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<body class="bg-cream text-ink min-h-screen">
+    @if (session('success'))
+        <div role="status" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] p-4 rounded-2xl bg-forest/10 text-forest border border-forest/20 text-xs font-bold flex items-center gap-2.5 shadow-lg">
+            <span class="w-2 h-2 rounded-full bg-forest"></span>
+            <span>{{ session('success') }}</span>
         </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-6 pb-28 sm:pt-8 sm:pb-10">
-        @if (session('success'))
-            <div role="status" class="mb-6 p-4 rounded-2xl bg-brand-mint text-brand-primary border border-brand-primary/15 text-[0.8125rem] font-medium flex items-center gap-2.5">
-                <span class="w-2 h-2 rounded-full bg-brand-emerald"></span>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div role="alert" class="mb-6 p-4 rounded-2xl bg-brand-brick/10 text-brand-brick border border-brand-brick/15 text-[0.8125rem] font-medium flex items-center gap-2.5">
-                <span class="w-2 h-2 rounded-full bg-brand-brick"></span>
-                <span>{{ session('error') }}</span>
-            </div>
-        @endif
-
-        @if (session('info'))
-            <div role="status" class="mb-6 p-4 rounded-2xl bg-brand-info/10 text-brand-info border border-brand-info/15 text-[0.8125rem] font-medium flex items-center gap-2.5">
-                <span class="w-2 h-2 rounded-full bg-brand-info"></span>
-                <span>{{ session('info') }}</span>
-            </div>
-        @endif
-
-        {{ $slot }}
-    </main>
-
-    <!-- Footer -->
-    <footer class="border-t border-black/[0.04] pt-6 pb-24 sm:pb-6 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-[0.75rem] text-brand-slate">
-            <p>Kula'an &middot; Platform Pengadaan Kolektif &copy; {{ date('Y') }}</p>
-            <p>Sidoarjo, Jawa Timur</p>
+    @endif
+    @if (session('error'))
+        <div role="alert" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] p-4 rounded-2xl bg-danger/10 text-danger border border-danger/20 text-xs font-bold flex items-center gap-2.5 shadow-lg">
+            <span class="w-2 h-2 rounded-full bg-danger"></span>
+            <span>{{ session('error') }}</span>
         </div>
-    </footer>
-
-    <!-- Mobile: bottom navigation, one thumb tap away from every main screen. -->
-    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-black/[0.06] shadow-[0_-4px_16px_-6px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]" aria-label="Navigasi utama">
-        <div class="flex items-stretch justify-around gap-1 px-2 py-1.5 max-w-7xl mx-auto">
-            <a href="{{ route('dashboard') }}"
-               class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('dashboard') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                Dashboard
-            </a>
-            @hasrole('umkm')
-                <a href="{{ route('umkm.catalog.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('umkm.catalog*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Katalog
-                </a>
-                <a href="{{ route('umkm.cart.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors relative {{ request()->routeIs('umkm.cart*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Keranjang
-                    @php $cartCount = app(\App\Services\CartService::class)->count(); @endphp
-                    @if ($cartCount > 0)
-                        <span class="absolute top-0.5 right-1 inline-flex items-center justify-center min-w-4 h-4 px-1 text-[0.5625rem] font-bold rounded-full bg-brand-accent text-brand-dark tabular-nums">
-                            {{ $cartCount }}
-                        </span>
-                    @endif
-                </a>
-                <a href="{{ route('umkm.requests.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('umkm.requests*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Pengajuan
-                </a>
-                <a href="{{ route('umkm.orders.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('umkm.orders*') || request()->routeIs('payment.show') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Tagihan
-                </a>
-                <a href="{{ route('umkm.tracking.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('umkm.tracking*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Live GPS
-                </a>
-            @endhasrole
-            @hasrole('distributor')
-                <a href="{{ route('distributor.products.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('distributor.products*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Katalog
-                </a>
-                <a href="{{ route('distributor.orders.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('distributor.orders*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Pesanan
-                </a>
-            @endhasrole
-            @hasrole('kurir')
-                <a href="{{ route('kurir.shipments.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('kurir.shipments*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Tugas Kirim
-                </a>
-            @endhasrole
-            @hasrole('admin')
-                <a href="{{ route('admin.categories.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('admin.categories*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Kategori
-                </a>
-                <a href="{{ route('admin.products.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('admin.products*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Produk
-                </a>
-                <a href="{{ route('admin.proposals.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('admin.proposals*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    Usulan
-                </a>
-                <a href="{{ route('admin.spk.index') }}"
-                   class="flex-1 min-h-11 flex items-center justify-center rounded-xl px-1 text-[0.6875rem] font-semibold text-center leading-tight transition-colors {{ request()->routeIs('admin.spk*') ? 'bg-brand-primary text-white' : 'text-brand-slate' }}">
-                    SPK
-                </a>
-            @endhasrole
+    @endif
+    @if (session('info'))
+        <div role="status" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] p-4 rounded-2xl bg-brass-soft text-brass border border-brass/30 text-xs font-bold flex items-center gap-2.5 shadow-lg">
+            <span class="w-2 h-2 rounded-full bg-brass"></span>
+            <span>{{ session('info') }}</span>
         </div>
-    </nav>
+    @endif
+
+    {{ $slot }}
 
     <!-- Global App Confirmation Modal -->
     <div x-data="{
@@ -272,9 +64,9 @@
          @keydown.escape.window="open = false"
          class="modal-overlay z-50 fixed inset-0 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity duration-200">
         <div @click.away="open = false"
-             class="bg-white rounded-2xl border border-brand-line shadow-2xl max-w-sm w-full p-6 text-center transform transition-all">
+             class="bg-white rounded-3xl border border-line shadow-2xl max-w-sm w-full p-6 text-center transform transition-all">
             <div class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center mb-4"
-                 :class="isDanger ? 'bg-red-50 text-brand-brick border border-red-100' : 'bg-brand-mint text-brand-primary border border-brand-primary/20'">
+                 :class="isDanger ? 'bg-danger/10 text-danger border border-danger/20' : 'bg-forest/10 text-forest border border-forest/20'">
                 <svg x-show="isDanger" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -282,19 +74,19 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
-            <h3 class="font-display font-bold text-lg text-brand-dark" x-text="title"></h3>
-            <p class="text-xs text-brand-slate mt-2 leading-relaxed" x-text="message"></p>
+            <h3 class="font-extrabold text-lg text-ink" x-text="title"></h3>
+            <p class="text-xs text-muted mt-2 leading-relaxed" x-text="message"></p>
 
             <div class="mt-6 flex items-center justify-center gap-3">
                 <button type="button"
                         @click="open = false"
-                        class="btn-ghost flex-1 py-2.5 px-4 text-xs font-bold rounded-xl border border-brand-line"
+                        class="flex-1 py-2.5 px-4 text-xs font-bold rounded-2xl border border-line text-ink hover:bg-cream transition cursor-pointer"
                         x-text="cancelText">
                 </button>
                 <button type="button"
                         @click="proceed()"
-                        :class="isDanger ? 'bg-brand-brick hover:bg-brand-brick/90 text-white' : 'btn-primary'"
-                        class="flex-1 py-2.5 px-4 text-xs font-bold rounded-xl shadow-sm transition-colors text-center"
+                        :class="isDanger ? 'bg-danger hover:bg-danger/90 text-white' : 'bg-forest hover:bg-forest-dark text-white'"
+                        class="flex-1 py-2.5 px-4 text-xs font-bold rounded-2xl shadow-sm transition-colors text-center cursor-pointer"
                         x-text="confirmText">
                 </button>
             </div>
