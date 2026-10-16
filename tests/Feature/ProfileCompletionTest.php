@@ -74,7 +74,7 @@ class ProfileCompletionTest extends TestCase
         $response = $this->actingAs($user)->get(route('profile.complete'));
 
         $response->assertStatus(200);
-        $response->assertSee('Informasi Akun');
+        $response->assertSee('Data akun');
         $response->assertSee($user->phone);
     }
 
