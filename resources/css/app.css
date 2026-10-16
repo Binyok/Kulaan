@@ -7,32 +7,46 @@
 
 @theme {
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 
+    /* Exact Mockup Palette (kulaan-mockups inline config) */
+    --color-forest: #2D6A4F;
+    --color-forest-dark: #1E4A36;
+    --color-forest-deep: #143726;
+    --color-cream: #FDF8EC;
+    --color-brass: #9A7B2D;
+    --color-brass-soft: #F5EDD8;
+    --color-ink: #1A2E22;
+    --color-muted: #5A6B60;
+    --color-line: #E8E0CF;
+    --color-success: #2E7D4F;
+    --color-danger: #C0392B;
+
+    /* Backwards compatibility aliases */
     --color-brand-primary: #2D6A4F;
-    --color-brand-primary-hover: #1B4332;
+    --color-brand-primary-hover: #1E4A36;
     --color-brand-primary-light: #40916C;
-    --color-brand-forest: #12352A;
+    --color-brand-forest: #143726;
     --color-brand-mint: #E8F5E9;
-    --color-brand-emerald: #157A3A;
-    --color-brand-accent: #D4A017;
-    --color-brand-accent-hover: #B78A13;
-    --color-brand-brass: #8A6708;
-    --color-brand-ochre-soft: #FEF9E7;
-    --color-brand-dark: #22302A;
-    --color-brand-slate: #686E63;
-    --color-brand-cream: #FAF7F1;
-    --color-brand-sand: #F1EBDD;
-    --color-brand-line: #E6E3D9;
-    --color-brand-soft-grey: #E2E8F0;
+    --color-brand-emerald: #2E7D4F;
+    --color-brand-accent: #9A7B2D;
+    --color-brand-accent-hover: #836724;
+    --color-brand-brass: #9A7B2D;
+    --color-brand-ochre-soft: #F5EDD8;
+    --color-brand-dark: #1A2E22;
+    --color-brand-slate: #5A6B60;
+    --color-brand-cream: #FDF8EC;
+    --color-brand-sand: #F5EDD8;
+    --color-brand-line: #E8E0CF;
+    --color-brand-soft-grey: #E8E0CF;
     --color-brand-brick: #C0392B;
     --color-brand-info: #2563EB;
 }
 
 body {
-    font-family: var(--font-sans);
-    background-color: var(--color-brand-cream);
-    color: var(--color-brand-dark);
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--color-cream);
+    color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -76,34 +90,34 @@ summary:focus-visible {
             0 16px 40px -12px rgba(27, 67, 50, 0.14);
     }
 
-    /* Premium Button Physics (min-height 44px: thumb-safe tap target) */
+    /* Mockup button */
     .btn-primary {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
         gap: 0.5rem;
-        min-height: 2.75rem;
-        padding: 0.625rem 1.5rem;
-        background: var(--color-brand-primary);
+        background: var(--color-forest);
         color: #fff;
-        font-weight: 600;
+        font-weight: 700;
+        border-radius: 0.9rem;
+        padding: 0.75rem 1.25rem;
         font-size: 0.8125rem;
-        border-radius: 9999px;
-        transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+        box-shadow: 0 4px 12px -4px rgba(45, 106, 79, 0.4);
         cursor: pointer;
         border: none;
-        letter-spacing: -0.01em;
-        text-align: center;
     }
 
-    .btn-primary:hover {
-        background: var(--color-brand-primary-hover);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px -2px rgba(45, 106, 79, 0.35);
-    }
-
-    .btn-primary:active {
-        transform: scale(0.98) translateY(0);
+    .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #fff;
+        color: var(--color-ink);
+        font-weight: 600;
+        border-radius: 0.9rem;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.8125rem;
+        border: 1px solid var(--color-line);
+        cursor: pointer;
     }
 
     .btn-accent {
@@ -131,29 +145,6 @@ summary:focus-visible {
 
     .btn-accent:active {
         transform: scale(0.98) translateY(0);
-    }
-
-    .btn-ghost {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        min-height: 2.75rem;
-        padding: 0.625rem 1.25rem;
-        background: transparent;
-        color: var(--color-brand-dark);
-        font-weight: 500;
-        font-size: 0.8125rem;
-        border-radius: 9999px;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
-        cursor: pointer;
-        text-align: center;
-    }
-
-    .btn-ghost:hover {
-        background: rgba(0, 0, 0, 0.03);
-        border-color: rgba(0, 0, 0, 0.12);
     }
 
     /* Back control: a real button for "go back", arrow acts as direction cue. */
@@ -200,71 +191,152 @@ summary:focus-visible {
         color: var(--color-brand-dark);
     }
 
-    /* Premium Input Style */
+    /* Mockup input */
     .input-field {
         width: 100%;
-        min-height: 2.75rem;
-        padding: 0.625rem 0.875rem;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        border-radius: 0.75rem;
-        font-size: 0.875rem;
+        border-radius: 0.875rem;
+        border: 1px solid var(--color-line);
         background: #fff;
-        color: var(--color-brand-dark);
-        transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+        padding: 0.8rem 1rem;
+        font-size: 0.875rem;
+        color: var(--color-ink);
         outline: none;
     }
 
     .input-field:focus {
-        border-color: var(--color-brand-primary);
-        box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.14);
+        border-color: var(--color-forest);
+        box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.12);
     }
 
     .input-field::placeholder {
-        color: #94a3b8;
+        color: var(--color-muted);
+        opacity: 0.55;
     }
 
-    /* Form label & hint: sentence case, shared across every form in the app. */
+    /* Form label & hint: shared across every form in the app. */
     .field-label {
         display: block;
         font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--color-brand-dark);
+        font-weight: 700;
+        color: var(--color-ink);
         margin-bottom: 0.375rem;
     }
 
     .field-hint {
         font-size: 0.6875rem;
-        color: var(--color-brand-slate);
+        color: var(--color-muted);
         margin-top: 0.375rem;
-        line-height: 1.5;
     }
 
     /* Eyebrow Tag: the app's recurring label motif */
     .eyebrow {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
-        padding: 0.25rem 0.75rem;
-        font-size: 0.625rem;
-        font-weight: 500;
+        gap: 0.5rem;
+        font-size: 0.6875rem;
+        font-weight: 800;
+        color: var(--color-forest);
         text-transform: uppercase;
-        letter-spacing: 0.15em;
-        border-radius: 9999px;
-        border: 1px solid rgba(0, 0, 0, 0.06);
-        background: rgba(0, 0, 0, 0.02);
-        color: var(--color-brand-slate);
+        letter-spacing: 0.14em;
     }
 
-    /* Status Badge */
+    /* Status Badge (mockup) */
     .badge {
         display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
-        padding: 0.1875rem 0.625rem;
-        font-size: 0.6875rem;
-        font-weight: 600;
+        padding: 0.25rem 0.625rem;
         border-radius: 9999px;
-        letter-spacing: 0.01em;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    /* Mockup card */
+    .card {
+        background: #fff;
+        border: 1px solid var(--color-line);
+        border-radius: 1.25rem;
+        box-shadow: 0 1px 3px rgba(26, 46, 34, 0.05);
+    }
+
+    /* Mockup table */
+    .tbl th {
+        text-align: left;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--color-muted);
+        font-weight: 700;
+        padding: 0 0.75rem 0.75rem 0.75rem;
+        border-bottom: 1px solid var(--color-line);
+        white-space: nowrap;
+    }
+
+    .tbl td {
+        padding: 0.9rem 0.75rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        font-size: 0.8125rem;
+        vertical-align: middle;
+    }
+
+    .tbl tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Mockup compact input */
+    .input {
+        width: 100%;
+        background: #fff;
+        border: 1px solid var(--color-line);
+        border-radius: 0.9rem;
+        padding: 0.7rem 1rem;
+        font-size: 0.8125rem;
+        outline: none;
+    }
+
+    .input:focus {
+        border-color: var(--color-forest);
+        box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.12);
+    }
+
+    /* Mockup role selector card */
+    .role-card input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .role-card {
+        border: 1.5px solid var(--color-line);
+        border-radius: 1rem;
+        padding: 0.8rem 0.5rem;
+        text-align: center;
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--color-muted);
+        background: #fff;
+        transition: all 0.15s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .role-card.active {
+        border-color: var(--color-forest);
+        background: rgba(45, 106, 79, 0.07);
+        color: var(--color-forest);
+        box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 
     /* Premium Table (desktop only; mobile uses card lists) */
@@ -444,26 +516,10 @@ summary:focus-visible {
         transition: width 1.2s ease, opacity 0.2s ease;
     }
 
-    /* Film grain for hero + forest panels only. Breaks digital flatness. */
+    /* Film grain dot texture for hero + forest panels only (mockup). */
     .texture-grain {
-        position: relative;
-        isolation: isolate;
-        overflow: hidden;
-    }
-
-    .texture-grain::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        pointer-events: none;
-        opacity: 0.07;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
-
-    .texture-grain > * {
-        position: relative;
-        z-index: 2;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+        background-size: 22px 22px;
     }
 
     /* Scroll reveal (MOTION dial 2): rise 14px + fade, staggered to guide the eye. */
@@ -484,6 +540,10 @@ summary:focus-visible {
 
 html {
     scroll-behavior: smooth;
+}
+
+input[type="range"] {
+    accent-color: var(--color-forest);
 }
 
 ::selection {
