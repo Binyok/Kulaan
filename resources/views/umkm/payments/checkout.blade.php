@@ -1,6 +1,17 @@
 <x-layouts.app>
     <x-slot name="title">Pembayaran Invoice {{ $orderItem->order->order_number }}</x-slot>
 
+    @php
+        $isPaid = $orderItem->payment_status->value === 'PAID';
+        $productName = $orderItem->product->name;
+        $productInitial = strtoupper(substr($productName, 0, 1));
+        $quantityLabel = number_format((float) $orderItem->quantity, 0, ',', '.').' '.$orderItem->product->unit;
+        $distributorName = $orderItem->order->distributor->company_name;
+        $subtotal = $orderItem->subtotal;
+        $savings = $orderItem->savings_amount;
+        $shipment = $orderItem->order->shipments->first();
+    @endphp
+
     <div x-data="{
         selectedMethod: 'qris',
         isCheckingStatus: false,
@@ -51,220 +62,423 @@
         }
     }">
 
-        <!-- Header -->
-        <div class="mb-6">
-            <div class="bg-gradient-to-r from-brand-forest to-brand-primary text-white rounded-2xl p-5 sm:p-7 shadow-sm">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <a href="{{ route('umkm.orders.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white transition-colors">
-                            &larr; Riwayat Pesanan
-                        </a>
-                        <h1 class="font-display font-bold text-2xl sm:text-3xl mt-2 tracking-tight">Invoice Pembayaran</h1>
-                        <p class="text-xs text-white/80 mt-1">
-                            No. <span class="font-mono font-bold">{{ $orderItem->order->order_number }}</span> &bull; Mitra {{ $orderItem->order->distributor->company_name }}
+        {{-- MOBILE --}}
+        <div class="lg:hidden pb-24">
+            <div class="px-4 pt-6">
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('umkm.orders.index') }}" aria-label="Kembali" class="w-10 h-10 rounded-2xl bg-white border border-line flex items-center justify-center text-ink shrink-0">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+                    </a>
+                    <div class="flex-1 min-w-0">
+                        <h1 class="text-lg font-extrabold tracking-tight">Invoice Pembayaran</h1>
+                        <p class="text-xs text-muted font-semibold">
+                            <span class="font-mono">{{ $orderItem->order->order_number }}</span> &middot; jatuh tempo <span class="font-mono tabular-nums" x-text="`${String(minutesLeft).padStart(2, '0')}:${String(secondsLeft).padStart(2, '0')}`"></span>
                         </p>
                     </div>
-                    <span class="badge {{ $orderItem->payment_status->badgeClass() }} text-xs py-1.5 px-4 self-start sm:self-auto">
-                        {{ $orderItem->payment_status->label() }}
-                    </span>
                 </div>
+            </div>
+
+            @if (! $isPaid)
+                <div class="px-4 mt-4">
+                    <div class="bg-white border border-line rounded-3xl p-4 shadow-sm">
+                        <div class="flex gap-3">
+                            <div class="w-14 h-14 rounded-2xl bg-forest/10 flex items-center justify-center text-forest font-extrabold text-xl shrink-0">{{ $productInitial }}</div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-extrabold text-sm">{{ $productName }}</p>
+                                <p class="text-xs text-muted mt-0.5">{{ $quantityLabel }} &middot; {{ $distributorName }}</p>
+                                <p class="text-[11px] text-muted mt-0.5">Kuota terpenuhi &mdash; matching berhasil</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-dashed border-line mt-3 pt-3 space-y-1.5 text-xs">
+                            <div class="flex justify-between"><span class="text-muted">Subtotal <span class="text-[10px]">(estimasi)</span></span><span class="font-bold tabular-nums">Rp {{ number_format($subtotal, 0, ',', '.') }}</span></div>
+                            @if ($savings > 0)
+                                <div class="flex justify-between text-forest"><span class="font-semibold">Hemat Kolektif</span><span class="font-bold tabular-nums">- Rp {{ number_format($savings, 0, ',', '.') }}</span></div>
+                            @endif
+                        </div>
+                        <div class="border-t border-line mt-3 pt-3">
+                            <p class="text-[11px] font-semibold text-muted">Total Tagihan</p>
+                            <p class="text-2xl font-extrabold text-forest tracking-tight mt-0.5 tabular-nums">Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-4 mt-5">
+                    <h2 class="text-sm font-extrabold">Pilih Metode Pembayaran</h2>
+
+                    <div class="mt-3 bg-white border-2 rounded-3xl overflow-hidden shadow-sm transition-colors" :class="selectedMethod === 'qris' ? 'border-forest' : 'border-line'">
+                        <button type="button" @click="selectedMethod = 'qris'" class="w-full flex items-center gap-3 p-4 cursor-pointer">
+                            <span class="w-10 h-10 rounded-2xl bg-danger/10 flex items-center justify-center shrink-0">
+                                <svg class="w-6 h-6 text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5Zm9.75 0c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM3.75 13.5c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5Zm6.75 1.5h1.5m4.5 0h1.5m-4.5 3h1.5m4.5 0h1.5"/></svg>
+                            </span>
+                            <span class="flex-1 text-left">
+                                <span class="block font-extrabold text-sm">QRIS</span>
+                                <span class="block text-[11px] text-muted">Scan dengan e-wallet / m-banking apa pun</span>
+                            </span>
+                            <span x-show="selectedMethod === 'qris'" class="w-5 h-5 rounded-full bg-forest flex items-center justify-center shrink-0">
+                                <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            </span>
+                            <svg x-show="selectedMethod !== 'qris'" x-cloak class="w-5 h-5 text-muted shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                        </button>
+                        <div x-show="selectedMethod === 'qris'" class="px-4 pb-4">
+                            <div class="bg-cream border border-line rounded-2xl p-4 flex flex-col items-center">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode('QRIS:KULAAN-MIDTRANS-'. $payment->payment_reference .'-RP'. (int)$orderItem->subtotal) }}"
+                                     alt="QRIS Code Kulaan" loading="lazy" class="w-40 h-40 rounded-lg">
+                                <p class="text-[11px] font-bold text-muted mt-2">NMID: ID1020038921820 &bull; KULAAN</p>
+                            </div>
+                            <ol class="mt-3 space-y-1.5 text-xs text-muted list-decimal list-inside leading-relaxed">
+                                <li>Buka e-wallet atau m-banking apa pun</li>
+                                <li>Pilih <span class="font-bold text-ink">Scan QR</span>, arahkan ke kode di atas</li>
+                                <li>Periksa nominal <span class="font-bold text-ink tabular-nums">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>, masukkan PIN &amp; konfirmasi</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="mt-2.5 space-y-2.5">
+                        <div class="bg-white border rounded-3xl overflow-hidden transition-colors" :class="selectedMethod === 'bca_va' ? 'border-forest' : 'border-line'">
+                            <button type="button" @click="selectedMethod = 'bca_va'" class="w-full p-4 flex items-center gap-3 cursor-pointer">
+                                <span class="w-10 h-10 rounded-2xl bg-forest/10 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-forest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
+                                </span>
+                                <span class="flex-1 text-left">
+                                    <span class="block font-extrabold text-sm">BCA Virtual Account</span>
+                                    <span class="block text-[11px] text-muted">Cek otomatis setelah transfer</span>
+                                </span>
+                                <svg class="w-5 h-5 text-muted shrink-0 transition-transform" :class="selectedMethod === 'bca_va' ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                            </button>
+                            <div x-show="selectedMethod === 'bca_va'" x-cloak class="px-4 pb-4">
+                                <div class="flex items-center gap-3 bg-cream border border-line rounded-2xl px-4 py-3">
+                                    <span class="flex-1 font-extrabold tracking-wider text-base tabular-nums">{{ $bcaVaNumber }}</span>
+                                    <button type="button" @click="copyToClipboard('{{ $bcaVaNumber }}', 'BCA')" class="text-xs font-bold text-forest bg-forest/10 px-4 py-2 rounded-xl cursor-pointer">Salin</button>
+                                </div>
+                                <p class="text-[11px] text-forest font-bold mt-2" x-show="copiedText === 'BCA'" x-cloak>Nomor BCA VA berhasil disalin ke clipboard!</p>
+                                <ol class="mt-3 space-y-1.5 text-xs text-muted list-decimal list-inside leading-relaxed">
+                                    <li>Masuk ke m-BCA &rarr; <span class="font-bold text-ink">m-Transfer</span> &rarr; <span class="font-bold text-ink">BCA Virtual Account</span></li>
+                                    <li>Masukkan nomor VA di atas, pastikan nama penerima <span class="font-bold text-ink">Kulaan &bull; {{ $distributorName }}</span></li>
+                                    <li>Masukkan PIN transaksi &amp; simpan bukti bayar</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border rounded-3xl overflow-hidden transition-colors" :class="selectedMethod === 'bni_va' ? 'border-forest' : 'border-line'">
+                            <button type="button" @click="selectedMethod = 'bni_va'" class="w-full p-4 flex items-center gap-3 cursor-pointer">
+                                <span class="w-10 h-10 rounded-2xl bg-forest/10 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-forest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
+                                </span>
+                                <span class="flex-1 text-left">
+                                    <span class="block font-extrabold text-sm">BNI Virtual Account</span>
+                                    <span class="block text-[11px] text-muted">Cek otomatis setelah transfer</span>
+                                </span>
+                                <svg class="w-5 h-5 text-muted shrink-0 transition-transform" :class="selectedMethod === 'bni_va' ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                            </button>
+                            <div x-show="selectedMethod === 'bni_va'" x-cloak class="px-4 pb-4">
+                                <div class="flex items-center gap-3 bg-cream border border-line rounded-2xl px-4 py-3">
+                                    <span class="flex-1 font-extrabold tracking-wider text-base tabular-nums">{{ $bniVaNumber }}</span>
+                                    <button type="button" @click="copyToClipboard('{{ $bniVaNumber }}', 'BNI')" class="text-xs font-bold text-forest bg-forest/10 px-4 py-2 rounded-xl cursor-pointer">Salin</button>
+                                </div>
+                                <p class="text-[11px] text-forest font-bold mt-2" x-show="copiedText === 'BNI'" x-cloak>Nomor BNI VA berhasil disalin ke clipboard!</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border rounded-3xl overflow-hidden transition-colors" :class="selectedMethod === 'mandiri_va' ? 'border-forest' : 'border-line'">
+                            <button type="button" @click="selectedMethod = 'mandiri_va'" class="w-full p-4 flex items-center gap-3 cursor-pointer">
+                                <span class="w-10 h-10 rounded-2xl bg-forest/10 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-forest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
+                                </span>
+                                <span class="flex-1 text-left">
+                                    <span class="block font-extrabold text-sm">Mandiri Virtual Account</span>
+                                    <span class="block text-[11px] text-muted">Cek otomatis setelah transfer</span>
+                                </span>
+                                <svg class="w-5 h-5 text-muted shrink-0 transition-transform" :class="selectedMethod === 'mandiri_va' ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                            </button>
+                            <div x-show="selectedMethod === 'mandiri_va'" x-cloak class="px-4 pb-4">
+                                <div class="flex items-center gap-3 bg-cream border border-line rounded-2xl px-4 py-3">
+                                    <span class="flex-1 font-extrabold tracking-wider text-base tabular-nums">{{ $mandiriVaNumber }}</span>
+                                    <button type="button" @click="copyToClipboard('{{ $mandiriVaNumber }}', 'Mandiri')" class="text-xs font-bold text-forest bg-forest/10 px-4 py-2 rounded-xl cursor-pointer">Salin</button>
+                                </div>
+                                <p class="text-[11px] text-forest font-bold mt-2" x-show="copiedText === 'Mandiri'" x-cloak>Nomor Mandiri VA berhasil disalin ke clipboard!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-4 mt-5 pb-6">
+                    <button type="button" @click="checkPaymentStatus(true)" :disabled="isCheckingStatus" class="w-full bg-forest text-white text-sm font-bold py-4 rounded-2xl shadow-sm disabled:opacity-70 disabled:cursor-wait cursor-pointer">
+                        <span x-show="!isCheckingStatus">Cek Status Pembayaran</span>
+                        <span x-show="isCheckingStatus" x-cloak>Memeriksa server...</span>
+                    </button>
+                    <form method="POST" action="{{ route('payment.simulate', $orderItem) }}" data-loading class="mt-2.5">
+                        @csrf
+                        <input type="hidden" name="payment_method" :value="selectedMethod">
+                        <button type="submit" class="w-full bg-white border-2 border-forest text-forest text-sm font-bold py-4 rounded-2xl cursor-pointer">Konfirmasi Transfer</button>
+                    </form>
+                    <p class="flex items-center justify-center gap-1.5 text-[11px] text-muted mt-4">
+                        <svg class="w-4 h-4 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12.75 11.25 15 15 9.75m-3-7.04A11.96 11.96 0 0 1 3.6 6 12 12 0 0 0 3 9.75c0 5.59 3.82 10.29 9 11.62 5.18-1.33 9-6.03 9-11.62 0-1.31-.21-2.57-.6-3.75h-.15c-3.2 0-6.1-1.25-8.25-3.29Z"/></svg>
+                        Pembayaran aman didukung oleh Midtrans
+                    </p>
+                </div>
+            @else
+                <div class="px-4 mt-6">
+                    <div class="bg-white border border-line rounded-3xl p-8 text-center shadow-sm">
+                        <span class="w-16 h-16 rounded-full bg-forest/10 text-forest inline-flex items-center justify-center mx-auto">
+                            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        </span>
+                        <h2 class="text-xl font-extrabold text-ink tracking-tight mt-4">Pembayaran Lunas</h2>
+                        <p class="text-xs text-muted mt-1">Invoice <span class="font-mono font-bold">{{ $orderItem->order->order_number }}</span> telah terbayar.</p>
+                        <dl class="mt-6 p-4 bg-cream rounded-2xl text-xs space-y-2 text-left border border-line">
+                            <div class="flex justify-between">
+                                <dt class="text-muted">Metode Bayar</dt>
+                                <dd class="font-bold text-ink uppercase">{{ $payment->payment_method ?? 'QRIS' }}</dd>
+                            </div>
+                            <div class="flex justify-between">
+                                <dt class="text-muted">Waktu Bayar</dt>
+                                <dd class="font-medium text-ink">{{ $payment->paid_at?->format('d M Y, H:i') ?? now()->format('d M Y, H:i') }}</dd>
+                            </div>
+                            <div class="flex justify-between">
+                                <dt class="text-muted">Total Lunas</dt>
+                                <dd class="font-extrabold text-forest tabular-nums">Rp {{ number_format($subtotal, 0, ',', '.') }}</dd>
+                            </div>
+                        </dl>
+                        @if ($shipment)
+                            <a href="{{ route('umkm.tracking.show', $shipment) }}" class="w-full bg-forest text-white text-sm font-bold py-3.5 rounded-2xl shadow-sm mt-6 inline-flex items-center justify-center">Pantau Kurir di Peta Live &rarr;</a>
+                        @else
+                            <a href="{{ route('umkm.orders.index') }}" class="w-full bg-white border-2 border-forest text-forest text-sm font-bold py-3.5 rounded-2xl mt-6 inline-flex items-center justify-center">Kembali ke Riwayat Pesanan</a>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        {{-- DESKTOP --}}
+        <div class="hidden lg:flex min-h-screen">
+            <div class="flex-1 min-w-0">
+                <header class="bg-white border-b border-line sticky top-0 z-20">
+                    <div class="max-w-7xl mx-auto px-6 h-[72px] flex items-center gap-6">
+                        <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 shrink-0">
+                            <span class="w-10 h-10 rounded-2xl bg-forest flex items-center justify-center text-white">
+                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
+                            </span>
+                            <span class="text-xl font-extrabold tracking-tight">Kulaan</span>
+                        </a>
+                        <form method="GET" action="{{ route('umkm.catalog.index') }}" class="flex-1 max-w-xl">
+                            <div class="flex items-center gap-2 bg-cream border border-line rounded-2xl pl-4 pr-2 py-2">
+                                <svg class="w-5 h-5 text-muted shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z"/></svg>
+                                <input name="q" class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" placeholder="Cari beras, minyak goreng, gula...">
+                                <button type="submit" class="bg-forest text-white text-sm font-bold px-5 py-2 rounded-xl cursor-pointer">Cari</button>
+                            </div>
+                        </form>
+                        <nav class="hidden lg:flex items-center gap-6 text-sm font-semibold text-muted shrink-0">
+                            <a href="{{ route('umkm.catalog.index') }}" class="hover:text-ink">Katalog</a>
+                            <a href="{{ route('umkm.orders.index') }}" class="text-forest font-bold">Pesanan</a>
+                            <a href="{{ route('umkm.tracking.index') }}" class="hover:text-ink">Tracking</a>
+                        </nav>
+                        <div class="flex items-center gap-3 shrink-0 ml-auto">
+                            <span class="flex items-center gap-1.5 text-sm font-semibold text-muted">
+                                <svg class="w-5 h-5 text-forest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                                {{ auth()->user()->umkm?->city ?? 'Jember' }}
+                            </span>
+                            <a href="{{ route('umkm.cart.index') }}" aria-label="Keranjang" class="w-11 h-11 rounded-2xl bg-white border border-line flex items-center justify-center relative">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
+                            </a>
+                            <span class="w-11 h-11 rounded-2xl bg-forest text-white flex items-center justify-center font-extrabold text-sm">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span>
+                        </div>
+                    </div>
+                </header>
+
+                <main class="max-w-7xl mx-auto px-6 pb-16">
+                    @if (! $isPaid)
+                        <div class="mt-8 flex items-center justify-between">
+                            <div>
+                                <h1 class="text-3xl font-extrabold tracking-tight">Invoice Pembayaran</h1>
+                                <p class="text-sm text-muted mt-1">Selesaikan pembayaran agar pesananmu diproses distributor.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold bg-white border border-line px-4 py-2 rounded-2xl font-mono">{{ $orderItem->order->order_number }}</span>
+                                <span class="text-xs font-bold bg-brass-soft text-brass px-3 py-2 rounded-2xl">Jatuh tempo <span class="font-mono tabular-nums" x-text="`${String(minutesLeft).padStart(2, '0')}:${String(secondsLeft).padStart(2, '0')}`"></span></span>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-3 gap-6 mt-6">
+                            <div class="lg:col-span-2">
+                                <h2 class="text-base font-extrabold">Pilih Metode Pembayaran</h2>
+
+                                <div class="flex gap-2 mt-4">
+                                    <button type="button" @click="selectedMethod = 'qris'" :class="selectedMethod === 'qris' ? 'bg-forest text-white shadow-sm' : 'bg-white border border-line text-muted'" class="flex-1 text-sm font-bold py-3.5 rounded-2xl cursor-pointer">QRIS</button>
+                                    <button type="button" @click="selectedMethod = 'bca_va'" :class="selectedMethod === 'bca_va' ? 'bg-forest text-white shadow-sm' : 'bg-white border border-line text-muted'" class="flex-1 text-sm font-bold py-3.5 rounded-2xl cursor-pointer">BCA VA</button>
+                                    <button type="button" @click="selectedMethod = 'bni_va'" :class="selectedMethod === 'bni_va' ? 'bg-forest text-white shadow-sm' : 'bg-white border border-line text-muted'" class="flex-1 text-sm font-bold py-3.5 rounded-2xl cursor-pointer">BNI VA</button>
+                                    <button type="button" @click="selectedMethod = 'mandiri_va'" :class="selectedMethod === 'mandiri_va' ? 'bg-forest text-white shadow-sm' : 'bg-white border border-line text-muted'" class="flex-1 text-sm font-bold py-3.5 rounded-2xl cursor-pointer">Mandiri VA</button>
+                                </div>
+
+                                <div x-show="selectedMethod === 'qris'" class="mt-4 bg-white border border-line rounded-3xl p-6 shadow-sm">
+                                    <div class="flex flex-col sm:flex-row gap-6 items-center">
+                                        <div class="bg-cream border border-line rounded-2xl p-4 shrink-0">
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode('QRIS:KULAAN-MIDTRANS-'. $payment->payment_reference .'-RP'. (int)$orderItem->subtotal) }}"
+                                                 alt="QRIS Code Kulaan" loading="lazy" class="w-44 h-44 rounded-lg">
+                                            <p class="text-[11px] font-bold text-muted text-center mt-2">NMID: ID1020038921820 &bull; KULAAN</p>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-extrabold">Cara bayar dengan QRIS</p>
+                                            <ol class="mt-3 space-y-2.5 text-sm text-muted list-decimal list-inside leading-relaxed">
+                                                <li>Buka e-wallet atau m-banking apa pun di HP-mu</li>
+                                                <li>Pilih <span class="font-bold text-ink">Scan QR</span>, arahkan ke kode di samping</li>
+                                                <li>Periksa nominal <span class="font-bold text-ink tabular-nums">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>, masukkan PIN &amp; konfirmasi</li>
+                                            </ol>
+                                            <p class="text-xs text-muted mt-4 bg-cream border border-line rounded-2xl p-3">Status pembayaran terdeteksi otomatis dalam &plusmn;1 menit setelah kamu membayar.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 space-y-3">
+                                    <div class="bg-white border border-line rounded-3xl p-5" x-show="selectedMethod === 'bca_va'" x-cloak>
+                                        <div class="flex items-center justify-between">
+                                            <p class="font-extrabold text-sm">BCA Virtual Account</p>
+                                            <svg class="w-5 h-5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4.5 15.75 7.5-7.5 7.5 7.5"/></svg>
+                                        </div>
+                                        <div class="flex items-center gap-3 mt-3 bg-cream border border-line rounded-2xl px-4 py-3">
+                                            <span class="flex-1 font-extrabold tracking-wider text-base tabular-nums">{{ $bcaVaNumber }}</span>
+                                            <button type="button" @click="copyToClipboard('{{ $bcaVaNumber }}', 'BCA')" class="text-xs font-bold text-forest bg-forest/10 px-4 py-2 rounded-xl cursor-pointer">Salin</button>
+                                        </div>
+                                        <p class="text-xs text-forest font-bold mt-2" x-show="copiedText === 'BCA'" x-cloak>Nomor BCA VA berhasil disalin ke clipboard!</p>
+                                        <p class="text-xs text-muted mt-2">Transfer tepat hingga 3 digit terakhir &mdash; cek otomatis.</p>
+                                    </div>
+                                    <div x-show="selectedMethod !== 'bca_va'" class="bg-white border border-line rounded-3xl">
+                                        <button type="button" @click="selectedMethod = 'bca_va'" class="w-full p-5 flex items-center justify-between cursor-pointer">
+                                            <span class="font-extrabold text-sm">BCA Virtual Account</span>
+                                            <svg class="w-5 h-5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                                        </button>
+                                    </div>
+
+                                    <div class="bg-white border border-line rounded-3xl p-5" x-show="selectedMethod === 'bni_va'" x-cloak>
+                                        <div class="flex items-center justify-between">
+                                            <p class="font-extrabold text-sm">BNI Virtual Account</p>
+                                            <svg class="w-5 h-5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4.5 15.75 7.5-7.5 7.5 7.5"/></svg>
+                                        </div>
+                                        <div class="flex items-center gap-3 mt-3 bg-cream border border-line rounded-2xl px-4 py-3">
+                                            <span class="flex-1 font-extrabold tracking-wider text-base tabular-nums">{{ $bniVaNumber }}</span>
+                                            <button type="button" @click="copyToClipboard('{{ $bniVaNumber }}', 'BNI')" class="text-xs font-bold text-forest bg-forest/10 px-4 py-2 rounded-xl cursor-pointer">Salin</button>
+                                        </div>
+                                        <p class="text-xs text-forest font-bold mt-2" x-show="copiedText === 'BNI'" x-cloak>Nomor BNI VA berhasil disalin ke clipboard!</p>
+                                        <p class="text-xs text-muted mt-2">Transfer tepat hingga 3 digit terakhir &mdash; cek otomatis.</p>
+                                    </div>
+                                    <div x-show="selectedMethod !== 'bni_va'" class="bg-white border border-line rounded-3xl">
+                                        <button type="button" @click="selectedMethod = 'bni_va'" class="w-full p-5 flex items-center justify-between cursor-pointer">
+                                            <span class="font-extrabold text-sm">BNI Virtual Account</span>
+                                            <svg class="w-5 h-5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                                        </button>
+                                    </div>
+
+                                    <div class="bg-white border border-line rounded-3xl p-5" x-show="selectedMethod === 'mandiri_va'" x-cloak>
+                                        <div class="flex items-center justify-between">
+                                            <p class="font-extrabold text-sm">Mandiri Virtual Account</p>
+                                            <svg class="w-5 h-5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4.5 15.75 7.5-7.5 7.5 7.5"/></svg>
+                                        </div>
+                                        <div class="flex items-center gap-3 mt-3 bg-cream border border-line rounded-2xl px-4 py-3">
+                                            <span class="flex-1 font-extrabold tracking-wider text-base tabular-nums">{{ $mandiriVaNumber }}</span>
+                                            <button type="button" @click="copyToClipboard('{{ $mandiriVaNumber }}', 'Mandiri')" class="text-xs font-bold text-forest bg-forest/10 px-4 py-2 rounded-xl cursor-pointer">Salin</button>
+                                        </div>
+                                        <p class="text-xs text-forest font-bold mt-2" x-show="copiedText === 'Mandiri'" x-cloak>Nomor Mandiri VA berhasil disalin ke clipboard!</p>
+                                        <p class="text-xs text-muted mt-2">Transfer tepat hingga 3 digit terakhir &mdash; cek otomatis.</p>
+                                    </div>
+                                    <div x-show="selectedMethod !== 'mandiri_va'" class="bg-white border border-line rounded-3xl">
+                                        <button type="button" @click="selectedMethod = 'mandiri_va'" class="w-full p-5 flex items-center justify-between cursor-pointer">
+                                            <span class="font-extrabold text-sm">Mandiri Virtual Account</span>
+                                            <svg class="w-5 h-5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-[11px] text-muted mt-4">Nomor virtual account BNI: {{ $bniVaNumber }} &bull; Mandiri: {{ $mandiriVaNumber }} (ditampilkan penuh setelah tab dipilih).</p>
+                            </div>
+
+                            <div>
+                                <div class="bg-white border border-line rounded-3xl p-6 shadow-sm lg:sticky lg:top-24">
+                                    <h2 class="text-base font-extrabold">Ringkasan Tagihan</h2>
+                                    <div class="flex gap-3 mt-4">
+                                        <div class="w-14 h-14 rounded-2xl bg-forest/10 flex items-center justify-center text-forest font-extrabold text-xl shrink-0">{{ $productInitial }}</div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-extrabold text-sm">{{ $productName }}</p>
+                                            <p class="text-xs text-muted mt-0.5">{{ $quantityLabel }} &middot; {{ $distributorName }}</p>
+                                            <p class="text-[11px] text-success font-semibold mt-0.5">Kuota terpenuhi &mdash; matching berhasil</p>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-dashed border-line mt-4 pt-4 space-y-2 text-sm">
+                                        <div class="flex justify-between"><span class="text-muted">Subtotal <span class="text-[11px]">(estimasi)</span></span><span class="font-bold tabular-nums">Rp {{ number_format($subtotal, 0, ',', '.') }}</span></div>
+                                        @if ($savings > 0)
+                                            <div class="flex justify-between text-forest"><span class="font-semibold">Hemat Kolektif</span><span class="font-bold tabular-nums">- Rp {{ number_format($savings, 0, ',', '.') }}</span></div>
+                                        @endif
+                                    </div>
+                                    <div class="border-t border-line mt-4 pt-4">
+                                        <p class="text-xs font-semibold text-muted">Total Tagihan</p>
+                                        <p class="text-3xl font-extrabold text-forest tracking-tight mt-1 tabular-nums">Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
+                                    </div>
+                                    <button type="button" @click="checkPaymentStatus(true)" :disabled="isCheckingStatus" class="w-full bg-forest text-white text-sm font-bold py-4 rounded-2xl shadow-sm mt-5 disabled:opacity-70 disabled:cursor-wait cursor-pointer">
+                                        <span x-show="!isCheckingStatus">Cek Status Pembayaran</span>
+                                        <span x-show="isCheckingStatus" x-cloak>Memeriksa server...</span>
+                                    </button>
+                                    <form method="POST" action="{{ route('payment.simulate', $orderItem) }}" data-loading class="mt-2.5">
+                                        @csrf
+                                        <input type="hidden" name="payment_method" :value="selectedMethod">
+                                        <button type="submit" class="w-full bg-white border-2 border-forest text-forest text-sm font-bold py-4 rounded-2xl cursor-pointer">Konfirmasi Transfer</button>
+                                    </form>
+                                    <p class="flex items-center justify-center gap-1.5 text-[11px] text-muted mt-4">
+                                        <svg class="w-4 h-4 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12.75 11.25 15 15 9.75m-3-7.04A11.96 11.96 0 0 1 3.6 6 12 12 0 0 0 3 9.75c0 5.59 3.82 10.29 9 11.62 5.18-1.33 9-6.03 9-11.62 0-1.31-.21-2.57-.6-3.75h-.15c-3.2 0-6.1-1.25-8.25-3.29Z"/></svg>
+                                        Pembayaran aman didukung oleh Midtrans
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <section class="bg-white border border-line rounded-3xl p-12 text-center max-w-md mx-auto shadow-sm mt-8">
+                            <span class="w-16 h-16 rounded-full bg-forest/10 text-forest inline-flex items-center justify-center mx-auto">
+                                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            </span>
+                            <h2 class="text-2xl font-extrabold text-ink tracking-tight mt-4">Pembayaran Lunas</h2>
+                            <p class="text-xs text-muted mt-1">Invoice <span class="font-mono font-bold">{{ $orderItem->order->order_number }}</span> telah terbayar.</p>
+                            <dl class="mt-6 p-4 bg-cream rounded-2xl text-xs space-y-2 text-left border border-line">
+                                <div class="flex justify-between">
+                                    <dt class="text-muted">Metode Bayar</dt>
+                                    <dd class="font-bold text-ink uppercase">{{ $payment->payment_method ?? 'QRIS' }}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-muted">Waktu Bayar</dt>
+                                    <dd class="font-medium text-ink">{{ $payment->paid_at?->format('d M Y, H:i') ?? now()->format('d M Y, H:i') }}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-muted">Total Lunas</dt>
+                                    <dd class="font-extrabold text-forest tabular-nums">Rp {{ number_format($subtotal, 0, ',', '.') }}</dd>
+                                </div>
+                            </dl>
+                            @if ($shipment)
+                                <a href="{{ route('umkm.tracking.show', $shipment) }}" class="w-full bg-forest text-white text-sm font-bold py-3.5 rounded-2xl shadow-sm mt-6 inline-flex items-center justify-center">Pantau Kurir di Peta Live &rarr;</a>
+                            @else
+                                <a href="{{ route('umkm.orders.index') }}" class="w-full bg-white border-2 border-forest text-forest text-sm font-bold py-3.5 rounded-2xl mt-6 inline-flex items-center justify-center">Kembali ke Riwayat Pesanan</a>
+                            @endif
+                        </section>
+                    @endif
+                </main>
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="p-4 rounded-2xl bg-brand-mint text-brand-primary border border-brand-primary/15 text-xs font-bold flex items-center gap-2.5 mb-6">
-                <span class="w-2.5 h-2.5 rounded-full bg-brand-emerald shrink-0"></span>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
-        @if ($orderItem->payment_status->value !== 'PAID')
-            <!-- Pola D: 2 Kolom (Metode Bayar di Kiri, Ringkasan Sticky di Kanan) -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                <!-- Kolom Kiri: Pilihan Metode Pembayaran (7 Kolom) -->
-                <div class="lg:col-span-7 space-y-5">
-                    <!-- Kartu Pemilihan Metode Visual -->
-                    <section class="bg-white rounded-2xl border border-brand-line p-5 sm:p-6 shadow-xs">
-                        <div class="flex items-center justify-between gap-3 mb-4">
-                            <h2 class="text-xs font-bold uppercase tracking-wider text-brand-dark">Pilih Metode Pembayaran</h2>
-                            <span class="inline-flex items-center gap-1.5 text-[0.6875rem] font-bold text-brand-brass bg-brand-ochre-soft px-3 py-1 rounded-full border border-brand-accent/25">
-                                <span class="font-mono tabular-nums" x-text="`${String(minutesLeft).padStart(2, '0')}:${String(secondsLeft).padStart(2, '0')}`"></span>
-                            </span>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-2">
-                            <button type="button" @click="selectedMethod = 'qris'"
-                                    :class="selectedMethod === 'qris' ? 'border-brand-primary bg-brand-mint/50 text-brand-primary font-bold ring-2 ring-brand-primary/20' : 'border-brand-line bg-white text-brand-slate hover:bg-brand-cream/50'"
-                                    class="border rounded-xl p-3 text-center text-xs transition-all cursor-pointer flex flex-col items-center justify-center gap-1 min-h-16">
-                                <span class="font-extrabold text-sm">QRIS</span>
-                                <span class="text-[0.625rem] opacity-75">Instan &bull; Gratis</span>
-                            </button>
-                            <button type="button" @click="selectedMethod = 'bca_va'"
-                                    :class="selectedMethod === 'bca_va' ? 'border-brand-primary bg-brand-mint/50 text-brand-primary font-bold ring-2 ring-brand-primary/20' : 'border-brand-line bg-white text-brand-slate hover:bg-brand-cream/50'"
-                                    class="border rounded-xl p-3 text-center text-xs transition-all cursor-pointer flex flex-col items-center justify-center gap-1 min-h-16">
-                                <span class="font-extrabold text-sm">BCA VA</span>
-                                <span class="text-[0.625rem] opacity-75">Virtual Account</span>
-                            </button>
-                            <button type="button" @click="selectedMethod = 'bni_va'"
-                                    :class="selectedMethod === 'bni_va' ? 'border-brand-primary bg-brand-mint/50 text-brand-primary font-bold ring-2 ring-brand-primary/20' : 'border-brand-line bg-white text-brand-slate hover:bg-brand-cream/50'"
-                                    class="border rounded-xl p-3 text-center text-xs transition-all cursor-pointer flex flex-col items-center justify-center gap-1 min-h-16">
-                                <span class="font-extrabold text-sm">BNI / Mandiri</span>
-                                <span class="text-[0.625rem] opacity-75">Virtual Account</span>
-                            </button>
-                        </div>
-
-                        <!-- Panel Detail QRIS -->
-                        <div x-show="selectedMethod === 'qris'" class="mt-5 text-center">
-                            <div class="p-4 bg-white border border-brand-line rounded-2xl inline-block shadow-xs">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode('QRIS:KULAAN-MIDTRANS-'. $payment->payment_reference .'-RP'. (int)$orderItem->subtotal) }}"
-                                     alt="QRIS Code Kula'an" loading="lazy" class="w-44 h-44 mx-auto rounded-lg">
-                                <p class="text-[10px] font-mono text-brand-slate mt-2 font-bold">NMID: ID1020038921820 &bull; KULAAN</p>
-                            </div>
-                            <ol class="text-left text-xs text-brand-slate space-y-1.5 bg-brand-cream/60 p-4 rounded-xl border border-brand-line/60 mt-4 list-decimal list-inside">
-                                <li>Buka aplikasi mobile banking atau e-wallet (GoPay, OVO, ShopeePay, Dana, dll).</li>
-                                <li>Scan QR di atas, pastikan nominal sesuai: <strong class="text-brand-dark">Rp {{ number_format($orderItem->subtotal, 0, ',', '.') }}</strong>.</li>
-                                <li>Masukkan PIN transaksi dan simpan bukti bayar.</li>
-                            </ol>
-                        </div>
-
-                        <!-- Panel Detail BCA VA -->
-                        <div x-show="selectedMethod === 'bca_va'" x-cloak class="mt-5 space-y-3">
-                            <div class="p-4 bg-brand-cream/60 rounded-xl border border-brand-line flex items-center justify-between gap-3">
-                                <div>
-                                    <span class="text-[0.625rem] font-bold text-brand-slate uppercase tracking-wider block">Nomor Rekening BCA Virtual Account</span>
-                                    <span class="font-mono text-xl font-extrabold text-brand-dark tracking-wider block mt-0.5">{{ $bcaVaNumber }}</span>
-                                </div>
-                                <button type="button" @click="copyToClipboard('{{ $bcaVaNumber }}', 'BCA')"
-                                        class="btn-ghost text-xs py-1.5 px-3 bg-white font-bold text-brand-primary border-brand-primary/20 shrink-0">
-                                    Salin Nomor
-                                </button>
-                            </div>
-                            <p class="text-[10px] text-brand-primary font-bold" x-show="copiedText === 'BCA'">Nomor BCA VA berhasil disalin ke clipboard!</p>
-                            <ol class="text-left text-xs text-brand-slate space-y-1.5 bg-brand-cream/40 p-4 rounded-xl border border-brand-line/40 list-decimal list-inside">
-                                <li>Masuk ke m-BCA &rarr; menu <strong>m-Transfer</strong> &rarr; <strong>BCA Virtual Account</strong>.</li>
-                                <li>Masukkan nomor VA di atas. Pastikan nama penerima <strong>Kula'an &bull; {{ $orderItem->umkm->business_name }}</strong>.</li>
-                                <li>Masukkan PIN transaksi Anda.</li>
-                            </ol>
-                        </div>
-
-                        <!-- Panel Detail BNI/Mandiri VA -->
-                        <div x-show="selectedMethod === 'bni_va'" x-cloak class="mt-5 space-y-3">
-                            <div class="p-4 bg-brand-cream/60 rounded-xl border border-brand-line flex items-center justify-between gap-3">
-                                <div>
-                                    <span class="text-[0.625rem] font-bold text-brand-slate uppercase tracking-wider block">Nomor BNI / Mandiri Virtual Account</span>
-                                    <span class="font-mono text-xl font-extrabold text-brand-dark tracking-wider block mt-0.5">{{ $bniVaNumber }}</span>
-                                </div>
-                                <button type="button" @click="copyToClipboard('{{ $bniVaNumber }}', 'BNI')"
-                                        class="btn-ghost text-xs py-1.5 px-3 bg-white font-bold text-brand-primary border-brand-primary/20 shrink-0">
-                                    Salin Nomor
-                                </button>
-                            </div>
-                            <p class="text-[10px] text-brand-primary font-bold" x-show="copiedText === 'BNI'">Nomor VA berhasil disalin ke clipboard!</p>
-                        </div>
-                    </section>
-                </div>
-
-                <!-- Kolom Kanan: Ringkasan Biaya & Sticky Tombol Bayar (5 Kolom) -->
-                <div class="lg:col-span-5 space-y-4">
-                    <section class="bg-white rounded-2xl border border-brand-line p-5 sm:p-6 shadow-xs sticky top-24">
-                        <h2 class="font-display font-bold text-brand-dark text-base border-b border-brand-line pb-3">
-                            Ringkasan Pembayaran
-                        </h2>
-
-                        <!-- Rincian Produk -->
-                        <div class="py-3 border-b border-brand-line/60">
-                            <p class="font-bold text-brand-dark text-sm">{{ $orderItem->product->name }}</p>
-                            <p class="text-xs text-brand-slate mt-0.5">
-                                {{ number_format($orderItem->quantity, 0) }} {{ $orderItem->product->unit }} &times; Rp {{ number_format($orderItem->unit_price, 0, ',', '.') }}
-                            </p>
-                            <p class="text-[0.6875rem] text-brand-slate mt-1">
-                                Kirim ke: {{ $orderItem->delivery_address }}, {{ $orderItem->delivery_district }}
-                            </p>
-                        </div>
-
-                        <dl class="space-y-2.5 mt-4 text-xs">
-                            <div class="flex items-center justify-between">
-                                <dt class="text-brand-slate">Subtotal</dt>
-                                <dd class="font-bold text-brand-dark tabular-nums">
-                                    Rp {{ number_format($orderItem->subtotal, 0, ',', '.') }}
-                                </dd>
-                            </div>
-                            @if ($orderItem->savings_amount > 0)
-                                <div class="flex items-center justify-between text-brand-primary">
-                                    <dt class="font-semibold">Hemat Kolektif</dt>
-                                    <dd class="font-bold tabular-nums">
-                                        - Rp {{ number_format($orderItem->savings_amount, 0, ',', '.') }}
-                                    </dd>
-                                </div>
-                            @endif
-                            <div class="pt-3 border-t border-brand-line flex items-baseline justify-between">
-                                <dt class="text-sm font-bold text-brand-dark">Total Tagihan</dt>
-                                <dd class="font-display font-extrabold text-brand-primary text-2xl tabular-nums">
-                                    Rp {{ number_format($orderItem->subtotal, 0, ',', '.') }}
-                                </dd>
-                            </div>
-                        </dl>
-
-                        <!-- Aksi Pembayaran & Verifikasi -->
-                        <div class="space-y-2.5 mt-5 pt-4 border-t border-brand-line">
-                            <form method="POST" action="{{ route('payment.simulate', $orderItem) }}" data-loading>
-                                @csrf
-                                <input type="hidden" name="payment_method" :value="selectedMethod">
-                                <button type="submit" class="btn-primary w-full justify-center py-3.5 text-sm font-bold rounded-xl shadow-sm">
-                                    Konfirmasi Dana Masuk (Simulasi) &rarr;
-                                </button>
-                            </form>
-
-                            <button type="button" @click="checkPaymentStatus(true)" :disabled="isCheckingStatus"
-                                    class="btn-ghost w-full justify-center py-2.5 text-xs font-bold rounded-xl border border-brand-line">
-                                <span x-show="!isCheckingStatus">Cek Status Gateway</span>
-                                <span x-show="isCheckingStatus" x-cloak>Memeriksa server...</span>
-                            </button>
-                        </div>
-
-                        <p class="text-[0.625rem] text-center text-brand-slate mt-3 leading-relaxed">
-                            Dana aman di escrow gateway Kula'an dan baru diteruskan ke distributor setelah konfirmasi pesanan siap dikirim.
-                        </p>
-                    </section>
-                </div>
-            </div>
-        @else
-            <!-- Receipt / Lunas -->
-            <section class="bg-white rounded-2xl border border-brand-line p-8 sm:p-12 text-center max-w-md mx-auto shadow-xs">
-                <span class="w-16 h-16 rounded-full bg-brand-mint text-brand-emerald inline-flex items-center justify-center font-display font-bold text-2xl mx-auto">
-                    &check;
-                </span>
-                <h2 class="font-display font-bold text-2xl text-brand-dark tracking-tight mt-4">Pembayaran Lunas</h2>
-                <p class="text-xs text-brand-slate mt-1">
-                    Invoice <span class="font-mono font-bold">{{ $orderItem->order->order_number }}</span> telah terbayar.
-                </p>
-
-                <dl class="mt-6 p-4 bg-brand-cream/60 rounded-xl text-xs space-y-2 text-left border border-brand-line/60">
-                    <div class="flex justify-between">
-                        <dt class="text-brand-slate">Metode Bayar</dt>
-                        <dd class="font-bold text-brand-dark uppercase">{{ $payment->payment_method ?? 'QRIS' }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-brand-slate">Waktu Bayar</dt>
-                        <dd class="font-medium text-brand-dark">{{ $payment->paid_at?->format('d M Y, H:i') ?? now()->format('d M Y, H:i') }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-brand-slate">Total Lunas</dt>
-                        <dd class="font-extrabold text-brand-primary tabular-nums">Rp {{ number_format($orderItem->subtotal, 0, ',', '.') }}</dd>
-                    </div>
-                </dl>
-
-                @php $shipment = $orderItem->order->shipments->first(); @endphp
-                @if ($shipment)
-                    <a href="{{ route('umkm.tracking.show', $shipment) }}" class="btn-primary w-full justify-center py-3 text-sm font-bold mt-6 inline-flex">
-                        Pantau Kurir di Peta Live &rarr;
-                    </a>
-                @else
-                    <a href="{{ route('umkm.orders.index') }}" class="btn-ghost w-full justify-center py-3 text-xs font-bold text-brand-primary mt-6 inline-flex border border-brand-primary/20">
-                        Kembali ke Riwayat Pesanan
-                    </a>
-                @endif
-            </section>
-        @endif
+        {{-- BOTTOM TAB --}}
+        <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line px-2 pt-2 pb-5 flex items-start justify-around">
+            <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m2.25 12 8.95-8.95a1.13 1.13 0 0 1 1.6 0l8.95 8.95M4.5 9.75V19.5a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75V9.75"/></svg>
+                <span class="text-[10px] font-semibold">Beranda</span>
+            </a>
+            <a href="{{ route('umkm.catalog.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
+                <span class="text-[10px] font-semibold">Katalog</span>
+            </a>
+            <a href="{{ route('umkm.cart.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
+                <span class="text-[10px] font-semibold">Keranjang</span>
+            </a>
+            <a href="{{ route('umkm.orders.index') }}" class="flex flex-col items-center gap-1 w-14 text-forest relative">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
+                <span class="text-[10px] font-bold">Pesanan</span>
+            </a>
+            <a href="{{ route('profile.complete') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.98 18.72a6 6 0 0 0-8.46 0M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-9.75 8.25a9 9 0 1 1 13.5 0"/></svg>
+                <span class="text-[10px] font-semibold">Akun</span>
+            </a>
+        </div>
     </div>
 </x-layouts.app>
