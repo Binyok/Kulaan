@@ -1,6 +1,14 @@
 # Kula'an — UMKM Supply Hub
 Platform **Smart Collective Procurement** yang menghubungkan UMKM dengan distributor bahan baku melalui pembelian kolektif otomatis berbasis **Sistem Pendukung Keputusan (AHP + TOPSIS + SAW)**.
 
+## 🌐 Website Live
+
+🔗 _Menyusul — deployment sedang disiapkan._
+
+## 📸 Tangkapan Layar
+
+_Menyusul — diambil setelah redesign UI selesai._
+
 ---
 
 ## 📌 Fitur Utama
@@ -47,6 +55,19 @@ Platform **Smart Collective Procurement** yang menghubungkan UMKM dengan distrib
 ---
 
 ## 🔄 Alur Sistem End-to-End
+
+Dua jalur masuk, satu alur hilir yang sama (matching → order → bayar → kirim → ulasan):
+
+### 🛒 Jalur Marketplace (utama)
+
+1. **Katalog** (`umkm/catalog`): UMKM memilih produk, lalu **memilih sendiri distributornya** — setiap kartu penawaran menampilkan badge **"Rekomendasi SPK"** (hasil AHP + TOPSIS) sebagai panduan, keputusan akhir tetap di tangan UMKM.
+2. **Keranjang** (`umkm/keranjang`): atur jumlah (qty stepper), gabung multi-produk dari distributor berbeda, info tier harga + total hemat otomatis.
+3. **Checkout** (tombol POST dari keranjang): membuat N `PurchaseRequest` — satu per produk, status `PENDING_MATCH`, distributor pilihan tercatat (`preferred_distributor_id`) — lalu **memicu matching engine per `product_id`** (`MatchingEngineService::processMatchingForProduct`). Pengguna diarahkan ke halaman Pengajuan.
+4. Dari sini alur berlanjut seperti langkah 2–8 di bawah.
+
+### 📝 Jalur Pengajuan Manual (fallback)
+
+UMKM yang tidak memilih distributor memakai jalur lama — langkah 1–8 di bawah, dengan catatan pada langkah 3 **SPK-lah yang memilihkan distributor**.
 
 1. **UMKM mengajukan kebutuhan** (`umkm/requests`): pilih produk, kuantitas, deadline, area pengiriman.
 2. **Auto-matching** (`MatchingEngineService::processMatchingForProduct`): permintaan seproduk dengan total kuantitas ≥ MOQ terkecil digabung jadi satu grup (`matching_groups` + `matching_members`).
@@ -174,3 +195,5 @@ php artisan test
 
 ## 📜 Lisensi & Hak Cipta
 Hak Cipta &copy; 2026 Kula'an. Platform Smart Collective Procurement untuk UMKM.
+
+Proyek ini dilisensikan di bawah [MIT License](LICENSE).
