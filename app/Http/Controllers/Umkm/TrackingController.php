@@ -49,7 +49,7 @@ class TrackingController extends Controller
             })
             ->when($from !== null, fn ($query) => $query->whereDate('created_at', '>=', $from))
             ->when($to !== null, fn ($query) => $query->whereDate('created_at', '<=', $to))
-            ->latest()
+            ->orderByDesc('updated_at')
             ->paginate(10)
             ->withQueryString();
 

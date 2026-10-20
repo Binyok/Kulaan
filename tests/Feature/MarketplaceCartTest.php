@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Enums\MatchingGroupStatus;
 use App\Enums\PurchaseRequestStatus;
+use App\Enums\UrgencyLevel;
 use App\Models\Distributor;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\PurchaseRequest;
 use App\Models\SupplierPriceTier;
 use App\Models\SupplierProduct;
 use App\Models\Umkm;
@@ -265,5 +267,57 @@ class MarketplaceCartTest extends TestCase
             'quantity' => 5,
             'status' => PurchaseRequestStatus::PENDING_MATCH->value,
         ]);
+    }
+
+    public function test_cart_page_shows_real_moq_progress_from_supplier_product(): void
+    {
+        [$user] = $this->createUmkmUser();
+        [$prod, $dist] = $this->createProductWithDistributor('Beras Ramos IR64', 10000, 10, 500);
+
+        $cart = app(CartService::class);
+        $cart->clear();
+        $cart->add($prod->id, $dist->id, 4);
+
+        $response = $this->actingAs($user)->get(route('umkm.cart.index'));
+
+        $response->assertOk();
+        $response->assertSee('data-moq-target>10<', false);
+        $response->assertSee('data-moq-gathered>4<', false);
+        $response->assertSee('data-moq-remaining>6 kg<', false);
+        $response->assertSee('hidden" data-moq-met', false);
+        $response->assertDontSee('hidden" data-moq-pending', false);
+    }
+
+    public function test_cart_moq_progress_includes_collective_pool_and_marks_target_met(): void
+    {
+        [$user] = $this->createUmkmUser();
+        [, $otherUmkm] = $this->createUmkmUser();
+        [$prod, $dist] = $this->createProductWithDistributor('Beras Ramos IR64', 10000, 10, 500);
+
+        PurchaseRequest::create([
+            'umkm_id' => $otherUmkm->id,
+            'product_id' => $prod->id,
+            'quantity' => 6,
+            'unit' => 'kg',
+            'deadline' => now()->addHours(24),
+            'urgency' => UrgencyLevel::SEDANG->value,
+            'delivery_district' => 'Banjarmasin Tengah',
+            'delivery_address' => 'Jl. Contoh No. 1',
+            'status' => PurchaseRequestStatus::PENDING_MATCH->value,
+            'preferred_distributor_id' => $dist->id,
+        ]);
+
+        $cart = app(CartService::class);
+        $cart->clear();
+        $cart->add($prod->id, $dist->id, 4);
+
+        $response = $this->actingAs($user)->get(route('umkm.cart.index'));
+
+        $response->assertOk();
+        $response->assertSee('data-moq-gathered>10<', false);
+        $response->assertSee('data-moq-remaining>0 kg<', false);
+        $response->assertSee('Kuota minimum terpenuhi');
+        $response->assertSee('hidden" data-moq-pending', false);
+        $response->assertDontSee('hidden" data-moq-met', false);
     }
 }

@@ -19,6 +19,7 @@ class Shipment extends Model
         'status',
         'estimated_arrival_at',
         'delivered_at',
+        'proof_image_path',
         'notes',
     ];
 

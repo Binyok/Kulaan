@@ -19,7 +19,7 @@ class SpkCriteriaController extends Controller
     {
         $criteria = SpkCriterion::all();
         $latestWeight = AhpWeight::latest()->first();
-        $histories = SpkCalculationHistory::with('matchingGroup.product')->latest()->take(10)->get();
+        $histories = SpkCalculationHistory::with('matchingGroup.product')->latest()->paginate(10);
 
         return view('admin.spk.index', compact('criteria', 'latestWeight', 'histories'));
     }

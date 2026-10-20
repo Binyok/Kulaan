@@ -186,11 +186,11 @@
                     @endphp
                     <article id="offer-m-{{ $d->id }}" class="mt-3 bg-white rounded-3xl {{ $isTop ? 'border-2 border-brass shadow-md' : 'border border-line' }} p-4">
                         <div class="flex items-center justify-between gap-2">
-                            <p class="font-extrabold text-[15px]">{{ $d->company_name }}</p>
+                            <p class="font-extrabold text-[15px] leading-tight line-clamp-2">{{ $d->company_name }}</p>
                             @if ($isTop)
-                                <span class="bg-brass text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide whitespace-nowrap">Rekomendasi SPK #1</span>
+                                <span class="bg-brass text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide whitespace-nowrap shrink-0">Rekomendasi SPK #1</span>
                             @elseif (! is_null($offer['rank']))
-                                <span class="bg-cream border border-line text-muted text-[10px] font-bold px-2.5 py-1 rounded-full">#{{ $offer['rank'] }}</span>
+                                <span class="bg-cream border border-line text-muted text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">#{{ $offer['rank'] }}</span>
                             @endif
                         </div>
                         <div class="flex items-center gap-1.5 mt-1.5 text-xs">
@@ -214,7 +214,7 @@
                         </div>
                         <div class="mt-3 pt-3 border-t border-line">
                             <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1.5">Jumlah Kebutuhan Anda ({{ $product->unit }})</label>
-                            <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center justify-between gap-3 flex-wrap">
                                 <div class="flex items-center gap-3 bg-cream border border-line rounded-2xl p-1.5">
                                     <button type="button" @click="dec({{ $d->id }})" class="w-9 h-9 rounded-xl bg-white border border-line flex items-center justify-center text-ink cursor-pointer">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14"/></svg>
@@ -224,9 +224,9 @@
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                     </button>
                                 </div>
-                                <div class="text-right">
+                                <div class="text-right shrink-0">
                                     <p class="text-[11px] text-muted">Harga <span class="font-semibold">(estimasi)</span></p>
-                                    <p class="text-xl font-extrabold text-ink tnum">Rp <span x-text="formatNumber(getPrice({{ $d->id }}))">{{ number_format($offer['unit_price'], 0, ',', '.') }}</span><span class="text-xs font-semibold text-muted">/{{ $product->unit }}</span></p>
+                                    <p class="text-xl font-extrabold text-ink tnum whitespace-nowrap">Rp <span x-text="formatNumber(getPrice({{ $d->id }}))">{{ number_format($offer['unit_price'], 0, ',', '.') }}</span><span class="text-xs font-semibold text-muted">/{{ $product->unit }}</span></p>
                                 </div>
                             </div>
                             <div class="flex items-center justify-between mt-2 text-[11px]">
@@ -238,15 +238,17 @@
                                 <span class="font-extrabold text-success tnum">~Rp <span x-text="formatNumber(getSavings({{ $d->id }}))"></span></span>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2.5 mt-3">
-                            <form method="POST" action="{{ route('umkm.cart.add') }}">
+                        <div class="flex items-center gap-2.5 mt-3">
+                            <form method="POST" action="{{ route('umkm.cart.add') }}" class="shrink-0">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 <input type="hidden" name="distributor_id" value="{{ $d->id }}">
                                 <input type="hidden" name="quantity" :value="getQty({{ $d->id }})">
-                                <button type="submit" class="w-full h-12 rounded-2xl border-2 border-forest text-forest text-sm font-bold cursor-pointer">Tambah ke Keranjang</button>
+                                <button type="submit" title="Tambah ke Keranjang" aria-label="Tambah ke Keranjang" class="w-12 h-12 rounded-2xl border-2 border-forest text-forest flex items-center justify-center cursor-pointer">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
+                                </button>
                             </form>
-                            <form method="POST" action="{{ route('umkm.cart.buy-now') }}">
+                            <form method="POST" action="{{ route('umkm.cart.buy-now') }}" class="flex-1">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 <input type="hidden" name="distributor_id" value="{{ $d->id }}">
@@ -308,31 +310,7 @@
                     </span>
                     <span class="text-xl font-extrabold tracking-tight">Kulaan</span>
                 </div>
-                <nav class="flex-1 px-4 py-6 space-y-1 text-sm font-semibold">
-                    <a href="{{ route('umkm.catalog.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-forest text-white">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-                        Katalog
-                    </a>
-                    <a href="{{ route('umkm.cart.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-                        Keranjang
-                        @if ($cartCount > 0)
-                            <span class="ml-auto bg-brass text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $cartCount }}</span>
-                        @endif
-                    </a>
-                    <a href="{{ route('umkm.requests.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l4.414 4.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
-                        Pengajuan
-                    </a>
-                    <a href="{{ route('umkm.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-                        Pesanan
-                    </a>
-                    <a href="{{ route('umkm.tracking.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-                        Pelacakan
-                    </a>
-                </nav>
+                <x-umkm.sidebar-nav active="catalog" />
                 <div class="p-4 border-t border-line">
                     <a href="{{ route('profile.complete') }}" class="flex items-center gap-3 px-2">
                         <span class="w-10 h-10 rounded-2xl bg-forest text-white flex items-center justify-center font-extrabold text-xs">{{ $initials }}</span>
@@ -449,7 +427,7 @@
                         </div>
 
                         @if (! empty($offers))
-                            <div class="grid md:grid-cols-3 gap-5 mt-5">
+                            <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5 mt-5">
                                 @foreach ($offers as $offer)
                                     @php
                                         $sp = $offer['supplier_product'];
@@ -460,12 +438,12 @@
                                         $discountPct = $benchmark > 0 && (float) $offer['unit_price'] < $benchmark ? (int) round(($benchmark - (float) $offer['unit_price']) / $benchmark * 100) : 0;
                                     @endphp
                                     <article id="offer-d-{{ $d->id }}" class="bg-white rounded-3xl {{ $isTop ? 'border-2 border-brass shadow-md' : 'border border-line' }} p-6 flex flex-col">
-                                        <div class="flex items-start justify-between gap-2">
-                                            <p class="font-extrabold text-lg">{{ $d->company_name }}</p>
+                                        <div class="flex items-start justify-between gap-2 min-h-[3.5rem]">
+                                            <p class="font-extrabold text-lg leading-tight line-clamp-2">{{ $d->company_name }}</p>
                                             @if ($isTop)
-                                                <span class="bg-brass text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide whitespace-nowrap">Rekomendasi SPK #1</span>
+                                                <span class="bg-brass text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide whitespace-nowrap shrink-0">Rekomendasi SPK #1</span>
                                             @elseif (! is_null($offer['rank']))
-                                                <span class="bg-cream border border-line text-muted text-[10px] font-bold px-2.5 py-1 rounded-full">#{{ $offer['rank'] }}</span>
+                                                <span class="bg-cream border border-line text-muted text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">#{{ $offer['rank'] }}</span>
                                             @endif
                                         </div>
                                         <div class="flex items-center gap-1.5 mt-2 text-xs">
@@ -490,7 +468,7 @@
 
                                         <div class="mt-4 pt-4 border-t border-line">
                                             <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-2">Jumlah Kebutuhan Anda ({{ $product->unit }})</label>
-                                            <div class="flex items-center justify-between gap-3">
+                                            <div class="flex items-center justify-between gap-3 flex-wrap">
                                                 <div class="flex items-center gap-3 bg-cream border border-line rounded-2xl p-1.5">
                                                     <button type="button" @click="dec({{ $d->id }})" class="w-10 h-10 rounded-xl bg-white border border-line flex items-center justify-center text-ink cursor-pointer">
                                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14"/></svg>
@@ -500,9 +478,9 @@
                                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                                     </button>
                                                 </div>
-                                                <div class="text-right">
+                                                <div class="text-right shrink-0">
                                                     <p class="text-[11px] text-muted">Harga <span class="font-semibold">(estimasi)</span></p>
-                                                    <p class="text-2xl font-extrabold text-ink tnum">Rp <span x-text="formatNumber(getPrice({{ $d->id }}))">{{ number_format($offer['unit_price'], 0, ',', '.') }}</span><span class="text-xs font-semibold text-muted">/{{ $product->unit }}</span></p>
+                                                    <p class="text-xl font-extrabold text-ink tnum whitespace-nowrap">Rp <span x-text="formatNumber(getPrice({{ $d->id }}))">{{ number_format($offer['unit_price'], 0, ',', '.') }}</span><span class="text-xs font-semibold text-muted">/{{ $product->unit }}</span></p>
                                                 </div>
                                             </div>
                                             <div class="flex items-center justify-between mt-2 text-[11px]">
@@ -515,15 +493,17 @@
                                             </div>
                                         </div>
 
-                                        <div class="grid grid-cols-2 gap-3 mt-auto pt-4">
-                                            <form method="POST" action="{{ route('umkm.cart.add') }}">
+                                        <div class="flex items-center gap-3 mt-auto pt-4">
+                                            <form method="POST" action="{{ route('umkm.cart.add') }}" class="shrink-0">
                                                 @csrf
                                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                                                 <input type="hidden" name="distributor_id" value="{{ $d->id }}">
                                                 <input type="hidden" name="quantity" :value="getQty({{ $d->id }})">
-                                                <button type="submit" class="w-full py-3.5 rounded-2xl border-2 border-forest text-forest font-bold cursor-pointer">Tambah ke Keranjang</button>
+                                                <button type="submit" title="Tambah ke Keranjang" aria-label="Tambah ke Keranjang" class="w-12 h-12 rounded-2xl border-2 border-forest text-forest flex items-center justify-center cursor-pointer hover:bg-forest/5 transition">
+                                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
+                                                </button>
                                             </form>
-                                            <form method="POST" action="{{ route('umkm.cart.buy-now') }}">
+                                            <form method="POST" action="{{ route('umkm.cart.buy-now') }}" class="flex-1">
                                                 @csrf
                                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                                                 <input type="hidden" name="distributor_id" value="{{ $d->id }}">
@@ -580,31 +560,7 @@
             </div>
         </div>
 
-        <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line px-2 pt-2 pb-5 flex items-start justify-around">
-            <a href="{{ route('umkm.catalog.index') }}" class="flex flex-col items-center gap-1 w-14 text-forest">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-                <span class="text-[10px] font-bold">Katalog</span>
-            </a>
-            <a href="{{ route('umkm.cart.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted relative">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-                <span class="text-[10px] font-semibold">Keranjang</span>
-                @if ($cartCount > 0)
-                    <span class="absolute top-0 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-white text-[10px] font-bold flex items-center justify-center">{{ $cartCount }}</span>
-                @endif
-            </a>
-            <a href="{{ route('umkm.requests.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l4.414 4.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
-                <span class="text-[10px] font-semibold">Pengajuan</span>
-            </a>
-            <a href="{{ route('umkm.orders.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-                <span class="text-[10px] font-semibold">Pesanan</span>
-            </a>
-            <a href="{{ route('umkm.tracking.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-                <span class="text-[10px] font-semibold">Pelacakan</span>
-            </a>
-        </div>
+        <x-umkm.mobile-tab active="catalog" />
     </div>
 
     <script>

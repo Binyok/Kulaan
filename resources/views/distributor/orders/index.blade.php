@@ -1,7 +1,7 @@
 <x-layouts.app>
     <x-slot name="title">Kelola Pesanan Kolektif</x-slot>
 
-    <div x-data="{ openCourierModal: false, selectedOrder: null }">
+    <div x-data="{ openCourierModal: false, selectedOrder: null, openDetailModal: false, selectedDetail: null }">
 
         <div class="lg:hidden bg-cream min-h-screen">
             <div class="pb-24">
@@ -22,20 +22,7 @@
                             <p class="text-[15px] font-extrabold leading-tight">{{ $distributor?->company_name ?? auth()->user()->name }}</p>
                         </div>
                     </div>
-                    <div class="relative" x-data="{ notifOpen: false }">
-                        <button type="button" @click="notifOpen = !notifOpen" class="w-10 h-10 rounded-2xl bg-white border border-line flex items-center justify-center text-ink relative cursor-pointer">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                        </button>
-                        <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                            <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                            <div class="mt-3 space-y-1">
-                                <a href="{{ route('distributor.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                    <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                    <span class="text-xs text-ink">Pesanan kolektif menunggu diproses</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    <x-notification-bell />
                 </div>
 
                 <div class="mx-4 mt-4 rounded-3xl bg-gradient-to-br from-forest-deep via-forest to-forest-dark text-white p-5 relative overflow-hidden shrink-0">
@@ -76,6 +63,13 @@
                     </div>
                 </div>
 
+                <div class="px-4 mt-4">
+                    <div class="inline-flex bg-white border border-line rounded-2xl p-1 text-xs font-bold">
+                        <a href="{{ route('distributor.orders.index', ['tab' => 'active']) }}" class="px-4 py-2 rounded-xl {{ $tab === 'active' ? 'bg-forest text-white' : 'text-muted' }}">Aktif</a>
+                        <a href="{{ route('distributor.orders.index', ['tab' => 'history']) }}" class="px-4 py-2 rounded-xl {{ $tab === 'history' ? 'bg-forest text-white' : 'text-muted' }}">Riwayat</a>
+                    </div>
+                </div>
+
                 <div class="px-4 mt-4 space-y-3">
                     @forelse ($orders as $order)
                         @php
@@ -111,30 +105,48 @@
                                     </div>
                                 @endforeach
                             </div>
+                            @php $shipment = $order->shipments->first(); @endphp
+                            @if ($shipment)
+                                <div class="mt-3 rounded-2xl border border-line p-3 space-y-2">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="font-bold text-ink">Kurir: {{ $shipment->courier?->user?->name ?? 'Belum ditugaskan' }}</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brass-soft text-brass">{{ $shipment->status }}</span>
+                                    </div>
+                                    @if ($shipment->courier)
+                                        <p class="text-[11px] text-muted">{{ $shipment->courier->vehicle_type }} &bull; {{ $shipment->courier->vehicle_number }} &bull; {{ $shipment->courier->user?->phone ?? '-' }}</p>
+                                    @endif
+                                    @if ($shipment->proof_image_path)
+                                        <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-full h-28 object-cover rounded-xl border border-line">
+                                    @endif
+                                </div>
+                            @endif
                             <div class="mt-3">
                                 @if ($order->status->value === 'PAID')
                                     <form method="POST" action="{{ route('distributor.orders.update-status', $order) }}">
                                         @csrf
                                         <input type="hidden" name="status" value="CONFIRMED">
-                                        <button type="submit" class="w-full bg-forest text-white text-sm font-bold py-3 rounded-2xl">Konfirmasi</button>
+                                        <button type="submit" class="w-full bg-forest text-white text-sm font-bold py-3 rounded-2xl cursor-pointer">Konfirmasi</button>
                                     </form>
                                 @elseif ($order->status->value === 'CONFIRMED')
                                     <form method="POST" action="{{ route('distributor.orders.update-status', $order) }}">
                                         @csrf
                                         <input type="hidden" name="status" value="PREPARING">
-                                        <button type="submit" class="w-full bg-forest text-white text-sm font-bold py-3 rounded-2xl">Siapkan Barang</button>
+                                        <button type="submit" class="w-full bg-forest text-white text-sm font-bold py-3 rounded-2xl cursor-pointer">Siapkan Barang</button>
                                     </form>
                                 @elseif ($order->status->value === 'PREPARING')
                                     <form method="POST" action="{{ route('distributor.orders.update-status', $order) }}">
                                         @csrf
                                         <input type="hidden" name="status" value="READY_TO_SHIP">
-                                        <button type="submit" class="w-full bg-forest text-white text-sm font-bold py-3 rounded-2xl">Siap Kirim</button>
+                                        <button type="submit" class="w-full bg-forest text-white text-sm font-bold py-3 rounded-2xl cursor-pointer">Siap Kirim</button>
                                     </form>
+                                @elseif ($order->status->value === 'READY_TO_SHIP' && $order->shipments->isEmpty())
+                                    <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCourierModal = true" class="w-full bg-brass text-white text-sm font-bold py-3 rounded-2xl cursor-pointer">Tugaskan Kurir</button>
                                 @elseif ($order->status->value === 'READY_TO_SHIP')
-                                    <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCourierModal = true" class="w-full bg-brass text-white text-sm font-bold py-3 rounded-2xl">Tugaskan Kurir</button>
+                                    <span class="block text-center text-xs text-muted py-2">Kurir sudah ditugaskan</span>
                                 @else
                                     <span class="block text-center text-xs text-muted py-2">Tidak ada aksi</span>
                                 @endif
+                                <button type="button" @click="selectedDetail = {{ json_encode($order) }}; openDetailModal = true" class="mt-2 w-full text-center text-xs font-bold text-forest border border-line rounded-2xl py-2.5 cursor-pointer">Lihat Detail</button>
                             </div>
                         </article>
                     @empty
@@ -226,20 +238,7 @@
                                 <svg class="w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z"/></svg>
                                 <input class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" placeholder="Cari pesanan, produk...">
                             </div>
-                            <div class="relative" x-data="{ notifOpen: false }">
-                                <button type="button" @click="notifOpen = !notifOpen" class="w-11 h-11 rounded-2xl bg-white border border-line flex items-center justify-center relative cursor-pointer">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                                </button>
-                                <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                                    <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                                    <div class="mt-3 space-y-1">
-                                        <a href="{{ route('distributor.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                            <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                            <span class="text-xs text-ink">Pesanan kolektif menunggu diproses</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                            <x-notification-bell />
                         </div>
                     </div>
                 </header>
@@ -279,6 +278,13 @@
                         </div>
                     </div>
 
+                    <div class="mb-6">
+                        <div class="inline-flex bg-white border border-line rounded-2xl p-1 text-sm font-bold">
+                            <a href="{{ route('distributor.orders.index', ['tab' => 'active']) }}" class="px-5 py-2.5 rounded-xl {{ $tab === 'active' ? 'bg-forest text-white' : 'text-muted' }}">Aktif</a>
+                            <a href="{{ route('distributor.orders.index', ['tab' => 'history']) }}" class="px-5 py-2.5 rounded-xl {{ $tab === 'history' ? 'bg-forest text-white' : 'text-muted' }}">Riwayat</a>
+                        </div>
+                    </div>
+
                     <div class="space-y-4">
                         @forelse ($orders as $order)
                             @php
@@ -314,30 +320,48 @@
                                         @endforeach
                                     </div>
                                 </div>
+                                @php $shipment = $order->shipments->first(); @endphp
+                                @if ($shipment)
+                                    <div class="mt-4 rounded-2xl border border-line p-4 space-y-2 self-start min-w-[16rem]">
+                                        <div class="flex items-center justify-between gap-3 text-xs">
+                                            <span class="font-bold text-ink">Kurir: {{ $shipment->courier?->user?->name ?? 'Belum ditugaskan' }}</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brass-soft text-brass">{{ $shipment->status }}</span>
+                                        </div>
+                                        @if ($shipment->courier)
+                                            <p class="text-xs text-muted">{{ $shipment->courier->vehicle_type }} &bull; {{ $shipment->courier->vehicle_number }} &bull; {{ $shipment->courier->user?->phone ?? '-' }}</p>
+                                        @endif
+                                        @if ($shipment->proof_image_path)
+                                            <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-full h-32 object-cover rounded-xl border border-line">
+                                        @endif
+                                    </div>
+                                @endif
                                 <div class="flex lg:flex-col justify-center shrink-0">
                                     @if ($order->status->value === 'PAID')
                                         <form method="POST" action="{{ route('distributor.orders.update-status', $order) }}">
                                             @csrf
                                             <input type="hidden" name="status" value="CONFIRMED">
-                                            <button type="submit" class="bg-forest text-white text-sm font-bold py-3 px-8 rounded-2xl">Konfirmasi</button>
+                                            <button type="submit" class="bg-forest text-white text-sm font-bold py-3 px-8 rounded-2xl cursor-pointer">Konfirmasi</button>
                                         </form>
                                     @elseif ($order->status->value === 'CONFIRMED')
                                         <form method="POST" action="{{ route('distributor.orders.update-status', $order) }}">
                                             @csrf
                                             <input type="hidden" name="status" value="PREPARING">
-                                            <button type="submit" class="bg-forest text-white text-sm font-bold py-3 px-8 rounded-2xl">Siapkan Barang</button>
+                                            <button type="submit" class="bg-forest text-white text-sm font-bold py-3 px-8 rounded-2xl cursor-pointer">Siapkan Barang</button>
                                         </form>
                                     @elseif ($order->status->value === 'PREPARING')
                                         <form method="POST" action="{{ route('distributor.orders.update-status', $order) }}">
                                             @csrf
                                             <input type="hidden" name="status" value="READY_TO_SHIP">
-                                            <button type="submit" class="bg-forest text-white text-sm font-bold py-3 px-8 rounded-2xl">Siap Kirim</button>
+                                            <button type="submit" class="bg-forest text-white text-sm font-bold py-3 px-8 rounded-2xl cursor-pointer">Siap Kirim</button>
                                         </form>
+                                    @elseif ($order->status->value === 'READY_TO_SHIP' && $order->shipments->isEmpty())
+                                        <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCourierModal = true" class="bg-brass text-white text-sm font-bold py-3 px-8 rounded-2xl cursor-pointer">Tugaskan Kurir</button>
                                     @elseif ($order->status->value === 'READY_TO_SHIP')
-                                        <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCourierModal = true" class="bg-brass text-white text-sm font-bold py-3 px-8 rounded-2xl">Tugaskan Kurir</button>
+                                        <span class="text-xs text-muted">Kurir sudah ditugaskan</span>
                                     @else
                                         <span class="text-xs text-muted">Tidak ada aksi</span>
                                     @endif
+                                    <button type="button" @click="selectedDetail = {{ json_encode($order) }}; openDetailModal = true" class="mt-2 text-center text-xs font-bold text-forest border border-line rounded-2xl px-6 py-2.5 cursor-pointer">Lihat Detail</button>
                                 </div>
                             </article>
                         @empty
@@ -368,7 +392,7 @@
                     <legend class="text-xs font-semibold text-muted mb-2">Pilih kurir armada</legend>
                     @if ($couriers->isEmpty())
                         <p class="text-xs text-muted p-3 bg-cream rounded-xl border border-line">
-                            Belum ada kurir terdaftar. Daftarkan kurir terlebih dahulu.
+                            Belum ada kurir tersedia untuk distributor Anda. Daftarkan kurir armada sendiri atau tunggu kurir independen bergabung.
                         </p>
                     @else
                         <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -392,12 +416,50 @@
                 </div>
 
                 <div class="flex gap-3 pt-3 border-t border-line/60">
-                    <button type="button" @click="openCourierModal = false" class="flex-1 border border-line text-muted text-sm font-bold py-3 rounded-2xl">Batal</button>
-                    <button type="submit" class="flex-1 bg-forest text-white text-sm font-bold py-3 rounded-2xl" @if ($couriers->isEmpty()) disabled @endif>
+                    <button type="button" @click="openCourierModal = false" class="flex-1 border border-line text-muted text-sm font-bold py-3 rounded-2xl cursor-pointer">Batal</button>
+                    <button type="submit" class="flex-1 bg-forest text-white text-sm font-bold py-3 rounded-2xl cursor-pointer" @if ($couriers->isEmpty()) disabled @endif>
                         Tugaskan Kurir
                     </button>
                 </div>
             </form>
+        </x-modal>
+
+        <x-modal open="openDetailModal" size="lg"
+                 eyebrow="Rincian Pesanan"
+                 title="Detail Pesanan Kolektif">
+            <template x-if="selectedDetail">
+                <div class="pt-5 space-y-4 text-sm">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="font-mono font-bold text-ink" x-text="selectedDetail.order_number"></span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brass-soft text-brass" x-text="selectedDetail.status"></span>
+                    </div>
+                    <div class="rounded-2xl border border-line divide-y divide-line/60">
+                        <template x-for="item in selectedDetail.items" :key="item.id">
+                            <div class="p-3 flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-bold text-ink" x-text="item.umkm?.business_name"></p>
+                                    <p class="text-xs text-muted mt-0.5" x-text="(item.quantity) + ' ' + (item.product?.unit ?? '') + ' • ' + (item.delivery_address ?? '')"></p>
+                                    <p class="text-[11px] text-muted" x-text="item.delivery_district ?? ''"></p>
+                                </div>
+                                <span class="text-[10px] font-bold text-muted shrink-0" x-text="item.payment_status"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <template x-if="selectedDetail.shipments && selectedDetail.shipments.length">
+                        <div class="rounded-2xl border border-line p-4 space-y-2">
+                            <p class="text-xs font-bold text-ink">Pengiriman</p>
+                            <p class="text-xs text-muted" x-text="'Kurir: ' + (selectedDetail.shipments[0].courier?.user?.name ?? 'Belum ditugaskan')"></p>
+                            <p class="text-xs text-muted" x-text="(selectedDetail.shipments[0].courier?.vehicle_type ?? '-') + ' • ' + (selectedDetail.shipments[0].courier?.vehicle_number ?? '-') + ' • ' + (selectedDetail.shipments[0].courier?.user?.phone ?? '-')"></p>
+                            <template x-if="selectedDetail.shipments[0].proof_image_path">
+                                <img :src="'{{ asset('storage') }}/' + selectedDetail.shipments[0].proof_image_path" alt="Bukti pengiriman" class="w-full h-48 object-cover rounded-xl border border-line">
+                            </template>
+                        </div>
+                    </template>
+                    <div class="flex justify-end pt-3 border-t border-line/60">
+                        <button type="button" @click="openDetailModal = false" class="btn-ghost text-sm py-3 px-6">Tutup</button>
+                    </div>
+                </div>
+            </template>
         </x-modal>
     </div>
 </x-layouts.app>

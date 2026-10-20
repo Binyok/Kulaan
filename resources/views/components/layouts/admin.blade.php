@@ -5,60 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    @auth
+        <meta name="kulaan-live-endpoint" content="{{ route('live.revision') }}">
+        <meta name="kulaan-live-interval" content="10000">
+    @endauth
+
     <title>{{ $title ?? "Panel Admin" }} - Kulaan</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <noscript><style>[data-reveal] { opacity: 1 !important; transform: none !important; }</style></noscript>
 </head>
 <body class="bg-cream text-ink min-h-screen">
-    @if (session('success'))
-        <div role="status" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] p-4 rounded-2xl bg-forest/10 text-forest border border-forest/20 text-xs font-bold flex items-center gap-2.5 shadow-lg">
-            <span class="w-2 h-2 rounded-full bg-forest"></span>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
-    @if (session('error'))
-        <div role="alert" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] p-4 rounded-2xl bg-danger/10 text-danger border border-danger/20 text-xs font-bold flex items-center gap-2.5 shadow-lg">
-            <span class="w-2 h-2 rounded-full bg-danger"></span>
-            <span>{{ session('error') }}</span>
-        </div>
-    @endif
-    @if (session('info'))
-        <div role="status" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] p-4 rounded-2xl bg-brass-soft text-brass border border-brass/30 text-xs font-bold flex items-center gap-2.5 shadow-lg">
-            <span class="w-2 h-2 rounded-full bg-brass"></span>
-            <span>{{ session('info') }}</span>
-        </div>
-    @endif
+    <x-toasts />
 
     {{ $slot }}
 
     <!-- Global App Confirmation Modal -->
-    <div x-data="{
-            open: false,
-            title: '',
-            message: '',
-            confirmText: 'Ya, Lanjutkan',
-            cancelText: 'Batal',
-            isDanger: true,
-            actionFn: null,
-            init() {
-                window.kulaanConfirm = ({ title, message, confirmText = 'Ya, Lanjutkan', cancelText = 'Batal', isDanger = true, onConfirm }) => {
-                    this.title = title || 'Konfirmasi Tindakan';
-                    this.message = message || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
-                    this.confirmText = confirmText;
-                    this.cancelText = cancelText;
-                    this.isDanger = isDanger;
-                    this.actionFn = onConfirm;
-                    this.open = true;
-                };
-            },
-            proceed() {
-                this.open = false;
-                if (typeof this.actionFn === 'function') {
-                    this.actionFn();
-                }
-            }
-         }"
+    <div x-data="kulaanConfirmModal"
          x-show="open"
          x-cloak
          @keydown.escape.window="open = false"

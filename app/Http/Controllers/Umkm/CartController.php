@@ -31,8 +31,42 @@ class CartController extends Controller
         $items = $this->cart->items();
         $total = $this->cart->total();
         $totalSavings = $this->cart->totalSavings();
+        $moqProgress = $this->moqProgress($items);
 
-        return view('umkm.cart.index', compact('items', 'total', 'totalSavings', 'umkm'));
+        return view('umkm.cart.index', compact('items', 'total', 'totalSavings', 'umkm', 'moqProgress'));
+    }
+
+    /**
+     * @param  array<string, array<string, mixed>>  $items
+     * @return array{target: float, gathered: float, remaining: float, percent: int, unit: string}
+     */
+    private function moqProgress(array $items): array
+    {
+        $target = 0.0;
+        $gathered = 0.0;
+        $units = [];
+
+        foreach ($items as $item) {
+            $pooled = (float) PurchaseRequest::where('product_id', $item['product_id'])
+                ->where('preferred_distributor_id', $item['distributor_id'])
+                ->where('status', PurchaseRequestStatus::PENDING_MATCH->value)
+                ->sum('quantity');
+
+            $target += (float) $item['moq'];
+            $gathered += $pooled + (float) $item['quantity'];
+            $units[] = (string) $item['product']->unit;
+        }
+
+        $target = round($target, 2);
+        $gathered = round($gathered, 2);
+
+        return [
+            'target' => $target,
+            'gathered' => $gathered,
+            'remaining' => round(max(0, $target - $gathered), 2),
+            'percent' => $target > 0 ? (int) min(100, round($gathered / $target * 100)) : 0,
+            'unit' => count(array_unique($units)) === 1 ? ($units[0] ?? '') : '',
+        ];
     }
 
     public function add(Request $request): RedirectResponse
@@ -95,6 +129,7 @@ class CartController extends Controller
                 'total' => $this->cart->total(),
                 'total_savings' => $this->cart->totalSavings(),
                 'count' => $this->cart->count(),
+                'moq_progress' => $this->moqProgress($items),
             ]);
         }
 

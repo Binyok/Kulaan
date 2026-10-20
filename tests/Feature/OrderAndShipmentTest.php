@@ -14,6 +14,7 @@ use App\Models\Shipment;
 use App\Models\Umkm;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -149,12 +150,22 @@ class OrderAndShipmentTest extends TestCase
             'longitude' => 114.590000,
         ]);
 
-        // Courier completes delivery
-        $response = $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment));
+        // Completing without the mandatory photo proof is rejected
+        $this->actingAs($courierUser)
+            ->from(route('kurir.shipments.index'))
+            ->post(route('kurir.shipments.complete', $shipment))
+            ->assertSessionHasErrors('proof');
+        $this->assertEquals('IN_TRANSIT', $shipment->fresh()->status);
+
+        // Courier completes delivery with photo proof
+        $response = $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment), [
+            'proof' => UploadedFile::fake()->image('proof.jpg'),
+        ]);
         $response->assertRedirect();
 
         $this->assertEquals('DELIVERED', $shipment->fresh()->status);
-        $this->assertEquals(OrderStatus::COMPLETED, $order->fresh()->status);
+        $this->assertNotNull($shipment->fresh()->proof_image_path);
+        $this->assertEquals(OrderStatus::DELIVERED, $order->fresh()->status);
     }
 
     public function test_umkm_can_submit_distributor_review_and_rating_recalculates(): void
@@ -203,6 +214,7 @@ class OrderAndShipmentTest extends TestCase
             'payment_status' => PaymentStatus::PAID->value,
             'delivery_district' => 'Banjarmasin Utara',
             'delivery_address' => 'Jl. Kayu Tangi 1',
+            'received_confirmed_at' => now(),
         ]);
 
         $response = $this->actingAs($umkmUser)->post(route('umkm.orders.review', $orderItem), [
@@ -264,15 +276,19 @@ class OrderAndShipmentTest extends TestCase
         $restart->assertRedirect(route('kurir.shipments.index'));
         $restart->assertSessionHas('error');
 
-        $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment))->assertRedirect();
+        $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment), [
+            'proof' => UploadedFile::fake()->image('proof.jpg'),
+        ])->assertRedirect();
         $this->assertEquals('DELIVERED', $shipment->fresh()->status);
 
         // Completing twice is rejected
         $repeat = $this->actingAs($courierUser)
             ->from(route('kurir.shipments.index'))
-            ->post(route('kurir.shipments.complete', $shipment));
+            ->post(route('kurir.shipments.complete', $shipment), [
+                'proof' => UploadedFile::fake()->image('proof.jpg'),
+            ]);
         $repeat->assertRedirect(route('kurir.shipments.index'));
         $repeat->assertSessionHas('error');
-        $this->assertEquals(OrderStatus::COMPLETED, $order->fresh()->status);
+        $this->assertEquals(OrderStatus::DELIVERED, $order->fresh()->status);
     }
 }

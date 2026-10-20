@@ -27,24 +27,7 @@
                     <p class="text-[15px] font-extrabold leading-tight">{{ $displayName }}</p>
                 </div>
             </div>
-            <div class="relative" x-data="{ notifOpen: false }">
-                <button type="button" @click="notifOpen = !notifOpen" class="w-10 h-10 rounded-2xl bg-white border border-line flex items-center justify-center text-ink relative cursor-pointer">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                </button>
-                <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                    <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                    <div class="mt-3 space-y-1">
-                        <a href="{{ route('umkm.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                            <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                            <span class="text-xs text-ink">Lihat tagihan &amp; pesananmu</span>
-                        </a>
-                        <a href="{{ route('umkm.tracking.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                            <span class="w-2 h-2 mt-1.5 rounded-full bg-forest shrink-0"></span>
-                            <span class="text-xs text-ink">Lacak pengiriman berjalan</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <x-notification-bell size="sm" />
         </div>
 
         <div class="px-4 mt-4">
@@ -107,7 +90,7 @@
                             : null;
                         $tone = ['bg-forest/10 text-forest/30', 'bg-brass-soft text-brass/30', 'bg-white border-b border-line text-muted/25'][$loop->index % 3];
                     @endphp
-                    <a href="{{ route('umkm.catalog.show', $prod) }}" class="bg-white rounded-3xl border border-line overflow-hidden shadow-sm">
+                    <a href="{{ route('umkm.catalog.show', $prod) }}" class="bg-white rounded-3xl border border-line overflow-hidden shadow-sm flex flex-col">
                         <div class="relative aspect-square flex items-center justify-center {{ $tone }}">
                             <span class="text-5xl font-extrabold">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
                             @if ($discountPct !== null && $discountPct > 0)
@@ -117,11 +100,13 @@
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>
                             </span>
                         </div>
-                        <div class="p-3">
+                        <div class="p-3 flex flex-col flex-1">
                             <p class="text-[13px] font-bold text-ink leading-tight">{{ $prod->name }}</p>
                             <p class="text-[11px] text-muted mt-0.5">{{ $prod->unit }}</p>
-                            <p class="text-[11px] text-muted mt-1">mulai dari</p>
-                            <p class="text-sm font-extrabold text-forest">Rp {{ number_format($minPrice, 0, ',', '.') }}</p>
+                            <div class="mt-auto pt-1">
+                                <p class="text-[11px] text-muted">mulai dari</p>
+                                <p class="text-sm font-extrabold text-forest tnum whitespace-nowrap">Rp {{ number_format($minPrice, 0, ',', '.') }}</p>
+                            </div>
                         </div>
                     </a>
                 @endforeach
@@ -154,31 +139,7 @@
                 </span>
                 <span class="text-xl font-extrabold tracking-tight">Kulaan</span>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-1 text-sm font-semibold">
-                <a href="{{ route('umkm.catalog.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-forest text-white">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-                    Katalog
-                </a>
-                <a href="{{ route('umkm.cart.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-                    Keranjang
-                    @if ($cartCount > 0)
-                        <span class="ml-auto bg-brass text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $cartCount }}</span>
-                    @endif
-                </a>
-                <a href="{{ route('umkm.requests.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
-                    Pengajuan
-                </a>
-                <a href="{{ route('umkm.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-                    Pesanan
-                </a>
-                <a href="{{ route('umkm.tracking.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-                    Pelacakan
-                </a>
-            </nav>
+            <x-umkm.sidebar-nav active="catalog" />
             <div class="p-4 border-t border-line">
                 <a href="{{ route('profile.complete') }}" class="flex items-center gap-3 px-2">
                     <span class="w-10 h-10 rounded-2xl bg-forest text-white flex items-center justify-center font-extrabold text-xs">{{ $initials }}</span>
@@ -210,24 +171,7 @@
                             <input type="search" name="q" value="{{ $search }}" class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" placeholder="Cari beras, minyak goreng, gula...">
                             <button type="submit" class="h-9 px-4 rounded-xl bg-forest text-white text-xs font-bold">Cari</button>
                         </form>
-                        <div class="relative" x-data="{ notifOpen: false }">
-                            <button type="button" @click="notifOpen = !notifOpen" class="w-11 h-11 rounded-2xl bg-white border border-line flex items-center justify-center relative cursor-pointer">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                            </button>
-                            <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                                <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                                <div class="mt-3 space-y-1">
-                                    <a href="{{ route('umkm.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                        <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                        <span class="text-xs text-ink">Lihat tagihan &amp; pesananmu</span>
-                                    </a>
-                                    <a href="{{ route('umkm.tracking.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                        <span class="w-2 h-2 mt-1.5 rounded-full bg-forest shrink-0"></span>
-                                        <span class="text-xs text-ink">Lacak pengiriman berjalan</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        <x-notification-bell />
                     </div>
                 </div>
             </header>
@@ -244,10 +188,10 @@
                             <a href="{{ route('umkm.catalog.index') }}" class="bg-white text-forest-dark font-bold px-6 py-3 rounded-2xl text-sm">Mulai Belanja</a>
                             <a href="{{ route('home') }}" class="border border-white/30 text-white font-bold px-6 py-3 rounded-2xl text-sm">Cara Kerja</a>
                         </div>
-                        <div class="flex gap-8 mt-8">
-                            <div><p class="text-2xl font-extrabold">&mdash;</p><p class="text-xs text-white/65">UMKM bergabung</p></div>
-                            <div><p class="text-2xl font-extrabold">&mdash;</p><p class="text-xs text-white/65">Distributor mitra</p></div>
-                            <div><p class="text-2xl font-extrabold">&mdash;</p><p class="text-xs text-white/65">Total dihemat</p></div>
+                        <div class="flex flex-wrap gap-x-8 gap-y-4 mt-8">
+                            <div><p class="text-2xl font-extrabold">{{ number_format($stats['total_umkm'], 0, ',', '.') }}</p><p class="text-xs text-white/65">UMKM bergabung</p></div>
+                            <div><p class="text-2xl font-extrabold">{{ number_format($stats['total_distributor'], 0, ',', '.') }}</p><p class="text-xs text-white/65">Distributor mitra</p></div>
+                            <div><p class="text-2xl font-extrabold">Rp {{ number_format($stats['total_savings'], 0, ',', '.') }}</p><p class="text-xs text-white/65">Total dihemat</p></div>
                         </div>
                     </div>
                 </section>
@@ -272,7 +216,7 @@
                 <section class="mt-10">
                     <div class="flex items-center justify-between">
                         <h2 class="text-xl font-extrabold">Jelajahi Produk</h2>
-                        <div class="flex gap-2">
+                        <div class="flex flex-wrap gap-2">
                             <a href="{{ route('umkm.catalog.index') }}" class="text-xs font-bold px-4 py-2 rounded-full bg-forest text-white">Semua</a>
                             @foreach ($categories->take(3) as $category)
                                 <a href="{{ route('umkm.catalog.index', ['q' => $category->name]) }}" class="text-xs font-bold px-4 py-2 rounded-full bg-white border border-line text-muted hover:text-ink transition">{{ $category->name }}</a>
@@ -281,7 +225,7 @@
                     </div>
 
                     @if ($products->isNotEmpty())
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mt-5">
+                        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-5">
                             @foreach ($products as $prod)
                                 @php
                                     $available = $prod->supplierProducts->where('is_available', true);
@@ -294,7 +238,7 @@
                                         : null;
                                     $tone = ['bg-forest/10 text-forest/25', 'bg-brass-soft text-brass/25', 'bg-white border-b border-line text-muted/20'][$loop->index % 3];
                                 @endphp
-                                <a href="{{ route('umkm.catalog.show', $prod) }}" class="bg-white rounded-3xl border border-line overflow-hidden shadow-sm hover:shadow-md transition">
+                                <a href="{{ route('umkm.catalog.show', $prod) }}" class="bg-white rounded-3xl border border-line overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
                                     <div class="relative aspect-[4/3] flex items-center justify-center {{ $tone }}">
                                         <span class="text-6xl font-extrabold">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
                                         @if ($discountPct !== null && $discountPct > 0)
@@ -304,26 +248,26 @@
                                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8.25c0-2.49-2.1-4.5-4.69-4.5-1.93 0-3.6 1.13-4.31 2.73-.71-1.6-2.38-2.73-4.31-2.73C5.1 3.75 3 5.77 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
                                         </span>
                                     </div>
-                                    <div class="p-4">
-                                        @if ($topRating && $topRating['rating'] !== null)
-                                            <div class="flex items-center gap-1 text-xs font-bold text-brass">
-                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                                {{ number_format($topRating['rating'], 1) }}
+                                    <div class="p-4 flex flex-col flex-1">
+                                        <div class="flex items-center gap-1 text-xs font-bold {{ $topRating && $topRating['rating'] !== null ? 'text-brass' : 'text-muted' }} min-w-0">
+                                            @if ($topRating && $topRating['rating'] !== null)
+                                                <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <span class="shrink-0">{{ number_format($topRating['rating'], 1) }}</span>
                                                 @if (! empty($topRating['name']))
-                                                    <span class="text-muted font-medium">({{ $topRating['name'] }})</span>
+                                                    <span class="text-muted font-medium truncate">({{ $topRating['name'] }})</span>
                                                 @endif
-                                            </div>
-                                        @else
-                                            <div class="flex items-center gap-1 text-xs font-bold text-muted">Belum ada rating distributor</div>
-                                        @endif
-                                        <p class="font-bold mt-1">{{ $prod->name }}</p>
+                                            @else
+                                                <span class="truncate">Belum ada rating distributor</span>
+                                            @endif
+                                        </div>
+                                        <p class="font-bold mt-1 leading-snug">{{ $prod->name }}</p>
                                         <p class="text-xs text-muted">{{ $prod->unit }} &middot; {{ $distributorCount }} distributor</p>
-                                        <div class="flex items-end justify-between mt-2">
-                                            <div>
+                                        <div class="flex items-end justify-between gap-2 mt-auto pt-3">
+                                            <div class="min-w-0">
                                                 <p class="text-[11px] text-muted">mulai dari</p>
-                                                <p class="font-extrabold text-forest">Rp {{ number_format($minPrice, 0, ',', '.') }}</p>
+                                                <p class="font-extrabold text-forest tnum whitespace-nowrap">Rp {{ number_format($minPrice, 0, ',', '.') }}</p>
                                             </div>
-                                            <span class="h-10 px-4 rounded-xl bg-forest text-white text-xs font-bold flex items-center">Lihat</span>
+                                            <span class="h-10 px-4 rounded-xl bg-forest text-white text-xs font-bold flex items-center shrink-0">Lihat</span>
                                         </div>
                                     </div>
                                 </a>
@@ -370,29 +314,5 @@
         </div>
     </div>
 
-    <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line px-2 pt-2 pb-5 flex items-start justify-around">
-        <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m2.25 12 8.95-8.95a1.13 1.13 0 0 1 1.6 0l8.95 8.95M4.5 9.75V19.5a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75V9.75"/></svg>
-            <span class="text-[10px] font-semibold">Beranda</span>
-        </a>
-        <a href="{{ route('umkm.catalog.index') }}" class="flex flex-col items-center gap-1 w-14 text-forest">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-            <span class="text-[10px] font-bold">Katalog</span>
-        </a>
-        <a href="{{ route('umkm.cart.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted relative">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-            <span class="text-[10px] font-semibold">Keranjang</span>
-            @if ($cartCount > 0)
-                <span class="absolute top-0 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-white text-[10px] font-bold flex items-center justify-center">{{ $cartCount }}</span>
-            @endif
-        </a>
-        <a href="{{ route('umkm.orders.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-            <span class="text-[10px] font-semibold">Pesanan</span>
-        </a>
-        <a href="{{ route('profile.complete') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.98 18.72a6 6 0 0 0-8.46 0M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-9.75 8.25a9 9 0 1 1 13.5 0"/></svg>
-            <span class="text-[10px] font-semibold">Akun</span>
-        </a>
-    </div>
+    <x-umkm.mobile-tab active="catalog" />
 </x-layouts.app>

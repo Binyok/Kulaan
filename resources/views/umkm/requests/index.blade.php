@@ -8,7 +8,6 @@
 
         $fallbackItems = $requests->filter(fn ($r) => $r->status->value === 'FAILED_MATCH_FALLBACK');
         $pendingItems = $requests->filter(fn ($r) => $r->status->value === 'PENDING_MATCH');
-        $otherItems = $requests->filter(fn ($r) => ! in_array($r->status->value, ['FAILED_MATCH_FALLBACK', 'PENDING_MATCH'], true));
     @endphp
 
     {{-- MOBILE --}}
@@ -31,24 +30,7 @@
                     <p class="text-[15px] font-extrabold leading-tight">{{ $displayName }}</p>
                 </div>
             </div>
-            <div class="relative" x-data="{ notifOpen: false }">
-                <button type="button" @click="notifOpen = !notifOpen" class="w-10 h-10 rounded-2xl bg-white border border-line flex items-center justify-center text-ink relative cursor-pointer">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                </button>
-                <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                    <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                    <div class="mt-3 space-y-1">
-                        <a href="{{ route('umkm.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                            <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                            <span class="text-xs text-ink">Tagihan menunggu pembayaran</span>
-                        </a>
-                        <a href="{{ route('umkm.tracking.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                            <span class="w-2 h-2 mt-1.5 rounded-full bg-forest shrink-0"></span>
-                            <span class="text-xs text-ink">Pengiriman sedang berjalan</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <x-notification-bell />
         </div>
 
         {{-- page header --}}
@@ -57,16 +39,49 @@
             <p class="text-xs text-muted mt-0.5">Pantau status pengajuan kolektifmu</p>
         </div>
 
+        <div class="px-4 mt-4 mb-5">
+            <div class="bg-white border border-line rounded-2xl p-1.5 flex gap-1">
+                <a href="{{ route('umkm.requests.index', ['tab' => 'aktif']) }}" @if ($tab === 'aktif') aria-current="page" @endif class="flex-1 text-center text-xs font-bold py-2.5 rounded-xl transition {{ $tab === 'aktif' ? 'bg-forest text-white' : 'text-muted hover:bg-cream' }}">Aktif</a>
+                <a href="{{ route('umkm.requests.index', ['tab' => 'riwayat']) }}" @if ($tab === 'riwayat') aria-current="page" @endif class="flex-1 text-center text-xs font-bold py-2.5 rounded-xl transition {{ $tab === 'riwayat' ? 'bg-forest text-white' : 'text-muted hover:bg-cream' }}">Selesai</a>
+            </div>
+        </div>
+
         @if ($requests->isEmpty())
             <div class="px-4 mt-5">
                 <section class="bg-white rounded-3xl border border-line p-10 text-center shadow-sm">
                     <div class="w-14 h-14 rounded-2xl bg-forest/10 text-forest flex items-center justify-center mx-auto font-extrabold text-2xl">K</div>
-                    <h2 class="font-extrabold text-ink text-lg mt-4">Belum Ada Pengajuan</h2>
-                    <p class="text-xs text-muted mt-2 leading-relaxed">
-                        Pilih bahan baku dari katalog, tentukan distributor, dan sistem akan mengurunkan kuota bersama UMKM lain.
-                    </p>
+                    @if ($tab === 'riwayat')
+                        <h2 class="font-extrabold text-ink text-lg mt-4">Belum Ada Riwayat Pengajuan</h2>
+                        <p class="text-xs text-muted mt-2 leading-relaxed">
+                            Pengajuan yang selesai, dibatalkan, atau gagal matching akan tampil di sini.
+                        </p>
+                    @else
+                        <h2 class="font-extrabold text-ink text-lg mt-4">Belum Ada Pengajuan Aktif</h2>
+                        <p class="text-xs text-muted mt-2 leading-relaxed">
+                            Pilih bahan baku dari katalog, tentukan distributor, dan sistem akan mengurunkan kuota bersama UMKM lain.
+                        </p>
+                    @endif
                     <a href="{{ route('umkm.catalog.index') }}" class="bg-forest text-white inline-flex text-sm font-bold px-5 py-3 rounded-2xl mt-5">Buka Katalog</a>
                 </section>
+            </div>
+        @elseif ($tab === 'riwayat')
+            <div class="px-4 mt-5 space-y-3">
+                @foreach ($requests as $req)
+                    <div class="bg-white border border-line rounded-3xl p-4">
+                        <span class="inline-flex items-center text-[10px] font-bold uppercase tracking-wide px-2.5 py-1.5 rounded-full {{ $req->status->badgeClass() }}">
+                            {{ $req->status->label() }}
+                        </span>
+                        <p class="font-extrabold text-sm mt-2.5">{{ $req->product->name }}</p>
+                        <p class="text-xs text-muted mt-0.5">
+                            {{ number_format($req->quantity, 0) }} {{ $req->unit }} &middot; {{ $req->preferredDistributor?->company_name ?? '-' }}
+                            @if ($req->matchingGroup && (float) $req->matchingGroup->target_moq > 0)
+                                &middot; kuota {{ number_format((float) $req->matchingGroup->total_quantity, 0) }}/{{ number_format((float) $req->matchingGroup->target_moq, 0) }} {{ $req->unit }}
+                            @elseif ($req->deadline)
+                                &middot; {{ $req->deadline->format('d M Y') }}
+                            @endif
+                        </p>
+                    </div>
+                @endforeach
             </div>
         @else
             {{-- sedang mengumpulkan kuota --}}
@@ -121,7 +136,7 @@
                             <form method="POST" action="{{ route('umkm.requests.cancel', $req) }}" id="cancel-form-m-{{ $req->id }}" class="shrink-0">
                                 @csrf
                                 <button type="button"
-                                        @click="kulaanConfirm({
+                                                        @click="window.kulaanConfirm({
                                             title: 'Batalkan Pengajuan?',
                                             message: 'Apakah Anda yakin ingin membatalkan pengajuan {{ addslashes($req->product->name) }} ini? Kuota Anda akan ditarik dari grup pengadaan.',
                                             confirmText: 'Ya, Batalkan',
@@ -129,7 +144,7 @@
                                             isDanger: true,
                                             onConfirm: () => document.getElementById('cancel-form-m-{{ $req->id }}').submit()
                                         })"
-                                        class="mt-1 text-xs font-bold text-danger min-h-9 cursor-pointer">
+                                        class="mt-1 text-xs font-bold text-danger min-h-11 px-2 cursor-pointer">
                                     Batalkan
                                 </button>
                             </form>
@@ -168,37 +183,6 @@
                 </div>
             @endif
 
-            {{-- riwayat --}}
-            @if ($otherItems->isNotEmpty())
-                <div class="px-4 mt-6">
-                    <h2 class="text-sm font-extrabold">Riwayat</h2>
-                    <div class="mt-3 space-y-3">
-                        @foreach ($otherItems as $req)
-                            @php $isSuccess = in_array($req->status->value, ['MATCHED', 'ORDERED'], true); @endphp
-                            <div class="bg-white border border-line rounded-3xl p-4">
-                                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1.5 rounded-full {{ $isSuccess ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger' }}">
-                                    @if ($isSuccess)
-                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                    @else
-                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                                    @endif
-                                    {{ $req->status->label() }}
-                                </span>
-                                <p class="font-extrabold text-sm mt-2.5">{{ $req->product->name }}</p>
-                                <p class="text-xs text-muted mt-0.5">
-                                    {{ number_format($req->quantity, 0) }} {{ $req->unit }} &middot; {{ $req->preferredDistributor?->company_name ?? '-' }}
-                                    @if ($req->matchingGroup && (float) $req->matchingGroup->target_moq > 0)
-                                        &middot; kuota terpenuhi {{ number_format((float) $req->matchingGroup->total_quantity, 0) }}/{{ number_format((float) $req->matchingGroup->target_moq, 0) }} {{ $req->unit }}
-                                    @elseif ($req->deadline)
-                                        &middot; {{ $req->deadline->format('d M Y') }}
-                                    @endif
-                                </p>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
             <p class="text-[11px] text-muted text-center mt-5 px-4 leading-relaxed">Semua harga bersifat estimasi &mdash;<br>harga final mengikuti total quantity kelompok kulaan.</p>
         @endif
 
@@ -214,31 +198,7 @@
                 </span>
                 <span class="text-xl font-extrabold tracking-tight">Kulaan</span>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-1 text-sm font-semibold">
-                <a href="{{ route('umkm.catalog.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-                    Katalog
-                </a>
-                <a href="{{ route('umkm.cart.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-                    Keranjang
-                    @if ($cartCount > 0)
-                        <span class="ml-auto bg-brass text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $cartCount }}</span>
-                    @endif
-                </a>
-                <a href="{{ route('umkm.requests.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-forest text-white">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
-                    Pengajuan
-                </a>
-                <a href="{{ route('umkm.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-                    Pesanan
-                </a>
-                <a href="{{ route('umkm.tracking.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-                    Pelacakan
-                </a>
-            </nav>
+            <x-umkm.sidebar-nav active="requests" />
             <div class="p-4 border-t border-line">
                 <a href="{{ route('profile.complete') }}" class="flex items-center gap-3 px-2">
                     <span class="w-10 h-10 rounded-2xl bg-forest text-white flex items-center justify-center font-extrabold text-xs">{{ $initials }}</span>
@@ -269,24 +229,7 @@
                             <svg class="w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z"/></svg>
                             <input name="q" class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" placeholder="Cari pesanan, produk...">
                         </form>
-                        <div class="relative" x-data="{ notifOpen: false }">
-                            <button type="button" @click="notifOpen = !notifOpen" class="w-11 h-11 rounded-2xl bg-white border border-line flex items-center justify-center relative cursor-pointer">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                            </button>
-                            <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                                <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                                <div class="mt-3 space-y-1">
-                                    <a href="{{ route('umkm.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                        <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                        <span class="text-xs text-ink">Tagihan menunggu pembayaran</span>
-                                    </a>
-                                    <a href="{{ route('umkm.tracking.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                        <span class="w-2 h-2 mt-1.5 rounded-full bg-forest shrink-0"></span>
-                                        <span class="text-xs text-ink">Pengiriman sedang berjalan</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        <x-notification-bell />
                     </div>
                 </div>
             </header>
@@ -297,18 +240,51 @@
                         <h1 class="text-3xl font-extrabold tracking-tight">Pengajuan Saya</h1>
                         <p class="text-sm text-muted mt-1">Pantau status pengajuan kolektifmu &mdash; setelah checkout, setiap item menunggu matching di sini.</p>
                     </div>
-                    <span class="text-xs font-bold bg-brass-soft text-brass px-3 py-1.5 rounded-full">{{ $pendingItems->count() }} pengajuan aktif</span>
+                    @if ($tab === 'aktif')
+                        <span class="text-xs font-bold bg-brass-soft text-brass px-3 py-1.5 rounded-full">{{ $pendingItems->count() }} pengajuan aktif</span>
+                    @endif
+                </div>
+
+                <div class="bg-white border border-line rounded-2xl p-1.5 flex gap-1 w-full max-w-md mt-5">
+                    <a href="{{ route('umkm.requests.index', ['tab' => 'aktif']) }}" @if ($tab === 'aktif') aria-current="page" @endif class="flex-1 text-center text-sm font-bold py-2.5 rounded-xl transition {{ $tab === 'aktif' ? 'bg-forest text-white' : 'text-muted hover:bg-cream' }}">Aktif</a>
+                    <a href="{{ route('umkm.requests.index', ['tab' => 'riwayat']) }}" @if ($tab === 'riwayat') aria-current="page" @endif class="flex-1 text-center text-sm font-bold py-2.5 rounded-xl transition {{ $tab === 'riwayat' ? 'bg-forest text-white' : 'text-muted hover:bg-cream' }}">Selesai</a>
                 </div>
 
                 @if ($requests->isEmpty())
                     <section class="bg-white rounded-3xl border border-line p-10 sm:p-16 text-center max-w-lg mx-auto shadow-sm mt-6">
                         <div class="w-14 h-14 rounded-2xl bg-forest/10 text-forest flex items-center justify-center mx-auto font-extrabold text-2xl">K</div>
-                        <h2 class="font-extrabold text-ink text-lg sm:text-xl mt-4">Belum Ada Pengajuan</h2>
-                        <p class="text-xs sm:text-sm text-muted mt-2 leading-relaxed">
-                            Pilih bahan baku dari katalog, tentukan distributor, dan sistem akan mengurunkan kuota bersama UMKM lain.
-                        </p>
+                        @if ($tab === 'riwayat')
+                            <h2 class="font-extrabold text-ink text-lg sm:text-xl mt-4">Belum Ada Riwayat Pengajuan</h2>
+                            <p class="text-xs sm:text-sm text-muted mt-2 leading-relaxed">
+                                Pengajuan yang selesai, dibatalkan, atau gagal matching akan tampil di sini.
+                            </p>
+                        @else
+                            <h2 class="font-extrabold text-ink text-lg sm:text-xl mt-4">Belum Ada Pengajuan Aktif</h2>
+                            <p class="text-xs sm:text-sm text-muted mt-2 leading-relaxed">
+                                Pilih bahan baku dari katalog, tentukan distributor, dan sistem akan mengurunkan kuota bersama UMKM lain.
+                            </p>
+                        @endif
                         <a href="{{ route('umkm.catalog.index') }}" class="bg-forest text-white inline-flex text-sm font-bold px-5 py-3 rounded-2xl mt-5">Buka Katalog</a>
                     </section>
+                @elseif ($tab === 'riwayat')
+                    <div class="mt-6 max-w-3xl space-y-4">
+                        @foreach ($requests as $req)
+                            <div class="bg-white border border-line rounded-3xl p-5">
+                                <span class="inline-flex items-center text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-full {{ $req->status->badgeClass() }}">
+                                    {{ $req->status->label() }}
+                                </span>
+                                <p class="font-extrabold mt-2.5">{{ $req->product->name }}</p>
+                                <p class="text-xs text-muted mt-1">
+                                    {{ number_format($req->quantity, 0) }} {{ $req->unit }} &middot; {{ $req->preferredDistributor?->company_name ?? '-' }}
+                                    @if ($req->matchingGroup && (float) $req->matchingGroup->target_moq > 0)
+                                        &middot; kuota {{ number_format((float) $req->matchingGroup->total_quantity, 0) }}/{{ number_format((float) $req->matchingGroup->target_moq, 0) }} {{ $req->unit }}
+                                    @elseif ($req->deadline)
+                                        &middot; {{ $req->deadline->format('d M Y') }}
+                                    @endif
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
                 @else
                     <div class="grid lg:grid-cols-3 gap-6 mt-6">
                         <div class="lg:col-span-2">
@@ -325,7 +301,7 @@
                                             <form method="POST" action="{{ route('umkm.requests.cancel', $req) }}" id="cancel-form-d-{{ $req->id }}" class="shrink-0">
                                                 @csrf
                                                 <button type="button"
-                                                        @click="kulaanConfirm({
+                                        @click="window.kulaanConfirm({
                                                             title: 'Batalkan Pengajuan?',
                                                             message: 'Apakah Anda yakin ingin membatalkan pengajuan {{ addslashes($req->product->name) }} ini? Kuota Anda akan ditarik dari grup pengadaan.',
                                                             confirmText: 'Ya, Batalkan',
@@ -410,36 +386,6 @@
                                     @endforeach
                                 </div>
                             @endif
-
-                            @if ($otherItems->isNotEmpty())
-                                <div>
-                                    <h2 class="text-base font-extrabold">Riwayat</h2>
-                                    <div class="mt-4 space-y-3">
-                                        @foreach ($otherItems as $req)
-                                            @php $isSuccess = in_array($req->status->value, ['MATCHED', 'ORDERED'], true); @endphp
-                                            <div class="bg-white border border-line rounded-3xl p-5">
-                                                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-full {{ $isSuccess ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger' }}">
-                                                    @if ($isSuccess)
-                                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                                    @else
-                                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                                                    @endif
-                                                    {{ $req->status->label() }}
-                                                </span>
-                                                <p class="font-extrabold mt-2.5">{{ $req->product->name }}</p>
-                                                <p class="text-xs text-muted mt-1">
-                                                    {{ number_format($req->quantity, 0) }} {{ $req->unit }} &middot; {{ $req->preferredDistributor?->company_name ?? '-' }}
-                                                    @if ($req->matchingGroup && (float) $req->matchingGroup->target_moq > 0)
-                                                        &middot; kuota terpenuhi {{ number_format((float) $req->matchingGroup->total_quantity, 0) }}/{{ number_format((float) $req->matchingGroup->target_moq, 0) }} {{ $req->unit }}
-                                                    @elseif ($req->deadline)
-                                                        &middot; {{ $req->deadline->format('d M Y') }}
-                                                    @endif
-                                                </p>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
                         </div>
                     </div>
 
@@ -452,29 +398,5 @@
     </div>
 
     {{-- bottom tab --}}
-    <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line px-2 pt-2 pb-5 flex items-start justify-around">
-        <a href="{{ route('umkm.catalog.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-            <span class="text-[10px] font-semibold">Katalog</span>
-        </a>
-        <a href="{{ route('umkm.cart.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted relative">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-            <span class="text-[10px] font-semibold">Keranjang</span>
-            @if ($cartCount > 0)
-                <span class="absolute top-0 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-white text-[10px] font-bold flex items-center justify-center">{{ $cartCount }}</span>
-            @endif
-        </a>
-        <a href="{{ route('umkm.requests.index') }}" class="flex flex-col items-center gap-1 w-14 text-forest">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
-            <span class="text-[10px] font-bold">Pengajuan</span>
-        </a>
-        <a href="{{ route('umkm.orders.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-            <span class="text-[10px] font-semibold">Pesanan</span>
-        </a>
-        <a href="{{ route('umkm.tracking.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-            <span class="text-[10px] font-semibold">Pelacakan</span>
-        </a>
-    </div>
+    <x-umkm.mobile-tab active="requests" />
 </x-layouts.app>

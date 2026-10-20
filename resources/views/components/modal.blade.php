@@ -3,6 +3,7 @@
 @php($widthClass = match ($size) {
     'sm' => 'max-w-md',
     'xl' => 'max-w-xl',
+    '2xl' => 'max-w-2xl',
     default => 'max-w-lg',
 })
 

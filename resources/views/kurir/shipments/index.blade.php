@@ -28,20 +28,7 @@
                     <p class="text-[15px] font-extrabold leading-tight">{{ $user->name }}</p>
                 </div>
             </div>
-            <div class="relative" x-data="{ notifOpen: false }">
-                <button type="button" @click="notifOpen = !notifOpen" class="w-10 h-10 rounded-2xl bg-white border border-line flex items-center justify-center text-ink relative cursor-pointer">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                </button>
-                <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                    <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                    <div class="mt-3 space-y-1">
-                        <a href="{{ route('kurir.shipments.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                            <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                            <span class="text-xs text-ink"><b>{{ $totalShipments }}</b> tugas pengiriman</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <x-notification-bell />
         </div>
 
         {{-- forest header --}}
@@ -58,6 +45,14 @@
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
             </span>
             <p class="text-[11px] leading-relaxed text-forest"><strong>GPS otomatis aktif</strong> begitu kamu tekan "Mulai Pengiriman". Pastikan izin lokasi di browser/HP-mu nyala ya.</p>
+        </div>
+
+        {{-- tabs --}}
+        <div class="px-4 mt-4">
+            <div class="inline-flex bg-white border border-line rounded-2xl p-1 text-xs font-bold">
+                <a href="{{ route('kurir.shipments.index', ['tab' => 'active']) }}" class="px-4 py-2 rounded-xl {{ $tab === 'active' ? 'bg-forest text-white' : 'text-muted' }}">Aktif</a>
+                <a href="{{ route('kurir.shipments.index', ['tab' => 'history']) }}" class="px-4 py-2 rounded-xl {{ $tab === 'history' ? 'bg-forest text-white' : 'text-muted' }}">Riwayat</a>
+            </div>
         </div>
 
         @if ($hasShipments)
@@ -132,10 +127,15 @@
                                             </button>
                                         </form>
                                     @elseif ($isTransit)
-                                        <form method="POST" action="{{ route('kurir.shipments.complete', $shipment) }}" id="complete-shipment-m-{{ $shipment->id }}">
+                                        <form method="POST" action="{{ route('kurir.shipments.complete', $shipment) }}" id="complete-shipment-m-{{ $shipment->id }}" enctype="multipart/form-data">
                                             @csrf
+                                            <div class="mb-3">
+                                                <label for="proof-m-{{ $shipment->id }}" class="field-label">Foto bukti pengiriman <span class="text-danger">*</span></label>
+                                                <input id="proof-m-{{ $shipment->id }}" x-ref="proof" type="file" name="proof" accept="image/*" capture="environment" required class="block w-full text-xs text-muted file:mr-3 file:rounded-xl file:border-0 file:bg-forest file:px-4 file:py-2.5 file:text-white file:text-xs file:font-bold file:cursor-pointer border border-line rounded-xl bg-white p-1.5">
+                                                <p class="text-[11px] text-muted mt-1">Wajib diisi. Format JPG/PNG/WEBP, maksimal 5MB.</p>
+                                            </div>
                                             <button type="button"
-                                                    @click="kulaanConfirm({
+                                                    @click="if (! $refs.proof.files.length) { $refs.proof.reportValidity(); return; } kulaanConfirm({
                                                         title: 'Selesaikan Pengantaran?',
                                                         message: 'Konfirmasi seluruh barang telah sampai dan diterima dengan baik di lokasi UMKM?',
                                                         confirmText: 'Ya, Selesai',
@@ -148,6 +148,9 @@
                                             </button>
                                         </form>
                                     @else
+                                        @if ($shipment->proof_image_path)
+                                            <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-full h-32 object-cover rounded-2xl border border-line mb-3">
+                                        @endif
                                         <p class="text-xs font-bold text-success">Tiba &amp; selesai &mdash; makasih!</p>
                                     @endif
                                 </div>
@@ -221,20 +224,7 @@
                             <span class="relative flex w-2 h-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-60"></span><span class="relative inline-flex w-2 h-2 rounded-full bg-success"></span></span>
                             GPS Aktif
                         </span>
-                        <div class="relative" x-data="{ notifOpen: false }">
-                            <button type="button" @click="notifOpen = !notifOpen" class="w-11 h-11 rounded-2xl bg-white border border-line flex items-center justify-center relative cursor-pointer">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                            </button>
-                            <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                                <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                                <div class="mt-3 space-y-1">
-                                    <a href="{{ route('kurir.shipments.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                        <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                        <span class="text-xs text-ink"><b>{{ $totalShipments }}</b> tugas pengiriman</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        <x-notification-bell />
                     </div>
                 </div>
             </header>
@@ -255,6 +245,14 @@
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
                     </span>
                     <p class="text-sm leading-relaxed text-forest"><strong>GPS otomatis aktif</strong> begitu kamu tekan "Mulai Pengiriman". Pastikan izin lokasi di browser/HP-mu nyala ya.</p>
+                </div>
+
+                {{-- tabs --}}
+                <div class="mb-6">
+                    <div class="inline-flex bg-white border border-line rounded-2xl p-1 text-sm font-bold">
+                        <a href="{{ route('kurir.shipments.index', ['tab' => 'active']) }}" class="px-5 py-2.5 rounded-xl {{ $tab === 'active' ? 'bg-forest text-white' : 'text-muted' }}">Aktif</a>
+                        <a href="{{ route('kurir.shipments.index', ['tab' => 'history']) }}" class="px-5 py-2.5 rounded-xl {{ $tab === 'history' ? 'bg-forest text-white' : 'text-muted' }}">Riwayat</a>
+                    </div>
                 </div>
 
                 @if ($hasShipments)
@@ -312,10 +310,15 @@
                                             </button>
                                         </form>
                                     @elseif ($isTransit)
-                                        <form method="POST" action="{{ route('kurir.shipments.complete', $shipment) }}" id="complete-shipment-d-{{ $shipment->id }}">
+                                        <form method="POST" action="{{ route('kurir.shipments.complete', $shipment) }}" id="complete-shipment-d-{{ $shipment->id }}" enctype="multipart/form-data">
                                             @csrf
+                                            <div class="mb-3">
+                                                <label for="proof-d-{{ $shipment->id }}" class="field-label">Foto bukti pengiriman <span class="text-danger">*</span></label>
+                                                <input id="proof-d-{{ $shipment->id }}" x-ref="proof" type="file" name="proof" accept="image/*" required class="block w-full text-sm text-muted file:mr-3 file:rounded-xl file:border-0 file:bg-forest file:px-5 file:py-2.5 file:text-white file:text-sm file:font-bold file:cursor-pointer border border-line rounded-xl bg-white p-1.5">
+                                                <p class="text-xs text-muted mt-1.5">Wajib diisi. Format JPG/PNG/WEBP, maksimal 5MB.</p>
+                                            </div>
                                             <button type="button"
-                                                    @click="kulaanConfirm({
+                                                    @click="if (! $refs.proof.files.length) { $refs.proof.reportValidity(); return; } kulaanConfirm({
                                                         title: 'Selesaikan Pengantaran?',
                                                         message: 'Konfirmasi seluruh barang telah sampai dan diterima dengan baik di lokasi UMKM?',
                                                         confirmText: 'Ya, Selesai',
@@ -328,6 +331,9 @@
                                             </button>
                                         </form>
                                     @else
+                                        @if ($shipment->proof_image_path)
+                                            <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-full h-36 object-cover rounded-2xl border border-line mb-3">
+                                        @endif
                                         <p class="text-sm font-bold text-success">Tiba &amp; selesai &mdash; makasih!</p>
                                     @endif
                                 </div>

@@ -1,22 +1,85 @@
 <x-layouts.app>
-    <x-slot name="title">Riwayat Pesanan &amp; Tagihan</x-slot>
+    <x-slot name="title">Pesanan Saya</x-slot>
 
     @php
         $displayName = $umkm?->business_name ?? auth()->user()->name;
         $initials = strtoupper(substr(auth()->user()->name, 0, 2));
-        $cartCount = app(\App\Services\CartService::class)->count();
 
         $hasOrders = $orderItems->isNotEmpty();
         $unpaidItems = $orderItems->filter(fn ($i) => $i->payment_status->value === 'UNPAID');
-        $paidItems = $orderItems->filter(fn ($i) => $i->payment_status->value !== 'UNPAID');
-        $unpaidInvoices = $unpaidItems;
-        $inTransitCount = $orderItems->filter(fn ($i) => $i->order?->shipments->contains(fn ($s) => $s->status === 'IN_TRANSIT'))->count();
+        $activeItems = $orderItems->filter(fn ($i) => $i->payment_status->value !== 'UNPAID');
+
+        $reviewableItems = $orderItems
+            ->filter(fn ($i) => $i->review === null && $i->received_confirmed_at !== null)
+            ->mapWithKeys(fn ($i) => [$i->id => [
+                'name' => $i->order->distributor?->company_name ?? 'Distributor',
+                'action' => route('umkm.orders.review', $i),
+            ]]);
 
         $paymentPillClass = fn ($status) => match ($status->value) {
             'PAID' => 'bg-success/10 text-success',
             'UNPAID' => 'bg-danger/10 text-danger',
             default => 'bg-brass-soft text-brass',
         };
+
+        $deliverySteps = ['Dipesan', 'Dibayar', 'Diproses', 'Dikirim', 'Sampai'];
+
+        $stepIndexFor = function ($order, $shipment = null) {
+            $status = $order->status->value;
+
+            return match (true) {
+                in_array($status, ['DELIVERED', 'COMPLETED'], true) => 4,
+                $status === 'IN_TRANSIT' || $shipment?->status === 'IN_TRANSIT' => 3,
+                in_array($status, ['CONFIRMED', 'PREPARING', 'READY_TO_SHIP', 'ASSIGNED_TO_COURIER'], true) => 2,
+                $status === 'PAID' => 1,
+                default => 0,
+            };
+        };
+
+        $deliveries = [];
+        $payments = [];
+        foreach ($unpaidItems->concat($activeItems) as $item) {
+            $order = $item->order;
+            $shipment = $order->shipments->first();
+            $products = $order->items
+                ->where('umkm_id', $umkm->id)
+                ->map(fn ($line) => [
+                    'name' => $line->product?->name ?? 'Produk',
+                    'qty' => number_format($line->quantity, 0).' '.($line->product?->unit ?? ''),
+                ])->values()->all();
+
+            if ($item->payment_status->value === 'UNPAID') {
+                $payments[$item->id] = [
+                    'orderNumber' => $order->order_number,
+                    'distributor' => $order->distributor?->company_name ?? '-',
+                    'status' => $item->payment_status->label(),
+                    'step' => $stepIndexFor($order, $shipment),
+                    'products' => $products,
+                    'subtotal' => 'Rp '.number_format($item->subtotal, 0, ',', '.'),
+                    'savings' => $item->savings_amount > 0 ? 'Rp '.number_format($item->savings_amount, 0, ',', '.') : null,
+                    'payUrl' => route('payment.show', $item),
+                ];
+            } elseif ($shipment) {
+                $courier = $shipment->courier;
+                $loc = $shipment->latestLocation;
+                $deliveries[$item->id] = [
+                    'shipmentNumber' => $shipment->shipment_number,
+                    'orderNumber' => $order->order_number,
+                    'statusLabel' => $shipment->status === 'DELIVERED' ? 'Pesanan Telah Tiba' : ($shipment->status === 'IN_TRANSIT' ? 'Kurir Sedang Bergerak' : 'Menunggu Pengambilan'),
+                    'statusDot' => $shipment->status === 'DELIVERED' ? 'bg-forest' : ($shipment->status === 'IN_TRANSIT' ? 'bg-success' : 'bg-brass'),
+                    'step' => $stepIndexFor($order, $shipment),
+                    'courierName' => $courier?->user?->name ?? 'Kurir Kulaan',
+                    'courierInitial' => strtoupper(substr($courier?->user?->name ?? 'K', 0, 1)),
+                    'courierVehicle' => ($courier?->vehicle_type ?? '-').' ('.($courier?->vehicle_number ?? '-').')',
+                    'courierPhone' => $courier?->user?->phone ?? '-',
+                    'speed' => (float) ($loc?->speed ?? 0),
+                    'lastUpdated' => $loc?->updated_at?->diffForHumans() ?? 'Belum ada sinyal GPS',
+                    'distributor' => $order->distributor?->company_name ?? '-',
+                    'address' => $item->delivery_address ?? '-',
+                    'products' => $products,
+                ];
+            }
+        }
     @endphp
 
     <div x-data="{
@@ -25,13 +88,33 @@
         reviewAction: '',
         rating: 5,
         comment: '',
+        lightboxSrc: '',
+        showDelivery: false,
+        delivery: {},
+        showPayment: false,
+        payment: {},
+        deliverySteps: {{ json_encode($deliverySteps) }},
+        deliveries: {{ json_encode((object) $deliveries) }},
+        payments: {{ json_encode((object) $payments) }},
+        reviewables: {{ json_encode($reviewableItems) }},
+        autoRate: {{ (int) request('rate') }},
+        init() {
+            const target = this.reviewables[this.autoRate];
+            if (target) {
+                this.openRatingModal(this.autoRate, target.name, target.action);
+            }
+        },
         openRatingModal(id, name, action) {
             this.distributorName = name;
             this.reviewAction = action;
             this.rating = 5;
             this.comment = '';
             this.showModal = true;
-        }
+        },
+        openLightbox(src) { this.lightboxSrc = src; },
+        closeLightbox() { this.lightboxSrc = ''; },
+        openDelivery(id) { const d = this.deliveries[id]; if (! d) { return; } this.delivery = d; this.showDelivery = true; },
+        openPayment(id) { const p = this.payments[id]; if (! p) { return; } this.payment = p; this.showPayment = true; }
     }">
 
         {{-- MOBILE --}}
@@ -53,102 +136,180 @@
                         <p class="text-[15px] font-extrabold leading-tight">{{ $displayName }}</p>
                     </div>
                 </div>
-                <div class="relative" x-data="{ notifOpen: false }">
-                    <button type="button" @click="notifOpen = !notifOpen" class="w-10 h-10 rounded-2xl bg-white border border-line flex items-center justify-center text-ink relative cursor-pointer">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                    </button>
-                    <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                        <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                        <div class="mt-3 space-y-1">
-                            <a href="{{ route('umkm.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                <span class="text-xs text-ink"><b>{{ $unpaidInvoices->count() }}</b> tagihan menunggu pembayaran</span>
-                            </a>
-                            <a href="{{ route('umkm.tracking.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                <span class="w-2 h-2 mt-1.5 rounded-full bg-forest shrink-0"></span>
-                                <span class="text-xs text-ink"><b>{{ $inTransitCount }}</b> pengiriman sedang berjalan</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                <x-notification-bell />
             </div>
 
-            <div class="px-4 pt-2 mt-4 mb-5">
+            <div class="px-4 pt-2 mt-4 mb-4">
                 <div class="bg-gradient-to-r from-forest to-forest-dark text-white rounded-2xl p-5 shadow-sm">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold bg-white/15 text-white">Pesanan Kolektif</span>
-                    <h1 class="font-extrabold text-xl mt-2 tracking-tight">Riwayat Pesanan &amp; Tagihan</h1>
-                    <p class="text-xs text-white/80 mt-1 leading-relaxed">Invoice, status pembayaran, dan ulasan distributor mitra pengadaanmu.</p>
+                    <h1 class="font-extrabold text-xl mt-2 tracking-tight">Pesanan Saya</h1>
+                    <p class="text-xs text-white/80 mt-1 leading-relaxed">
+                        {{ $tab === 'aktif' ? 'Pantau pembayaran dan pengiriman yang sedang berjalan.' : 'Riwayat pesanan yang sudah kamu terima beserta bukti pengiriman dan ulasanmu.' }}
+                    </p>
                     <a href="{{ route('umkm.catalog.index') }}" class="inline-block mt-3 bg-brass text-white text-xs font-bold px-4 py-2.5 rounded-xl">+ Pesan Lagi</a>
                 </div>
             </div>
 
-            @if ($hasOrders)
-                @if ($unpaidItems->isNotEmpty())
-                    <section class="px-4 mb-5">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="w-2.5 h-2.5 rounded-full bg-danger"></span>
-                            <h2 class="text-xs font-bold text-danger uppercase tracking-wider">Menunggu Pembayaran ({{ $unpaidItems->count() }})</h2>
-                        </div>
-                        <div class="space-y-3">
-                            @foreach ($unpaidItems as $item)
-                                <article class="bg-white rounded-2xl border border-danger/30 shadow-sm overflow-hidden">
-                                    <div class="flex items-center justify-between px-4 py-3 border-b border-line/60 bg-cream/40">
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
-                                            <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
-                                        </div>
-                                        <span class="text-[10px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
-                                    </div>
-                                    <div class="px-4 py-3.5">
-                                        <p class="font-bold text-ink text-sm">{{ $item->product->name }}</p>
-                                        <p class="text-xs text-muted mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; Distributor: {{ $item->order->distributor->company_name }}</p>
-                                        @if ($item->savings_amount > 0)
-                                            <p class="text-[0.6875rem] font-semibold text-brass mt-1">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }} vs eceran</p>
-                                        @endif
-                                        <div class="flex items-center justify-between mt-3">
-                                            <span class="font-extrabold text-forest text-lg tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
-                                            <a href="{{ route('payment.show', $item) }}" class="bg-forest text-white text-xs font-bold py-2.5 px-4 rounded-xl">Bayar Sekarang &rarr;</a>
-                                        </div>
-                                    </div>
-                                </article>
-                            @endforeach
-                        </div>
-                    </section>
-                @endif
+            <div class="px-4 mb-5">
+                <div class="bg-white border border-line rounded-2xl p-1.5 flex gap-1">
+                    <a href="{{ route('umkm.orders.index', ['tab' => 'aktif']) }}" @if ($tab === 'aktif') aria-current="page" @endif class="flex-1 text-center text-xs font-bold py-2.5 rounded-xl transition {{ $tab === 'aktif' ? 'bg-forest text-white' : 'text-muted hover:bg-cream' }}">Aktif</a>
+                    <a href="{{ route('umkm.orders.index', ['tab' => 'riwayat']) }}" @if ($tab === 'riwayat') aria-current="page" @endif class="flex-1 text-center text-xs font-bold py-2.5 rounded-xl transition {{ $tab === 'riwayat' ? 'bg-forest text-white' : 'text-muted hover:bg-cream' }}">Riwayat</a>
+                </div>
+            </div>
 
-                @if ($paidItems->isNotEmpty())
+            @if ($hasOrders)
+                @if ($tab === 'aktif')
+                    @if ($unpaidItems->isNotEmpty())
+                        <section class="px-4 mb-5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="w-2.5 h-2.5 rounded-full bg-danger"></span>
+                                <h2 class="text-xs font-bold text-danger uppercase tracking-wider">Menunggu Pembayaran ({{ $unpaidItems->count() }})</h2>
+                            </div>
+                            <div class="space-y-3">
+                                @foreach ($unpaidItems as $item)
+                                    <article class="bg-white rounded-2xl border border-danger/30 shadow-sm overflow-hidden">
+                                        <div class="flex items-center justify-between px-4 py-3 border-b border-line/60 bg-cream/40">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
+                                                <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
+                                            </div>
+                                            <span class="text-[10px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
+                                        </div>
+                                        <div class="px-4 py-3.5">
+                                            <p class="font-bold text-ink text-sm">{{ $item->product->name }}</p>
+                                            <p class="text-xs text-muted mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; Distributor: {{ $item->order->distributor->company_name }}</p>
+                                            @if ($item->savings_amount > 0)
+                                                <p class="text-[0.6875rem] font-semibold text-brass mt-1">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }} vs eceran</p>
+                                            @endif
+                                            <div class="flex items-center justify-between mt-3">
+                                                <span class="font-extrabold text-forest text-lg tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
+                                                <div class="flex items-center gap-2">
+                                                    <button type="button" @click="openPayment({{ $item->id }})" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-2 cursor-pointer">Detail</button>
+                                                    <a href="{{ route('payment.show', $item) }}" class="bg-forest text-white text-xs font-bold py-2.5 px-4 rounded-xl">Bayar Sekarang &rarr;</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
+
+                    @if ($activeItems->isNotEmpty())
+                        <section class="px-4 pb-6">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="w-2.5 h-2.5 rounded-full bg-success"></span>
+                                <h2 class="text-xs font-bold text-muted uppercase tracking-wider">Dalam Proses &amp; Pengiriman ({{ $activeItems->count() }})</h2>
+                            </div>
+                            <div class="space-y-3">
+                                @foreach ($activeItems as $item)
+                                    @php
+                                        $shipment = $item->order->shipments->first();
+                                        $hasProof = $shipment && $shipment->status === 'DELIVERED' && $shipment->proof_image_path;
+                                        $isReceived = $item->received_confirmed_at !== null;
+                                        $needsConfirm = ! $isReceived && in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true);
+                                    @endphp
+                                    <article class="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
+                                        <div class="flex items-center justify-between px-4 py-3 border-b border-line/60">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
+                                                <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
+                                            </div>
+                                            <span class="text-[10px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
+                                        </div>
+                                        <div class="px-4 py-3.5">
+                                            <p class="font-bold text-ink text-sm">{{ $item->product->name }}</p>
+                                            <p class="text-xs text-muted mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; {{ $item->order->distributor->company_name }}</p>
+                                            @if ($item->savings_amount > 0)
+                                                <p class="text-[0.6875rem] font-semibold text-brass mt-0.5">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }} vs eceran</p>
+                                            @endif
+
+                                            @if ($hasProof)
+                                                <button type="button" @click="openLightbox('{{ asset('storage/'.$shipment->proof_image_path) }}')" class="mt-3 w-full flex items-center gap-3 p-2.5 rounded-xl bg-cream/60 border border-line text-left cursor-pointer">
+                                                    <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-14 h-14 rounded-lg object-cover border border-line">
+                                                    <div class="min-w-0 flex-1">
+                                                        <p class="text-[11px] font-bold text-ink">Bukti pengiriman kurir</p>
+                                                        <p class="text-[11px] text-muted truncate">{{ $shipment->courier?->user?->name ?? 'Kurir Kulaan' }} &bull; {{ optional($shipment->delivered_at)->format('d M Y, H:i') }}</p>
+                                                        <p class="text-[10px] font-semibold text-forest mt-0.5">Ketuk untuk perbesar</p>
+                                                    </div>
+                                                </button>
+                                            @endif
+
+                                            <div class="flex items-center justify-between mt-3">
+                                                <span class="font-extrabold text-ink text-base tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="px-4 pb-4 pt-3 border-t border-line/60 flex items-center gap-2 flex-wrap">
+                                            <p class="w-full text-[11px] font-semibold text-muted">Status: <span class="text-ink">{{ $item->order->status->label() }}</span></p>
+                                            @if ($needsConfirm)
+                                                <form method="POST" action="{{ route('umkm.orders.confirm', $item) }}" class="w-full">
+                                                    @csrf
+                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-white bg-forest rounded-xl px-4 py-3 cursor-pointer">
+                                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                                        Pesanan Diterima
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            @if ($shipment && ! $isReceived)
+                                                <a href="{{ route('umkm.tracking.show', $shipment) }}" class="text-xs font-bold text-forest">Lacak Kurir &rarr;</a>
+                                            @endif
+
+                                            @if (! $shipment)
+                                                <p class="text-[11px] text-muted">Pelacakan kurir muncul setelah distributor menugaskan kurir.</p>
+                                            @endif
+
+                                            <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-1.5 ml-auto">Invoice</a>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
+                @else
                     <section class="px-4 pb-6">
                         <div class="flex items-center gap-2 mb-3">
                             <span class="w-2.5 h-2.5 rounded-full bg-success"></span>
-                            <h2 class="text-xs font-bold text-muted uppercase tracking-wider">Riwayat Pesanan Lunas ({{ $paidItems->count() }})</h2>
+                            <h2 class="text-xs font-bold text-muted uppercase tracking-wider">Riwayat Pesanan Selesai ({{ $orderItems->count() }})</h2>
                         </div>
                         <div class="space-y-3">
-                            @foreach ($paidItems as $item)
+                            @foreach ($orderItems as $item)
                                 @php $shipment = $item->order->shipments->first(); @endphp
                                 <article class="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
-                                    <div class="flex items-center justify-between px-4 py-3 border-b border-line/60">
+                                    <div class="flex items-center justify-between px-4 py-3 border-b border-line/60 bg-cream/40">
                                         <div class="flex items-center gap-2 min-w-0">
                                             <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
-                                            <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
+                                            <span class="text-[10px] font-bold bg-success/10 text-success px-2 py-0.5 rounded-full">Diterima</span>
                                         </div>
-                                        <span class="text-[10px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
+                                        <span class="text-[10px] text-muted">{{ optional($item->received_confirmed_at)->format('d M Y') }}</span>
                                     </div>
                                     <div class="px-4 py-3.5">
                                         <p class="font-bold text-ink text-sm">{{ $item->product->name }}</p>
                                         <p class="text-xs text-muted mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; {{ $item->order->distributor->company_name }}</p>
-                                        @if ($item->savings_amount > 0)
-                                            <p class="text-[0.6875rem] font-semibold text-brass mt-0.5">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }} vs eceran</p>
+
+                                        @if ($shipment && $shipment->proof_image_path)
+                                            <button type="button" @click="openLightbox('{{ asset('storage/'.$shipment->proof_image_path) }}')" class="mt-3 w-full flex items-center gap-3 p-2.5 rounded-xl bg-cream/60 border border-line text-left cursor-pointer">
+                                                <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-14 h-14 rounded-lg object-cover border border-line">
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="text-[11px] font-bold text-ink">Bukti pengiriman kurir</p>
+                                                    <p class="text-[11px] text-muted truncate">{{ $shipment->courier?->user?->name ?? 'Kurir Kulaan' }} &bull; {{ optional($shipment->delivered_at)->format('d M Y, H:i') }}</p>
+                                                    <p class="text-[10px] text-muted mt-0.5">Surat jalan {{ $shipment->shipment_number }}</p>
+                                                </div>
+                                            </button>
                                         @endif
+
                                         <div class="flex items-center justify-between mt-3">
                                             <span class="font-extrabold text-ink text-base tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
                                         </div>
+
                                         <div class="flex items-center gap-2 mt-3 flex-wrap">
                                             @if ($item->review)
                                                 <span class="inline-flex items-center gap-1 text-[11px] font-bold text-brass bg-brass-soft px-2.5 py-1 rounded-full border border-brass/30">
                                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
                                                     {{ $item->review->rating }}/5
                                                 </span>
-                                            @elseif (in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true))
+                                            @else
                                                 <button type="button"
                                                         @click="openRatingModal({{ $item->id }}, '{{ addslashes($item->order->distributor->company_name) }}', '{{ route('umkm.orders.review', $item) }}')"
                                                         class="inline-flex items-center gap-1 text-[11px] font-semibold text-brass bg-brass-soft rounded-lg border border-brass/30 px-3 py-1.5 transition-colors cursor-pointer">
@@ -158,11 +319,15 @@
                                             @endif
 
                                             @if ($shipment)
-                                                <a href="{{ route('umkm.tracking.show', $shipment) }}" class="text-xs font-bold text-forest">Lacak Kurir &rarr;</a>
+                                                <button type="button" @click="openDelivery({{ $item->id }})" class="inline-flex items-center gap-1 text-[11px] font-semibold text-forest bg-forest/10 rounded-lg border border-forest/20 px-3 py-1.5 cursor-pointer">Detail Pengiriman</button>
                                             @endif
 
-                                            <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-1.5">Invoice</a>
+                                            <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-1.5 ml-auto">Invoice</a>
                                         </div>
+
+                                        @if ($item->review?->comment)
+                                            <p class="text-[11px] text-muted mt-2.5 leading-relaxed border-t border-line/60 pt-2.5">{{ $item->review->comment }}</p>
+                                        @endif
                                     </div>
                                 </article>
                             @endforeach
@@ -175,10 +340,17 @@
                 <section class="px-4">
                     <div class="bg-white rounded-2xl border border-line p-10 text-center shadow-sm">
                         <div class="w-14 h-14 rounded-2xl bg-brass-soft text-brass flex items-center justify-center mx-auto font-display font-bold text-2xl">K</div>
-                        <h2 class="font-display font-bold text-ink text-lg mt-4">Belum Ada Riwayat Pesanan</h2>
-                        <p class="text-xs text-muted mt-2 leading-relaxed max-w-sm mx-auto">
-                            Setelah pengajuanmu ter-matching dan dibayar, invoice dan ulasan mitra tampil di sini.
-                        </p>
+                        @if ($tab === 'aktif')
+                            <h2 class="font-display font-bold text-ink text-lg mt-4">Tidak Ada Pesanan Aktif</h2>
+                            <p class="text-xs text-muted mt-2 leading-relaxed max-w-sm mx-auto">
+                                Pesanan yang menunggu pembayaran atau sedang dikirim akan tampil di sini.
+                            </p>
+                        @else
+                            <h2 class="font-display font-bold text-ink text-lg mt-4">Belum Ada Riwayat Pesanan</h2>
+                            <p class="text-xs text-muted mt-2 leading-relaxed max-w-sm mx-auto">
+                                Setelah kamu konfirmasi pesanan diterima, bukti pengiriman dan ulasan mitra tampil di sini.
+                            </p>
+                        @endif
                         <a href="{{ route('umkm.catalog.index') }}" class="btn-primary inline-flex text-sm font-bold px-5 py-2.5 mt-5">
                             Buka Katalog &rarr;
                         </a>
@@ -196,31 +368,7 @@
                     </span>
                     <span class="text-xl font-extrabold tracking-tight">Kulaan</span>
                 </div>
-                <nav class="flex-1 px-4 py-6 space-y-1 text-sm font-semibold">
-                    <a href="{{ route('umkm.catalog.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-                        Katalog
-                    </a>
-                    <a href="{{ route('umkm.cart.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-                        Keranjang
-                        @if ($cartCount > 0)
-                            <span class="ml-auto bg-brass text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $cartCount }}</span>
-                        @endif
-                    </a>
-                    <a href="{{ route('umkm.requests.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
-                        Pengajuan
-                    </a>
-                    <a href="{{ route('umkm.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-forest text-white">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-                        Pesanan
-                    </a>
-                    <a href="{{ route('umkm.tracking.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-                        Pelacakan
-                    </a>
-                </nav>
+                <x-umkm.sidebar-nav active="orders" />
                 <div class="p-4 border-t border-line">
                     <a href="{{ route('profile.complete') }}" class="flex items-center gap-3 px-2">
                         <span class="w-10 h-10 rounded-2xl bg-forest text-white flex items-center justify-center font-extrabold text-xs">{{ $initials }}</span>
@@ -251,110 +399,182 @@
                                 <svg class="w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z"/></svg>
                                 <input name="q" class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" placeholder="Cari pesanan, produk...">
                             </form>
-                            <div class="relative" x-data="{ notifOpen: false }">
-                                <button type="button" @click="notifOpen = !notifOpen" class="w-11 h-11 rounded-2xl bg-white border border-line flex items-center justify-center relative cursor-pointer">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                                </button>
-                                <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                                    <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                                    <div class="mt-3 space-y-1">
-                                        <a href="{{ route('umkm.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                            <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                            <span class="text-xs text-ink"><b>{{ $unpaidInvoices->count() }}</b> tagihan menunggu pembayaran</span>
-                                        </a>
-                                        <a href="{{ route('umkm.tracking.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                            <span class="w-2 h-2 mt-1.5 rounded-full bg-forest shrink-0"></span>
-                                            <span class="text-xs text-ink"><b>{{ $inTransitCount }}</b> pengiriman sedang berjalan</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                            <x-notification-bell />
                         </div>
                     </div>
                 </header>
 
                 <main class="px-8 py-6 max-w-6xl">
-                    <div class="bg-gradient-to-r from-forest to-forest-dark text-white rounded-2xl p-7 shadow-sm mb-8">
+                    <div class="bg-gradient-to-r from-forest to-forest-dark text-white rounded-2xl p-7 shadow-sm mb-6">
                         <div class="flex items-center justify-between gap-4 flex-wrap">
                             <div>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold bg-white/15 text-white">Pesanan Kolektif</span>
-                                <h1 class="font-extrabold text-3xl mt-2 tracking-tight">Riwayat Pesanan &amp; Tagihan</h1>
-                                <p class="text-sm text-white/80 mt-1">Invoice, status pembayaran, dan ulasan distributor mitra pengadaanmu.</p>
+                                <h1 class="font-extrabold text-3xl mt-2 tracking-tight">Pesanan Saya</h1>
+                                <p class="text-sm text-white/80 mt-1">
+                                    {{ $tab === 'aktif' ? 'Pantau status pembayaran dan pengiriman yang sedang berjalan.' : 'Riwayat pesanan yang sudah diterima beserta bukti pengiriman dan ulasanmu.' }}
+                                </p>
                             </div>
                             <a href="{{ route('umkm.catalog.index') }}" class="bg-brass text-white text-sm font-bold px-5 py-3 rounded-xl">+ Pesan Lagi</a>
                         </div>
                     </div>
 
-                    @if ($hasOrders)
-                        @if ($unpaidItems->isNotEmpty())
-                            <section class="mb-8">
-                                <div class="flex items-center gap-2 mb-4">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-danger"></span>
-                                    <h2 class="text-xs font-bold text-danger uppercase tracking-wider">Menunggu Pembayaran ({{ $unpaidItems->count() }})</h2>
-                                </div>
-                                <div class="space-y-4">
-                                    @foreach ($unpaidItems as $item)
-                                        <article class="bg-white rounded-2xl border border-danger/30 shadow-sm overflow-hidden">
-                                            <div class="flex items-center justify-between px-5 py-3 border-b border-line/60 bg-cream/40">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
-                                                    <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
-                                                </div>
-                                                <span class="text-[11px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
-                                            </div>
-                                            <div class="px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
-                                                <div>
-                                                    <p class="font-bold text-ink text-base">{{ $item->product->name }}</p>
-                                                    <p class="text-xs text-muted mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; Distributor: {{ $item->order->distributor->company_name }}</p>
-                                                    @if ($item->savings_amount > 0)
-                                                        <p class="text-xs font-semibold text-brass mt-1">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }} vs eceran</p>
-                                                    @endif
-                                                </div>
-                                                <div class="flex items-center gap-4">
-                                                    <span class="font-extrabold text-forest text-xl tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
-                                                    <a href="{{ route('payment.show', $item) }}" class="bg-forest text-white text-sm font-bold py-3 px-5 rounded-xl">Bayar Sekarang &rarr;</a>
-                                                </div>
-                                            </div>
-                                        </article>
-                                    @endforeach
-                                </div>
-                            </section>
-                        @endif
+                    <div class="bg-white border border-line rounded-2xl p-1.5 flex gap-1 w-full max-w-md mb-6">
+                        <a href="{{ route('umkm.orders.index', ['tab' => 'aktif']) }}" @if ($tab === 'aktif') aria-current="page" @endif class="flex-1 text-center text-sm font-bold py-2.5 rounded-xl transition {{ $tab === 'aktif' ? 'bg-forest text-white' : 'text-muted hover:bg-cream' }}">Aktif</a>
+                        <a href="{{ route('umkm.orders.index', ['tab' => 'riwayat']) }}" @if ($tab === 'riwayat') aria-current="page" @endif class="flex-1 text-center text-sm font-bold py-2.5 rounded-xl transition {{ $tab === 'riwayat' ? 'bg-forest text-white' : 'text-muted hover:bg-cream' }}">Riwayat</a>
+                    </div>
 
-                        @if ($paidItems->isNotEmpty())
+                    @if ($hasOrders)
+                        @if ($tab === 'aktif')
+                            @if ($unpaidItems->isNotEmpty())
+                                <section class="mb-8">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-danger"></span>
+                                        <h2 class="text-xs font-bold text-danger uppercase tracking-wider">Menunggu Pembayaran ({{ $unpaidItems->count() }})</h2>
+                                    </div>
+                                    <div class="space-y-4">
+                                        @foreach ($unpaidItems as $item)
+                                            <article class="bg-white rounded-2xl border border-danger/30 shadow-sm overflow-hidden">
+                                                <div class="flex items-center justify-between px-5 py-3 border-b border-line/60 bg-cream/40">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
+                                                        <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
+                                                    </div>
+                                                    <span class="text-[11px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
+                                                </div>
+                                                <div class="px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
+                                                    <div>
+                                                        <p class="font-bold text-ink text-base">{{ $item->product->name }}</p>
+                                                        <p class="text-xs text-muted mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; Distributor: {{ $item->order->distributor->company_name }}</p>
+                                                        @if ($item->savings_amount > 0)
+                                                            <p class="text-xs font-semibold text-brass mt-1">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }} vs eceran</p>
+                                                        @endif
+                                                    </div>
+                                                    <div class="flex items-center gap-4">
+                                                        <span class="font-extrabold text-forest text-xl tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
+                                                        <button type="button" @click="openPayment({{ $item->id }})" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-2 cursor-pointer">Detail</button>
+                                                        <a href="{{ route('payment.show', $item) }}" class="bg-forest text-white text-sm font-bold py-3 px-5 rounded-xl">Bayar Sekarang &rarr;</a>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        @endforeach
+                                    </div>
+                                </section>
+                            @endif
+
+                            @if ($activeItems->isNotEmpty())
+                                <section>
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-success"></span>
+                                        <h2 class="text-xs font-bold text-muted uppercase tracking-wider">Dalam Proses &amp; Pengiriman ({{ $activeItems->count() }})</h2>
+                                    </div>
+                                    <div class="space-y-4">
+                                        @foreach ($activeItems as $item)
+                                            @php
+                                                $shipment = $item->order->shipments->first();
+                                                $hasProof = $shipment && $shipment->status === 'DELIVERED' && $shipment->proof_image_path;
+                                                $isReceived = $item->received_confirmed_at !== null;
+                                                $needsConfirm = ! $isReceived && in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true);
+                                            @endphp
+                                            <article class="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
+                                                <div class="flex items-center justify-between px-5 py-3 border-b border-line/60">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
+                                                        <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
+                                                    </div>
+                                                    <span class="text-[11px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
+                                                </div>
+                                                <div class="px-5 py-4 flex items-start justify-between gap-4 flex-wrap">
+                                                    <div class="min-w-0">
+                                                        <p class="font-bold text-ink">{{ $item->product->name }}</p>
+                                                        <p class="text-xs text-muted mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; {{ $item->order->distributor->company_name }}</p>
+                                                        @if ($item->savings_amount > 0)
+                                                            <p class="text-xs font-semibold text-brass mt-1">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }} vs eceran</p>
+                                                        @endif
+                                                        @if ($hasProof)
+                                                            <button type="button" @click="openLightbox('{{ asset('storage/'.$shipment->proof_image_path) }}')" class="mt-3 flex items-center gap-3 p-2.5 rounded-xl bg-cream/60 border border-line text-left cursor-pointer">
+                                                                <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-16 h-16 rounded-lg object-cover border border-line">
+                                                                <div class="min-w-0">
+                                                                    <p class="text-xs font-bold text-ink">Bukti pengiriman kurir</p>
+                                                                    <p class="text-xs text-muted truncate">{{ $shipment->courier?->user?->name ?? 'Kurir Kulaan' }} &bull; {{ optional($shipment->delivered_at)->format('d M Y, H:i') }}</p>
+                                                                    <p class="text-[11px] font-semibold text-forest mt-0.5">Klik untuk perbesar</p>
+                                                                </div>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                    <span class="font-extrabold text-ink text-lg tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
+                                                </div>
+
+                                                <div class="px-5 pb-4 pt-3 border-t border-line/60 flex items-center gap-3 flex-wrap">
+                                                    <p class="w-full text-xs font-semibold text-muted">Status: <span class="text-ink">{{ $item->order->status->label() }}</span></p>
+                                                    @if ($needsConfirm)
+                                                        <form method="POST" action="{{ route('umkm.orders.confirm', $item) }}">
+                                                            @csrf
+                                                            <button type="submit" class="inline-flex items-center gap-1.5 text-sm font-bold text-white bg-forest rounded-xl px-4 py-2.5 cursor-pointer">
+                                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                                                Pesanan Diterima
+                                                            </button>
+                                                        </form>
+                                                    @endif
+
+                                                    @if ($shipment && ! $isReceived)
+                                                        <a href="{{ route('umkm.tracking.show', $shipment) }}" class="text-sm font-bold text-forest hover:underline">Lacak Kurir &rarr;</a>
+                                                    @endif
+
+                                                    @if (! $shipment)
+                                                        <p class="text-xs text-muted">Pelacakan kurir muncul setelah distributor menugaskan kurir.</p>
+                                                    @endif
+
+                                                    <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-2 ml-auto">Invoice</a>
+                                                </div>
+                                            </article>
+                                        @endforeach
+                                    </div>
+                                </section>
+                            @endif
+                        @else
                             <section>
                                 <div class="flex items-center gap-2 mb-4">
                                     <span class="w-2.5 h-2.5 rounded-full bg-success"></span>
-                                    <h2 class="text-xs font-bold text-muted uppercase tracking-wider">Riwayat Pesanan Lunas ({{ $paidItems->count() }})</h2>
+                                    <h2 class="text-xs font-bold text-muted uppercase tracking-wider">Riwayat Pesanan Selesai ({{ $orderItems->count() }})</h2>
                                 </div>
                                 <div class="space-y-4">
-                                    @foreach ($paidItems as $item)
+                                    @foreach ($orderItems as $item)
                                         @php $shipment = $item->order->shipments->first(); @endphp
                                         <article class="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
-                                            <div class="flex items-center justify-between px-5 py-3 border-b border-line/60">
+                                            <div class="flex items-center justify-between px-5 py-3 border-b border-line/60 bg-cream/40">
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
-                                                    <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
+                                                    <span class="text-[10px] font-bold bg-success/10 text-success px-2 py-0.5 rounded-full">Diterima</span>
                                                 </div>
-                                                <span class="text-[11px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
+                                                <span class="text-[11px] text-muted">{{ optional($item->received_confirmed_at)->format('d M Y') }}</span>
                                             </div>
-                                            <div class="px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
-                                                <div>
-                                                    <p class="font-bold text-ink">{{ $item->product->name }}</p>
-                                                    <p class="text-xs text-muted mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; {{ $item->order->distributor->company_name }}</p>
-                                                    @if ($item->savings_amount > 0)
-                                                        <p class="text-xs font-semibold text-brass mt-1">Hemat Rp {{ number_format($item->savings_amount, 0, ',', '.') }} vs eceran</p>
-                                                    @endif
-                                                </div>
-                                                <div class="flex items-center gap-3 flex-wrap">
+                                            <div class="px-5 py-4">
+                                                <div class="flex items-start justify-between gap-4 flex-wrap">
+                                                    <div class="min-w-0">
+                                                        <p class="font-bold text-ink">{{ $item->product->name }}</p>
+                                                        <p class="text-xs text-muted mt-0.5">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }} &bull; {{ $item->order->distributor->company_name }}</p>
+                                                    </div>
                                                     <span class="font-extrabold text-ink tabular-nums">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
+                                                </div>
 
+                                                @if ($shipment && $shipment->proof_image_path)
+                                                    <button type="button" @click="openLightbox('{{ asset('storage/'.$shipment->proof_image_path) }}')" class="mt-3 flex items-center gap-3 p-2.5 rounded-xl bg-cream/60 border border-line text-left cursor-pointer">
+                                                        <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-16 h-16 rounded-lg object-cover border border-line">
+                                                        <div class="min-w-0">
+                                                            <p class="text-xs font-bold text-ink">Bukti pengiriman kurir</p>
+                                                            <p class="text-xs text-muted truncate">{{ $shipment->courier?->user?->name ?? 'Kurir Kulaan' }} &bull; {{ optional($shipment->delivered_at)->format('d M Y, H:i') }}</p>
+                                                            <p class="text-[11px] text-muted mt-0.5">Surat jalan {{ $shipment->shipment_number }}</p>
+                                                        </div>
+                                                    </button>
+                                                @endif
+
+                                                <div class="flex items-center gap-3 mt-3 flex-wrap">
                                                     @if ($item->review)
                                                         <span class="inline-flex items-center gap-1 text-[11px] font-bold text-brass bg-brass-soft px-2.5 py-1 rounded-full border border-brass/30">
                                                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.56-5 4.36 1.5 6.45L12 16.9 5.99 19.63l1.5-6.45-5-4.36 6.6-.56L12 2z"/></svg>
                                                             {{ $item->review->rating }}/5
                                                         </span>
-                                                    @elseif (in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true))
+                                                    @else
                                                         <button type="button"
                                                                 @click="openRatingModal({{ $item->id }}, '{{ addslashes($item->order->distributor->company_name) }}', '{{ route('umkm.orders.review', $item) }}')"
                                                                 class="inline-flex items-center gap-1 text-[11px] font-semibold text-brass bg-brass-soft rounded-lg border border-brass/30 px-3 py-2 transition-colors cursor-pointer">
@@ -364,11 +584,15 @@
                                                     @endif
 
                                                     @if ($shipment)
-                                                        <a href="{{ route('umkm.tracking.show', $shipment) }}" class="text-xs font-bold text-forest hover:underline">Lacak Kurir &rarr;</a>
+                                                        <button type="button" @click="openDelivery({{ $item->id }})" class="inline-flex items-center gap-1 text-[11px] font-semibold text-forest bg-forest/10 rounded-lg border border-forest/20 px-3 py-2 cursor-pointer">Detail Pengiriman</button>
                                                     @endif
 
-                                                    <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-2">Invoice</a>
+                                                    <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-2 ml-auto">Invoice</a>
                                                 </div>
+
+                                                @if ($item->review?->comment)
+                                                    <p class="text-xs text-muted mt-3 leading-relaxed border-t border-line/60 pt-3">{{ $item->review->comment }}</p>
+                                                @endif
                                             </div>
                                         </article>
                                     @endforeach
@@ -380,10 +604,17 @@
                     @else
                         <section class="bg-white rounded-2xl border border-line p-16 text-center max-w-lg mx-auto shadow-sm">
                             <div class="w-14 h-14 rounded-2xl bg-brass-soft text-brass flex items-center justify-center mx-auto font-display font-bold text-2xl">K</div>
-                            <h2 class="font-display font-bold text-ink text-xl mt-4">Belum Ada Riwayat Pesanan</h2>
-                            <p class="text-sm text-muted mt-2 leading-relaxed max-w-sm mx-auto">
-                                Setelah pengajuanmu ter-matching dan dibayar, invoice dan ulasan mitra tampil di sini.
-                            </p>
+                            @if ($tab === 'aktif')
+                                <h2 class="font-display font-bold text-ink text-xl mt-4">Tidak Ada Pesanan Aktif</h2>
+                                <p class="text-sm text-muted mt-2 leading-relaxed max-w-sm mx-auto">
+                                    Pesanan yang menunggu pembayaran atau sedang dalam pengiriman akan tampil di sini.
+                                </p>
+                            @else
+                                <h2 class="font-display font-bold text-ink text-xl mt-4">Belum Ada Riwayat Pesanan</h2>
+                                <p class="text-sm text-muted mt-2 leading-relaxed max-w-sm mx-auto">
+                                    Setelah kamu konfirmasi pesanan diterima, bukti pengiriman dan ulasan mitra tampil di sini.
+                                </p>
+                            @endif
                             <a href="{{ route('umkm.catalog.index') }}" class="btn-primary inline-flex text-sm font-bold px-5 py-2.5 mt-5">
                                 Buka Katalog &rarr;
                             </a>
@@ -394,30 +625,14 @@
         </div>
 
         {{-- MOBILE BOTTOM TAB --}}
-        <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line px-2 pt-2 pb-5 flex items-start justify-around">
-            <a href="{{ route('umkm.catalog.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-                <span class="text-[10px] font-semibold">Katalog</span>
-            </a>
-            <a href="{{ route('umkm.cart.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted relative">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-                <span class="text-[10px] font-semibold">Keranjang</span>
-                @if ($cartCount > 0)
-                    <span class="absolute top-0 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-white text-[10px] font-bold flex items-center justify-center">{{ $cartCount }}</span>
-                @endif
-            </a>
-            <a href="{{ route('umkm.requests.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
-                <span class="text-[10px] font-semibold">Pengajuan</span>
-            </a>
-            <a href="{{ route('umkm.orders.index') }}" class="flex flex-col items-center gap-1 w-14 text-forest">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-                <span class="text-[10px] font-bold">Pesanan</span>
-            </a>
-            <a href="{{ route('umkm.tracking.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-                <span class="text-[10px] font-semibold">Pelacakan</span>
-            </a>
+        <x-umkm.mobile-tab active="orders" />
+
+        <!-- Lightbox Bukti Pengiriman -->
+        <div x-show="lightboxSrc" x-cloak @keydown.escape.window="closeLightbox()" @click.self="closeLightbox()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Bukti pengiriman">
+            <button type="button" @click="closeLightbox()" class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/15 text-white flex items-center justify-center cursor-pointer" aria-label="Tutup">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+            <img :src="lightboxSrc" alt="Bukti pengiriman diperbesar" class="max-h-[85vh] max-w-full rounded-2xl border border-white/20 shadow-2xl object-contain">
         </div>
 
         <!-- Rating Modal -->
@@ -451,6 +666,155 @@
                     <button type="button" @click="showModal = false" class="btn-ghost text-sm py-3 w-full sm:w-auto">Batal</button>
                 </div>
             </form>
+        </x-modal>
+
+        <!-- Detail Pengiriman Modal -->
+        <x-modal open="showDelivery" size="2xl" title="Detail Pengiriman">
+            <div class="pt-4 space-y-4">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <p class="text-xs text-muted">
+                        Surat jalan <span class="font-mono font-bold text-ink" x-text="delivery.shipmentNumber"></span>
+                        &bull; Pesanan <span class="font-mono" x-text="delivery.orderNumber"></span>
+                    </p>
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 bg-cream/60 rounded-full border border-line text-[11px] font-bold text-ink">
+                        <span class="w-2 h-2 rounded-full" :class="delivery.statusDot"></span>
+                        <span x-text="delivery.statusLabel"></span>
+                    </span>
+                </div>
+
+                <ol class="bg-cream/40 rounded-2xl border border-line px-2 sm:px-4 py-3 flex items-start" aria-label="Status pengiriman">
+                    <template x-for="(label, i) in deliverySteps" :key="i">
+                        <li class="flex-1 flex flex-col items-center gap-1.5 min-w-0 relative">
+                            <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0"
+                                  :class="i < delivery.step ? 'bg-forest text-white' : (i === delivery.step ? 'bg-brass text-ink ring-4 ring-brass/20' : 'bg-cream text-muted border border-line')">
+                                <template x-if="i < delivery.step">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </template>
+                                <template x-if="i >= delivery.step"><span x-text="i + 1"></span></template>
+                            </span>
+                            <span class="text-[9px] sm:text-[11px] font-bold text-center leading-tight" :class="i <= delivery.step ? 'text-ink' : 'text-muted/60'" x-text="label"></span>
+                            <template x-if="i < deliverySteps.length - 1">
+                                <span class="absolute top-3.5 left-[calc(50%+1.25rem)] right-[calc(-50%+1.25rem)] h-0.5 rounded" :class="i < delivery.step ? 'bg-forest' : 'bg-line'" aria-hidden="true"></span>
+                            </template>
+                        </li>
+                    </template>
+                </ol>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-white rounded-2xl border border-line p-4">
+                        <h3 class="text-[11px] font-bold text-ink uppercase tracking-wider mb-3">Kurir Ditugaskan</h3>
+                        <div class="flex items-center gap-3">
+                            <span class="w-12 h-12 rounded-2xl bg-forest text-white flex items-center justify-center font-extrabold text-lg shrink-0" x-text="delivery.courierInitial"></span>
+                            <div class="min-w-0">
+                                <p class="font-bold text-sm text-ink truncate" x-text="delivery.courierName"></p>
+                                <p class="text-xs text-muted truncate" x-text="delivery.courierVehicle"></p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-3 text-xs">
+                            <div class="bg-cream/60 rounded-xl p-2.5 border border-line/60">
+                                <p class="text-[10px] text-muted">No. Telepon</p>
+                                <p class="font-bold text-ink mt-0.5" x-text="delivery.courierPhone"></p>
+                            </div>
+                            <div class="bg-cream/60 rounded-xl p-2.5 border border-line/60">
+                                <p class="text-[10px] text-muted">Kecepatan</p>
+                                <p class="font-bold text-ink mt-0.5"><span x-text="delivery.speed"></span> km/jam</p>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-muted mt-2.5">Update terakhir: <span class="font-semibold text-ink" x-text="delivery.lastUpdated"></span></p>
+                        <a x-show="delivery.courierPhone && delivery.courierPhone !== '-'" :href="'tel:' + (delivery.courierPhone || '')" class="mt-3 w-full inline-flex items-center justify-center gap-2 bg-forest text-white text-sm font-bold py-3 rounded-xl">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.25 6.75c0 8.28 6.72 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.37c0-.5-.28-.96-.73-1.19l-2.5-1.25a1.13 1.13 0 0 0-1.28.21l-.82.82a16.5 16.5 0 0 1-7.07-7.07l.82-.82a1.13 1.13 0 0 0 .21-1.28L9.13 4.06a1.13 1.13 0 0 0-1.19-.73H6.75A2.25 2.25 0 0 0 4.5 5.58v1.17Z"/></svg>
+                            Hubungi Kurir
+                        </a>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-line p-4">
+                        <h3 class="text-[11px] font-bold text-ink uppercase tracking-wider mb-3">Isi Pengiriman</h3>
+                        <div class="space-y-2 text-sm">
+                            <template x-for="(p, i) in delivery.products" :key="i">
+                                <div class="flex justify-between gap-2">
+                                    <span class="text-muted" x-text="p.name"></span>
+                                    <span class="font-bold text-ink whitespace-nowrap" x-text="p.qty"></span>
+                                </div>
+                            </template>
+                            <div class="flex justify-between gap-2 pt-2 border-t border-line/60">
+                                <span class="text-muted">Distributor</span>
+                                <span class="font-bold text-ink text-right" x-text="delivery.distributor"></span>
+                            </div>
+                            <div class="pt-2 border-t border-line/60">
+                                <span class="text-xs text-muted">Alamat Kirim</span>
+                                <p class="text-xs text-ink mt-0.5 leading-relaxed" x-text="delivery.address"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-5 mt-1 border-t border-black/[0.06]">
+                <button type="button" @click="showDelivery = false" class="btn-ghost text-sm py-3 w-full">Tutup</button>
+            </div>
+        </x-modal>
+
+        <!-- Detail Pesanan (Menunggu Pembayaran) Modal -->
+        <x-modal open="showPayment" size="xl" title="Detail Pesanan" eyebrow="Menunggu Pembayaran">
+            <div class="pt-4 space-y-4">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <p class="text-xs text-muted">Pesanan <span class="font-mono font-bold text-ink" x-text="payment.orderNumber"></span></p>
+                    <span class="text-[11px] font-bold bg-danger/10 text-danger px-3 py-1.5 rounded-full" x-text="payment.status"></span>
+                </div>
+
+                <ol class="bg-cream/40 rounded-2xl border border-line px-2 sm:px-4 py-3 flex items-start" aria-label="Status pesanan">
+                    <template x-for="(label, i) in deliverySteps" :key="i">
+                        <li class="flex-1 flex flex-col items-center gap-1.5 min-w-0 relative">
+                            <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0"
+                                  :class="i < payment.step ? 'bg-forest text-white' : (i === payment.step ? 'bg-brass text-ink ring-4 ring-brass/20' : 'bg-cream text-muted border border-line')">
+                                <template x-if="i < payment.step">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </template>
+                                <template x-if="i >= payment.step"><span x-text="i + 1"></span></template>
+                            </span>
+                            <span class="text-[9px] sm:text-[11px] font-bold text-center leading-tight" :class="i <= payment.step ? 'text-ink' : 'text-muted/60'" x-text="label"></span>
+                            <template x-if="i < deliverySteps.length - 1">
+                                <span class="absolute top-3.5 left-[calc(50%+1.25rem)] right-[calc(-50%+1.25rem)] h-0.5 rounded" :class="i < payment.step ? 'bg-forest' : 'bg-line'" aria-hidden="true"></span>
+                            </template>
+                        </li>
+                    </template>
+                </ol>
+
+                <div class="bg-white rounded-2xl border border-line p-4">
+                    <h3 class="text-[11px] font-bold text-ink uppercase tracking-wider mb-3">Rincian Pesanan</h3>
+                    <div class="space-y-2 text-sm">
+                        <template x-for="(p, i) in payment.products" :key="i">
+                            <div class="flex justify-between gap-2">
+                                <span class="text-muted" x-text="p.name"></span>
+                                <span class="font-bold text-ink whitespace-nowrap" x-text="p.qty"></span>
+                            </div>
+                        </template>
+                        <div class="flex justify-between gap-2 pt-2 border-t border-line/60">
+                            <span class="text-muted">Distributor</span>
+                            <span class="font-bold text-ink text-right" x-text="payment.distributor"></span>
+                        </div>
+                        <template x-if="payment.savings">
+                            <div class="flex justify-between gap-2">
+                                <span class="text-brass font-semibold text-xs">Hemat vs harga eceran</span>
+                                <span class="font-bold text-brass text-xs" x-text="payment.savings"></span>
+                            </div>
+                        </template>
+                        <div class="flex justify-between items-center gap-2 pt-2 border-t border-line/60">
+                            <span class="text-muted">Total tagihan</span>
+                            <span class="font-extrabold text-forest text-lg tabular-nums" x-text="payment.subtotal"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="bg-brass-soft/60 rounded-2xl border border-brass/30 p-3.5 text-[11px] text-ink leading-relaxed">
+                    Selesaikan pembayaran agar pesanan masuk ke proses pengiriman. Lanjutkan ke halaman pembayaran lewat tombol di bawah.
+                </p>
+            </div>
+
+            <div class="pt-5 mt-1 border-t border-black/[0.06] flex flex-col-reverse sm:flex-row gap-3">
+                <a :href="payment.payUrl" class="btn-primary text-sm py-3 px-6 w-full sm:w-auto text-center">Bayar Sekarang</a>
+                <button type="button" @click="showPayment = false" class="btn-ghost text-sm py-3 w-full sm:w-auto">Tutup</button>
+            </div>
         </x-modal>
     </div>
 </x-layouts.app>

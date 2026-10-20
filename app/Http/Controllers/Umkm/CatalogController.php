@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Umkm;
 
 use App\Enums\PurchaseRequestStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Distributor;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\PurchaseRequest;
 use App\Models\SupplierProduct;
+use App\Models\Umkm;
 use App\Services\Spk\DistributorRecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -56,7 +59,14 @@ class CatalogController extends Controller
             }
         }
 
-        return view('umkm.catalog.index', compact('products', 'umkm', 'search', 'topRatingByProduct'));
+        $stats = [
+            'total_umkm' => Umkm::count(),
+            'total_distributor' => Distributor::count(),
+            'total_savings' => (float) OrderItem::sum('savings_amount'),
+            'total_volume' => (float) OrderItem::sum('quantity'),
+        ];
+
+        return view('umkm.catalog.index', compact('products', 'umkm', 'search', 'topRatingByProduct', 'stats'));
     }
 
     public function show(Request $request, Product $product, DistributorRecommendationService $recommendationService): View

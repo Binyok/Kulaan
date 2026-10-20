@@ -27,24 +27,7 @@
                     <p class="text-[15px] font-extrabold leading-tight">{{ $displayName }}</p>
                 </div>
             </div>
-            <div class="relative" x-data="{ notifOpen: false }">
-                <button type="button" @click="notifOpen = !notifOpen" class="w-10 h-10 rounded-2xl bg-white border border-line flex items-center justify-center text-ink relative cursor-pointer">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                </button>
-                <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                    <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                    <div class="mt-3 space-y-1">
-                        <a href="{{ route('umkm.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                            <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                            <span class="text-xs text-ink">Tagihan menunggu pembayaran</span>
-                        </a>
-                        <a href="{{ route('umkm.tracking.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                            <span class="w-2 h-2 mt-1.5 rounded-full bg-forest shrink-0"></span>
-                            <span class="text-xs text-ink">Pengiriman sedang berjalan</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <x-notification-bell />
         </div>
 
         {{-- page header --}}
@@ -65,11 +48,12 @@
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
                         </span>
                         <div class="flex-1">
-                            <p class="text-[13px] font-bold text-ink leading-snug">Kurang <span class="text-brass">15 kg</span> lagi menuju minimum pemesanan &mdash; harga grosir menanti</p>
+                            <p class="text-[13px] font-bold text-ink leading-snug {{ $moqProgress['target'] > 0 && $moqProgress['remaining'] <= 0 ? 'hidden' : '' }}" data-moq-pending>Kurang <span class="text-brass tnum" data-moq-remaining>{{ number_format($moqProgress['remaining'], 0, ',', '.') }} {{ $moqProgress['unit'] }}</span> lagi menuju minimum pemesanan &mdash; harga grosir menanti</p>
+                            <p class="text-[13px] font-bold text-success leading-snug {{ $moqProgress['target'] > 0 && $moqProgress['remaining'] <= 0 ? '' : 'hidden' }}" data-moq-met>Kuota minimum terpenuhi &mdash; harga grosir aktif</p>
                             <div class="h-2 rounded-full bg-white/70 border border-brass/20 overflow-hidden mt-2.5">
-                                <div class="h-full w-[70%] rounded-full bg-gradient-to-r from-brass to-forest"></div>
+                                <div class="h-full rounded-full bg-gradient-to-r from-brass to-forest" style="width: {{ $moqProgress['percent'] }}%" data-moq-bar></div>
                             </div>
-                            <p class="text-[11px] text-muted mt-1.5">Terkumpul 35/50 kg di kelompokmu</p>
+                            <p class="text-[11px] text-muted mt-1.5">Terkumpul <span data-moq-gathered>{{ number_format($moqProgress['gathered'], 0, ',', '.') }}</span>/<span data-moq-target>{{ number_format($moqProgress['target'], 0, ',', '.') }}</span> <span data-moq-unit>{{ $moqProgress['unit'] }}</span> di kelompokmu</p>
                         </div>
                     </div>
                 </div>
@@ -198,31 +182,7 @@
                 </span>
                 <span class="text-xl font-extrabold tracking-tight">Kulaan</span>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-1 text-sm font-semibold">
-                <a href="{{ route('umkm.catalog.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-                    Katalog
-                </a>
-                <a href="{{ route('umkm.cart.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-forest text-white">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-                    Keranjang
-                    @if ($itemCount > 0)
-                        <span class="ml-auto bg-brass text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $itemCount }}</span>
-                    @endif
-                </a>
-                <a href="{{ route('umkm.requests.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
-                    Pengajuan
-                </a>
-                <a href="{{ route('umkm.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-                    Pesanan
-                </a>
-                <a href="{{ route('umkm.tracking.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-                    Pelacakan
-                </a>
-            </nav>
+            <x-umkm.sidebar-nav active="cart" />
             <div class="p-4 border-t border-line">
                 <a href="{{ route('profile.complete') }}" class="flex items-center gap-3 px-2">
                     <span class="w-10 h-10 rounded-2xl bg-forest text-white flex items-center justify-center font-extrabold text-xs">{{ $initials }}</span>
@@ -253,24 +213,7 @@
                             <svg class="w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z"/></svg>
                             <input name="q" class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" placeholder="Cari pesanan, produk...">
                         </form>
-                        <div class="relative" x-data="{ notifOpen: false }">
-                            <button type="button" @click="notifOpen = !notifOpen" class="w-11 h-11 rounded-2xl bg-white border border-line flex items-center justify-center relative cursor-pointer">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                            </button>
-                            <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                                <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                                <div class="mt-3 space-y-1">
-                                    <a href="{{ route('umkm.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                        <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                        <span class="text-xs text-ink">Tagihan menunggu pembayaran</span>
-                                    </a>
-                                    <a href="{{ route('umkm.tracking.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                        <span class="w-2 h-2 mt-1.5 rounded-full bg-forest shrink-0"></span>
-                                        <span class="text-xs text-ink">Pengiriman sedang berjalan</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        <x-notification-bell />
                     </div>
                 </div>
             </header>
@@ -288,12 +231,13 @@
                             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
                         </span>
                         <div class="flex-1">
-                            <p class="font-bold">Kurang <span class="text-brass">15 kg</span> lagi menuju minimum pemesanan &mdash; harga grosir menanti</p>
+                            <p class="font-bold {{ $moqProgress['target'] > 0 && $moqProgress['remaining'] <= 0 ? 'hidden' : '' }}" data-moq-pending>Kurang <span class="text-brass tnum" data-moq-remaining>{{ number_format($moqProgress['remaining'], 0, ',', '.') }} {{ $moqProgress['unit'] }}</span> lagi menuju minimum pemesanan &mdash; harga grosir menanti</p>
+                            <p class="font-bold text-success {{ $moqProgress['target'] > 0 && $moqProgress['remaining'] <= 0 ? '' : 'hidden' }}" data-moq-met>Kuota minimum terpenuhi &mdash; harga grosir aktif</p>
                             <div class="h-2.5 rounded-full bg-white/70 border border-brass/20 overflow-hidden mt-2 max-w-xl">
-                                <div class="h-full w-[70%] rounded-full bg-gradient-to-r from-brass to-forest"></div>
+                                <div class="h-full rounded-full bg-gradient-to-r from-brass to-forest" style="width: {{ $moqProgress['percent'] }}%" data-moq-bar></div>
                             </div>
                         </div>
-                        <p class="text-sm text-muted whitespace-nowrap">Terkumpul <span class="font-bold text-ink">35/50 kg</span></p>
+                        <p class="text-sm text-muted whitespace-nowrap">Terkumpul <span class="font-bold text-ink"><span data-moq-gathered>{{ number_format($moqProgress['gathered'], 0, ',', '.') }}</span>/<span data-moq-target>{{ number_format($moqProgress['target'], 0, ',', '.') }}</span> <span data-moq-unit>{{ $moqProgress['unit'] }}</span></span></p>
                     </div>
 
                     <div class="grid lg:grid-cols-[1fr_380px] gap-6 mt-6 items-start">
@@ -423,31 +367,7 @@
     </div>
 
     {{-- bottom tab --}}
-    <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line px-2 pt-2 pb-5 flex items-start justify-around">
-        <a href="{{ route('umkm.catalog.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-            <span class="text-[10px] font-semibold">Katalog</span>
-        </a>
-        <a href="{{ route('umkm.cart.index') }}" class="flex flex-col items-center gap-1 w-14 text-forest relative">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-            <span class="text-[10px] font-bold">Keranjang</span>
-            @if ($itemCount > 0)
-                <span class="absolute top-0 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-white text-[10px] font-bold flex items-center justify-center">{{ $itemCount }}</span>
-            @endif
-        </a>
-        <a href="{{ route('umkm.requests.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
-            <span class="text-[10px] font-semibold">Pengajuan</span>
-        </a>
-        <a href="{{ route('umkm.orders.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
-            <span class="text-[10px] font-semibold">Pesanan</span>
-        </a>
-        <a href="{{ route('umkm.tracking.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-            <span class="text-[10px] font-semibold">Pelacakan</span>
-        </a>
-    </div>
+    <x-umkm.mobile-tab active="cart" />
 
     <script>
         const cartCurrentQtys = {
@@ -458,6 +378,37 @@
 
         function formatRupiah(num) {
             return Math.round(num || 0).toLocaleString('id-ID');
+        }
+
+        function applyMoqProgress(progress) {
+            if (!progress) {
+                return;
+            }
+
+            const unit = progress.unit || '';
+            const met = progress.target > 0 && progress.remaining <= 0;
+
+            document.querySelectorAll('[data-moq-remaining]').forEach((el) => {
+                el.textContent = `${formatRupiah(progress.remaining)} ${unit}`.trim();
+            });
+            document.querySelectorAll('[data-moq-gathered]').forEach((el) => {
+                el.textContent = formatRupiah(progress.gathered);
+            });
+            document.querySelectorAll('[data-moq-target]').forEach((el) => {
+                el.textContent = formatRupiah(progress.target);
+            });
+            document.querySelectorAll('[data-moq-unit]').forEach((el) => {
+                el.textContent = unit;
+            });
+            document.querySelectorAll('[data-moq-bar]').forEach((el) => {
+                el.style.width = `${progress.percent}%`;
+            });
+            document.querySelectorAll('[data-moq-pending]').forEach((el) => {
+                el.classList.toggle('hidden', met);
+            });
+            document.querySelectorAll('[data-moq-met]').forEach((el) => {
+                el.classList.toggle('hidden', !met);
+            });
         }
 
         async function changeCartQty(productId, distributorId, key, delta) {
@@ -549,6 +500,8 @@
 
                 const summarySavings = document.getElementById('summary-savings');
                 if (summarySavings) summarySavings.textContent = formatRupiah(data.total_savings);
+
+                applyMoqProgress(data.moq_progress);
 
             } catch (err) {
                 console.error(err);

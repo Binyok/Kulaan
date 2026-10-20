@@ -25,6 +25,7 @@ class OrderItem extends Model
         'payment_status',
         'delivery_district',
         'delivery_address',
+        'received_confirmed_at',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class OrderItem extends Model
             'benchmark_retail_price' => 'decimal:2',
             'savings_amount' => 'decimal:2',
             'payment_status' => PaymentStatus::class,
+            'received_confirmed_at' => 'datetime',
         ];
     }
 

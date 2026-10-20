@@ -1,6 +1,33 @@
 <x-layouts.app>
     <x-slot name="title">Dashboard Distributor</x-slot>
 
+    @php
+        $orderAction = function ($order) {
+            $status = $order->status->value;
+
+            $pill = match ($status) {
+                'PAID' => ['Perlu diproses', 'bg-brass-soft text-brass'],
+                'CONFIRMED', 'PREPARING' => ['Perlu diproses', 'bg-brass-soft text-brass'],
+                'READY_TO_SHIP' => ['Siap kirim', 'bg-forest/10 text-forest'],
+                'ASSIGNED_TO_COURIER' => ['Kurir ditugaskan', 'bg-brass/15 text-brass'],
+                'IN_TRANSIT' => ['Dalam perjalanan', 'bg-brass/15 text-brass'],
+                'DELIVERED', 'COMPLETED' => ['Selesai', 'bg-success/10 text-success'],
+                'CANCELLED', 'EXPIRED' => ['Dibatalkan', 'bg-danger/10 text-danger'],
+                default => [$order->status->label(), 'bg-brass-soft text-brass'],
+            };
+
+            $action = match ($status) {
+                'PAID' => 'Konfirmasi',
+                'CONFIRMED' => 'Siapkan barang',
+                'PREPARING' => 'Siap kirim',
+                'READY_TO_SHIP' => 'Tugaskan kurir',
+                default => null,
+            };
+
+            return ['pill' => $pill, 'action' => $action];
+        };
+    @endphp
+
     <div class="lg:hidden bg-cream min-h-screen">
         <div class="pb-24">
             <div class="px-4 pt-4 flex items-center justify-between">
@@ -20,20 +47,7 @@
                         <p class="text-[15px] font-extrabold leading-tight">{{ $distributor?->company_name ?? $user->name }}</p>
                     </div>
                 </div>
-                <div class="relative" x-data="{ notifOpen: false }">
-                    <button type="button" @click="notifOpen = !notifOpen" class="w-10 h-10 rounded-2xl bg-white border border-line flex items-center justify-center text-ink relative cursor-pointer">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                    </button>
-                    <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                        <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                        <div class="mt-3 space-y-1">
-                            <a href="{{ route('distributor.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                <span class="text-xs text-ink"><b>{{ $pendingOrdersCount }}</b> pesanan perlu diproses</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                <x-notification-bell />
             </div>
 
             <div class="px-4 mt-4">
@@ -89,26 +103,20 @@
                 <div class="mt-3 space-y-2.5">
                     @forelse ($orders->take(5) as $order)
                         @php
-                            $needsProcessing = in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING'], true);
+                            $oa = $orderAction($order);
                         @endphp
-                        <div class="bg-white rounded-3xl {{ $needsProcessing ? 'border-2 border-brass/40' : 'border border-line' }} p-3.5">
+                        <div class="bg-white rounded-3xl {{ $oa['action'] ? 'border-2 border-brass/40' : 'border border-line' }} p-3.5">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
                                     <p class="font-mono text-[13px] font-bold">{{ $order->order_number }}</p>
                                     <p class="text-[11px] text-muted mt-0.5 truncate">{{ number_format($order->total_quantity, 0) }} unit &bull; Rp {{ number_format($order->total_amount, 0, ',', '.') }} &bull; {{ $order->items->map(fn ($i) => $i->umkm?->business_name)->filter()->unique()->join(', ') }}</p>
                                 </div>
-                                @if ($needsProcessing)
-                                    <span class="shrink-0 bg-brass-soft text-brass text-[10px] font-bold px-2 py-1 rounded-full">Perlu diproses</span>
-                                @else
-                                    <span class="shrink-0 bg-success/10 text-success text-[10px] font-bold px-2 py-1 rounded-full">Siap kirim</span>
-                                @endif
+                                <span class="shrink-0 {{ $oa['pill'][1] }} text-[10px] font-bold px-2 py-1 rounded-full">{{ $oa['pill'][0] }}</span>
                             </div>
                             <div class="flex items-center justify-between mt-2.5">
                                 <p class="text-sm font-extrabold tabular-nums">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
-                                @if ($needsProcessing)
-                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-forest bg-forest/10 px-3 py-2 rounded-xl">Konfirmasi</a>
-                                @else
-                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-muted px-3 py-2">Tugaskan kurir</a>
+                                @if ($oa['action'])
+                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-forest bg-forest/10 px-3 py-2 rounded-xl cursor-pointer">{{ $oa['action'] }}</a>
                                 @endif
                             </div>
                         </div>
@@ -197,20 +205,7 @@
                             <svg class="w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z"/></svg>
                             <input class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" placeholder="Cari pesanan, produk...">
                         </div>
-                        <div class="relative" x-data="{ notifOpen: false }">
-                            <button type="button" @click="notifOpen = !notifOpen" class="w-11 h-11 rounded-2xl bg-white border border-line flex items-center justify-center relative cursor-pointer">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0"/></svg>
-                            </button>
-                            <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak class="absolute right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-xl p-4 z-40 text-left">
-                                <p class="text-sm font-extrabold text-ink">Notifikasi</p>
-                                <div class="mt-3 space-y-1">
-                                    <a href="{{ route('distributor.orders.index') }}" class="flex items-start gap-2 rounded-xl p-2 hover:bg-cream">
-                                        <span class="w-2 h-2 mt-1.5 rounded-full bg-brass shrink-0"></span>
-                                        <span class="text-xs text-ink"><b>{{ $pendingOrdersCount }}</b> pesanan perlu diproses</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        <x-notification-bell />
                     </div>
                 </div>
             </header>
@@ -270,10 +265,10 @@
                     <div class="divide-y divide-line/70">
                         @forelse ($orders->take(5) as $order)
                             @php
-                                $needsProcessing = in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING'], true);
+                                $oa = $orderAction($order);
                             @endphp
                             <div class="py-4 flex items-center gap-4">
-                                <span class="w-12 h-12 rounded-2xl {{ $needsProcessing ? 'bg-brass-soft text-brass' : 'bg-forest/10 text-forest' }} flex items-center justify-center shrink-0">
+                                <span class="w-12 h-12 rounded-2xl {{ $oa['action'] ? 'bg-brass-soft text-brass' : 'bg-forest/10 text-forest' }} flex items-center justify-center shrink-0">
                                     <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 8h6M9 12h4"/></svg>
                                 </span>
                                 <div class="min-w-0 flex-1">
@@ -281,12 +276,9 @@
                                     <p class="text-xs text-muted mt-0.5">{{ number_format($order->total_quantity, 0) }} unit &bull; Rp {{ number_format($order->total_amount, 0, ',', '.') }} &bull; {{ $order->items->map(fn ($i) => $i->umkm?->business_name)->filter()->unique()->join(', ') }}</p>
                                 </div>
                                 <p class="font-extrabold tabular-nums text-sm shrink-0">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
-                                @if ($needsProcessing)
-                                    <span class="bg-brass-soft text-brass text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0">Perlu diproses</span>
-                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-white bg-forest px-4 py-2.5 rounded-xl shrink-0">Konfirmasi</a>
-                                @else
-                                    <span class="bg-success/10 text-success text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0">Siap kirim</span>
-                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-muted px-4 py-2.5 shrink-0">Tugaskan kurir</a>
+                                <span class="{{ $oa['pill'][1] }} text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0">{{ $oa['pill'][0] }}</span>
+                                @if ($oa['action'])
+                                    <a href="{{ route('distributor.orders.index') }}" class="text-xs font-bold text-white bg-forest px-4 py-2.5 rounded-xl shrink-0 cursor-pointer">{{ $oa['action'] }}</a>
                                 @endif
                             </div>
                         @empty

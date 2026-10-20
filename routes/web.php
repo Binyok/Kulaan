@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Distributor\OrderManagementController;
 use App\Http\Controllers\Distributor\SupplierProductController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LiveRevisionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Umkm\CartController;
@@ -45,6 +46,9 @@ Route::middleware('guest')->group(function () {
 
 // Midtrans Webhook (public with signature validation)
 Route::post('api/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
+
+// Lightweight change fingerprint the UI polls so fresh data shows up without a manual reload
+Route::get('live/revision', LiveRevisionController::class)->middleware('auth')->name('live.revision');
 
 // Authenticated routes
 Route::middleware(['auth', 'profile.complete'])->group(function () {
@@ -80,6 +84,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::post('requests/{purchaseRequest}/retry-matching', [PurchaseRequestController::class, 'retryMatching'])->name('requests.retry-matching');
 
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('orders/{orderItem}/confirm', [OrderController::class, 'confirmReceive'])->name('orders.confirm');
         Route::post('orders/{orderItem}/review', [OrderController::class, 'storeReview'])->name('orders.review');
 
         Route::get('shipments', [TrackingController::class, 'index'])->name('tracking.index');

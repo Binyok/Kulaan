@@ -29,12 +29,31 @@ class PurchaseRequestController extends Controller
             abort(403, 'Profil UMKM tidak ditemukan.');
         }
 
+        $tab = $request->input('tab', 'aktif');
+        if (! in_array($tab, ['aktif', 'riwayat'], true)) {
+            $tab = 'aktif';
+        }
+
+        $activeStatuses = [
+            PurchaseRequestStatus::PENDING_MATCH->value,
+            PurchaseRequestStatus::FAILED_MATCH_FALLBACK->value,
+        ];
+        $historyStatuses = [
+            PurchaseRequestStatus::MATCHED->value,
+            PurchaseRequestStatus::ORDERED->value,
+            PurchaseRequestStatus::CANCELLED->value,
+            PurchaseRequestStatus::FAILED_MATCH_FALLBACK->value,
+        ];
+
         $requests = PurchaseRequest::with('product.category', 'matchingGroup', 'preferredDistributor')
             ->where('umkm_id', $umkm->id)
-            ->latest()
-            ->paginate(10);
+            ->when($tab === 'aktif', fn ($query) => $query->whereIn('status', $activeStatuses))
+            ->when($tab === 'riwayat', fn ($query) => $query->whereIn('status', $historyStatuses))
+            ->orderByDesc('updated_at')
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('umkm.requests.index', compact('requests', 'umkm'));
+        return view('umkm.requests.index', compact('requests', 'umkm', 'tab'));
     }
 
     public function store(StorePurchaseRequest $request, MatchingEngineService $matchingEngine): RedirectResponse

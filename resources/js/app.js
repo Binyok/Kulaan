@@ -2,6 +2,50 @@ import './bootstrap';
 import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
+
+// Global confirmation dialog. Triggers call window.kulaanConfirm({...}); the
+// <x-layouts.*> confirm modal listens for the event on window, so the dialog
+// opens regardless of when or where the trigger button was rendered. Defining
+// the trigger here (rather than inside an Alpine init()) removes any ordering
+// dependency between page markup and the modal component.
+window.kulaanConfirm = (options = {}) => {
+    window.dispatchEvent(new CustomEvent('kulaan-confirm', { detail: options }));
+};
+
+Alpine.data('kulaanConfirmModal', () => ({
+    open: false,
+    title: '',
+    message: '',
+    confirmText: 'Ya, Lanjutkan',
+    cancelText: 'Batal',
+    isDanger: true,
+    actionFn: null,
+    init() {
+        this.handleConfirm = (event) => {
+            const detail = event.detail || {};
+            this.title = detail.title || 'Konfirmasi Tindakan';
+            this.message = detail.message || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+            this.confirmText = detail.confirmText || 'Ya, Lanjutkan';
+            this.cancelText = detail.cancelText || 'Batal';
+            this.isDanger = detail.isDanger !== false;
+            this.actionFn = typeof detail.onConfirm === 'function' ? detail.onConfirm : null;
+            this.open = true;
+        };
+        window.addEventListener('kulaan-confirm', this.handleConfirm);
+    },
+    destroy() {
+        window.removeEventListener('kulaan-confirm', this.handleConfirm);
+    },
+    proceed() {
+        this.open = false;
+        const action = this.actionFn;
+        this.actionFn = null;
+        if (typeof action === 'function') {
+            action();
+        }
+    },
+}));
+
 Alpine.start();
 
 // Scroll reveal: elements marked [data-reveal] rise + fade once they enter
@@ -73,6 +117,72 @@ document.addEventListener('click', (event) => {
     }
     showRouteProgress();
 });
+
+// Realtime auto-refresh: every authenticated page polls a cheap revision
+// fingerprint and reloads itself the instant new data lands, so nobody has to
+// hit refresh to see an incoming order, request, or shipment. Polling pauses
+// while the tab is hidden, a modal is open, or the user is mid-input, so an
+// in-progress interaction is never yanked out from under them.
+const liveEndpoint = document.querySelector('meta[name="kulaan-live-endpoint"]')?.content;
+
+if (liveEndpoint) {
+    const intervalMs = Number(document.querySelector('meta[name="kulaan-live-interval"]')?.content || 10000);
+    let baseline = null;
+
+    const isBusy = () => {
+        if (document.visibilityState !== 'visible') {
+            return true;
+        }
+        if (document.body.style.overflow === 'hidden') {
+            return true;
+        }
+        if (document.querySelector('dialog[open]')) {
+            return true;
+        }
+        const active = document.activeElement;
+        return !!active && (active.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName));
+    };
+
+    const fetchRevision = async () => {
+        try {
+            const res = await fetch(liveEndpoint, {
+                headers: { Accept: 'application/json' },
+                cache: 'no-store',
+                credentials: 'same-origin',
+            });
+            if (!res.ok) {
+                return null;
+            }
+            const data = await res.json();
+            return data?.revision ?? null;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    (async () => {
+        baseline = await fetchRevision();
+    })();
+
+    setInterval(async () => {
+        if (isBusy()) {
+            return;
+        }
+        const revision = await fetchRevision();
+        if (revision && baseline && revision !== baseline) {
+            location.reload();
+        }
+    }, intervalMs);
+
+    document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible' && !isBusy()) {
+            const revision = await fetchRevision();
+            if (revision && baseline && revision !== baseline) {
+                location.reload();
+            }
+        }
+    });
+}
 
 // Cascading region selects (province > city > district > village) backed by
 // the public emsifa wilayah API. Selections submit NAMES (matching the DB

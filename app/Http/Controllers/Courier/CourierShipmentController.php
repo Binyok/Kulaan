@@ -21,12 +21,20 @@ class CourierShipmentController extends Controller
             abort(403);
         }
 
+        $tab = $request->input('tab', 'active');
+        if (! in_array($tab, ['active', 'history'], true)) {
+            $tab = 'active';
+        }
+
         $shipments = Shipment::with('order.items.product', 'order.items.umkm', 'latestLocation')
             ->where('courier_id', $courier->id)
-            ->latest()
-            ->paginate(10);
+            ->when($tab === 'active', fn ($query) => $query->whereIn('status', ['PENDING', 'ASSIGNED_TO_COURIER', 'IN_TRANSIT']))
+            ->when($tab === 'history', fn ($query) => $query->where('status', 'DELIVERED'))
+            ->orderByDesc('updated_at')
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('kurir.shipments.index', compact('shipments', 'courier'));
+        return view('kurir.shipments.index', compact('shipments', 'courier', 'tab'));
     }
 
     public function startDelivery(Request $request, Shipment $shipment): RedirectResponse
@@ -53,6 +61,10 @@ class CourierShipmentController extends Controller
         $courier = $request->user()->courier;
         if ($shipment->courier_id !== $courier?->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        if ($shipment->status !== 'IN_TRANSIT') {
+            return response()->json(['error' => 'Pengiriman tidak sedang berjalan.'], 409);
         }
 
         $request->validate([
@@ -101,17 +113,27 @@ class CourierShipmentController extends Controller
             return back()->with('error', 'Pengiriman belum dimulai, belum bisa diselesaikan.');
         }
 
-        DB::transaction(function () use ($shipment) {
+        $request->validate([
+            'proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ], [
+            'proof.required' => 'Foto bukti pengiriman wajib diunggah sebelum menyelesaikan pengiriman.',
+            'proof.image' => 'Berkas bukti harus berupa gambar (JPG, PNG, atau WEBP).',
+        ]);
+
+        $path = $request->file('proof')->store('proofs/shipments', 'public');
+
+        DB::transaction(function () use ($shipment, $path) {
             $shipment->update([
                 'status' => 'DELIVERED',
                 'delivered_at' => now(),
+                'proof_image_path' => $path,
             ]);
 
             $shipment->order->update([
-                'status' => OrderStatus::COMPLETED->value,
+                'status' => OrderStatus::DELIVERED->value,
             ]);
         });
 
-        return back()->with('success', 'Pengiriman berhasil diselesaikan!');
+        return back()->with('success', 'Pengiriman selesai. Foto bukti terkirim ke UMKM penerima untuk dikonfirmasi.');
     }
 }

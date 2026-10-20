@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Distributor;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Courier;
+use App\Models\Distributor;
 use App\Models\Order;
 use App\Models\Shipment;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,14 +24,32 @@ class OrderManagementController extends Controller
             abort(403);
         }
 
-        $orders = Order::with('items.product', 'items.umkm', 'shipments.courier')
+        $tab = $request->input('tab', 'active');
+        if (! in_array($tab, ['active', 'history'], true)) {
+            $tab = 'active';
+        }
+
+        $orders = Order::with('items.product', 'items.umkm', 'shipments.courier.user', 'shipments.latestLocation')
             ->where('distributor_id', $distributor->id)
-            ->latest()
-            ->paginate(10);
+            ->when($tab === 'active', fn ($query) => $query->whereNotIn('status', [
+                OrderStatus::DELIVERED->value,
+                OrderStatus::COMPLETED->value,
+                OrderStatus::CANCELLED->value,
+                OrderStatus::EXPIRED->value,
+            ]))
+            ->when($tab === 'history', fn ($query) => $query->whereIn('status', [
+                OrderStatus::DELIVERED->value,
+                OrderStatus::COMPLETED->value,
+                OrderStatus::CANCELLED->value,
+                OrderStatus::EXPIRED->value,
+            ]))
+            ->orderByDesc('updated_at')
+            ->paginate(10)
+            ->withQueryString();
 
-        $couriers = Courier::where('is_available', true)->get();
+        $couriers = $this->availableCouriers($distributor)->get();
 
-        return view('distributor.orders.index', compact('orders', 'couriers', 'distributor'));
+        return view('distributor.orders.index', compact('orders', 'couriers', 'distributor', 'tab'));
     }
 
     public function updateStatus(Request $request, Order $order): RedirectResponse
@@ -83,7 +103,13 @@ class OrderManagementController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $courier = Courier::findOrFail($request->courier_id);
+        $courier = $this->availableCouriers($distributor)->whereKey($request->courier_id)->first();
+
+        if (! $courier) {
+            throw ValidationException::withMessages([
+                'courier_id' => 'Kurir yang dipilih tidak tersedia untuk distributor Anda.',
+            ]);
+        }
 
         DB::transaction(function () use ($order, $courier, $request) {
             Shipment::create([
@@ -98,5 +124,17 @@ class OrderManagementController extends Controller
         });
 
         return back()->with('success', 'Kurir '.$courier->user->name.' berhasil ditugaskan untuk pengiriman pesanan.');
+    }
+
+    /**
+     * Couriers a distributor may assign: its own fleet plus independent couriers.
+     */
+    private function availableCouriers(Distributor $distributor): Builder
+    {
+        return Courier::query()
+            ->where('is_available', true)
+            ->where(fn (Builder $query) => $query
+                ->where('distributor_id', $distributor->id)
+                ->orWhereNull('distributor_id'));
     }
 }
