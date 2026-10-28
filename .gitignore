@@ -27,3 +27,13 @@ Homestead.yaml
 Thumbs.db
 
 strix_runs/
+
+# Berkas konfigurasi lokal
+/.agents/
+/.claude/
+/.kiro/
+/AGENTS.md
+/CLAUDE.md
+/boost.json
+/.mcp.json
+/opencode.json
