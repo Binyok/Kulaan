@@ -94,7 +94,7 @@
                                 <input type="hidden" name="product_id" value="{{ $item['product_id'] }}">
                                 <input type="hidden" name="distributor_id" value="{{ $item['distributor_id'] }}">
                                 <button type="button"
-                                        @click="kulaanConfirm({
+                                        onclick="window.kulaanConfirm({
                                             title: 'Hapus dari Keranjang?',
                                             message: 'Apakah Anda yakin ingin menghapus {{ addslashes($prod->name) }} dari keranjang belanja?',
                                             confirmText: 'Ya, Hapus',
@@ -108,19 +108,27 @@
                             </form>
                         </div>
                         <div class="flex items-center justify-between mt-3">
-                            <div class="flex items-center gap-2.5 bg-cream border border-line rounded-xl p-1">
+                            <div class="flex items-center gap-1.5 bg-cream border border-line rounded-xl p-1">
                                 <button type="button"
                                         onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', -1)"
-                                        class="w-8 h-8 rounded-lg bg-white border border-line flex items-center justify-center cursor-pointer">
+                                        class="w-8 h-8 rounded-lg bg-white border border-line flex items-center justify-center cursor-pointer hover:bg-cream">
                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14"/></svg>
                                 </button>
-                                <span class="text-sm font-extrabold w-6 text-center tabular-nums"
-                                      id="qty-label-{{ $item['key'] }}">{{ $item['quantity'] == floor($item['quantity']) ? number_format($item['quantity'], 0) : number_format($item['quantity'], 1) }}</span>
+                                <input type="number"
+                                       min="1"
+                                       step="1"
+                                       value="{{ $item['quantity'] == floor($item['quantity']) ? (int) $item['quantity'] : $item['quantity'] }}"
+                                       onchange="setCartQtyDirect('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', this)"
+                                       onkeydown="if(event.key === 'Enter'){ this.blur(); }"
+                                       aria-label="Jumlah kebutuhan"
+                                       class="qty-input-{{ $item['key'] }} w-16 text-center font-extrabold text-sm bg-white border border-line rounded-md py-0.5 outline-none focus:border-forest tabular-nums"
+                                       title="Ketik jumlah kebutuhan">
                                 <button type="button"
                                         onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', 1)"
-                                        class="w-8 h-8 rounded-lg bg-forest text-white flex items-center justify-center cursor-pointer">
+                                        class="w-8 h-8 rounded-lg bg-forest text-white flex items-center justify-center cursor-pointer hover:bg-forest-dark">
                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                 </button>
+                                <span class="text-xs text-muted pr-1">{{ $prod->unit }}</span>
                             </div>
                             <div class="text-right">
                                 <p class="text-[11px] text-muted line-through tabular-nums">Rp <span id="retail-total-{{ $item['key'] }}">{{ number_format($item['retail_total'], 0, ',', '.') }}</span></p>
@@ -128,6 +136,12 @@
                                 <span class="inline-block bg-success/10 text-success text-[10px] font-extrabold px-2 py-0.5 rounded-full mt-0.5 {{ $item['savings'] > 0 ? '' : 'hidden' }}"
                                       id="savings-badge-{{ $item['key'] }}">HEMAT Rp <span id="savings-amount-{{ $item['key'] }}">{{ number_format($item['savings'], 0, ',', '.') }}</span></span>
                             </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                            <span class="text-[10px] text-muted font-bold">Tambah cepat:</span>
+                            <button type="button" onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', 10)" class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-cream hover:bg-forest/10 hover:text-forest border border-line transition cursor-pointer">+10</button>
+                            <button type="button" onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', 50)" class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-cream hover:bg-forest/10 hover:text-forest border border-line transition cursor-pointer">+50</button>
+                            <button type="button" onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', 100)" class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-cream hover:bg-forest/10 hover:text-forest border border-line transition cursor-pointer">+100</button>
                         </div>
                     </div>
                 @endforeach
@@ -277,7 +291,7 @@
                                                 <input type="hidden" name="product_id" value="{{ $item['product_id'] }}">
                                                 <input type="hidden" name="distributor_id" value="{{ $item['distributor_id'] }}">
                                                 <button type="button"
-                                                        @click="kulaanConfirm({
+                                                        onclick="window.kulaanConfirm({
                                                             title: 'Hapus dari Keranjang?',
                                                             message: 'Apakah Anda yakin ingin menghapus {{ addslashes($prod->name) }} dari keranjang belanja?',
                                                             confirmText: 'Ya, Hapus',
@@ -291,29 +305,42 @@
                                                 </button>
                                             </form>
                                         </div>
-                                        <div class="flex items-center justify-between mt-4">
-                                            <div class="flex items-center gap-3 bg-cream border border-line rounded-xl p-1">
-                                                <button type="button"
-                                                        onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', -1)"
-                                                        class="w-9 h-9 rounded-lg bg-white border border-line flex items-center justify-center cursor-pointer">
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14"/></svg>
-                                                </button>
-                                                <span class="font-extrabold w-8 text-center tabular-nums"
-                                                      id="qty-label-{{ $item['key'] }}">{{ $item['quantity'] == floor($item['quantity']) ? number_format($item['quantity'], 0) : number_format($item['quantity'], 1) }}</span>
-                                                <button type="button"
-                                                        onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', 1)"
-                                                        class="w-9 h-9 rounded-lg bg-forest text-white flex items-center justify-center cursor-pointer">
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                                                </button>
-                                                <span class="text-xs text-muted pr-2">{{ $prod->unit }}</span>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="text-xs text-muted line-through tabular-nums">Rp <span id="retail-total-{{ $item['key'] }}">{{ number_format($item['retail_total'], 0, ',', '.') }}</span></p>
-                                                <p class="text-xl font-extrabold tabular-nums">Rp <span id="subtotal-{{ $item['key'] }}">{{ number_format($item['subtotal'], 0, ',', '.') }}</span></p>
-                                                <span class="inline-block bg-success/10 text-success text-[11px] font-extrabold px-2.5 py-1 rounded-full mt-1 {{ $item['savings'] > 0 ? '' : 'hidden' }}"
-                                                      id="savings-badge-{{ $item['key'] }}">HEMAT Rp <span id="savings-amount-{{ $item['key'] }}">{{ number_format($item['savings'], 0, ',', '.') }}</span></span>
-                                            </div>
-                                        </div>
+                                         <div class="flex items-center justify-between mt-4">
+                                             <div class="flex items-center gap-2 bg-cream border border-line rounded-xl p-1">
+                                                 <button type="button"
+                                                         onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', -1)"
+                                                         class="w-9 h-9 rounded-lg bg-white border border-line flex items-center justify-center cursor-pointer hover:bg-cream">
+                                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14"/></svg>
+                                                 </button>
+                                                 <input type="number"
+                                                        min="1"
+                                                        step="1"
+                                                        value="{{ $item['quantity'] == floor($item['quantity']) ? (int) $item['quantity'] : $item['quantity'] }}"
+                                                        onchange="setCartQtyDirect('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', this)"
+                                                        onkeydown="if(event.key === 'Enter'){ this.blur(); }"
+                                                        aria-label="Jumlah kebutuhan"
+                                                        class="qty-input-{{ $item['key'] }} w-20 text-center font-extrabold text-base bg-white border border-line rounded-lg py-1 outline-none focus:border-forest tabular-nums"
+                                                        title="Ketik jumlah kebutuhan">
+                                                 <button type="button"
+                                                         onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', 1)"
+                                                         class="w-9 h-9 rounded-lg bg-forest text-white flex items-center justify-center cursor-pointer hover:bg-forest-dark">
+                                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                                 </button>
+                                                 <span class="text-xs text-muted pr-2">{{ $prod->unit }}</span>
+                                             </div>
+                                             <div class="text-right">
+                                                 <p class="text-xs text-muted line-through tabular-nums">Rp <span id="retail-total-{{ $item['key'] }}">{{ number_format($item['retail_total'], 0, ',', '.') }}</span></p>
+                                                 <p class="text-xl font-extrabold tabular-nums">Rp <span id="subtotal-{{ $item['key'] }}">{{ number_format($item['subtotal'], 0, ',', '.') }}</span></p>
+                                                 <span class="inline-block bg-success/10 text-success text-[11px] font-extrabold px-2.5 py-1 rounded-full mt-1 {{ $item['savings'] > 0 ? '' : 'hidden' }}"
+                                                       id="savings-badge-{{ $item['key'] }}">HEMAT Rp <span id="savings-amount-{{ $item['key'] }}">{{ number_format($item['savings'], 0, ',', '.') }}</span></span>
+                                             </div>
+                                         </div>
+                                         <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                                             <span class="text-[11px] text-muted font-bold">Tambah cepat:</span>
+                                             <button type="button" onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', 10)" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-cream hover:bg-forest/10 hover:text-forest border border-line transition cursor-pointer">+10</button>
+                                             <button type="button" onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', 50)" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-cream hover:bg-forest/10 hover:text-forest border border-line transition cursor-pointer">+50</button>
+                                             <button type="button" onclick="changeCartQty('{{ $item['product_id'] }}', '{{ $item['distributor_id'] }}', '{{ $item['key'] }}', 100)" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-cream hover:bg-forest/10 hover:text-forest border border-line transition cursor-pointer">+100</button>
+                                         </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -411,6 +438,27 @@
             });
         }
 
+        async function setCartQtyDirect(productId, distributorId, key, inputEl) {
+            let nextQty = parseInt(inputEl.value, 10);
+            if (isNaN(nextQty) || nextQty <= 0) {
+                if (window.kulaanConfirm) {
+                    window.kulaanConfirm({
+                        title: 'Hapus dari Keranjang?',
+                        message: 'Jumlah menjadi 0. Apakah Anda ingin menghapus item ini dari keranjang belanja?',
+                        confirmText: 'Ya, Hapus',
+                        cancelText: 'Batal',
+                        isDanger: true,
+                        onConfirm: () => performCartQtyChange(productId, distributorId, key, 0)
+                    });
+                    inputEl.value = cartCurrentQtys[key] || 1;
+                    return;
+                }
+                nextQty = 0;
+            }
+
+            await performCartQtyChange(productId, distributorId, key, nextQty);
+        }
+
         async function changeCartQty(productId, distributorId, key, delta) {
             const current = cartCurrentQtys[key] || 1;
             const nextQty = Math.max(0, Math.round(current + delta));
@@ -456,8 +504,7 @@
                 }
 
                 if (data.removed) {
-                    const card = document.getElementById(`cart-card-${key}`);
-                    if (card) card.remove();
+                    document.querySelectorAll(`[id="cart-card-${key}"]`).forEach(el => el.remove());
                     delete cartCurrentQtys[key];
                     if (data.count === 0) {
                         location.reload();
@@ -465,41 +512,55 @@
                     }
                 } else {
                     cartCurrentQtys[key] = nextQty;
-                    const qtyLabel = document.getElementById(`qty-label-${key}`);
-                    if (qtyLabel) qtyLabel.textContent = nextQty;
 
-                    const unitPriceSpan = document.getElementById(`unit-price-${key}`);
-                    if (unitPriceSpan) unitPriceSpan.textContent = formatRupiah(data.item.unit_price);
+                    document.querySelectorAll(`.qty-input-${key}`).forEach(el => {
+                        el.value = nextQty;
+                    });
 
-                    const subtotalSpan = document.getElementById(`subtotal-${key}`);
-                    if (subtotalSpan) subtotalSpan.textContent = formatRupiah(data.item.subtotal);
+                    document.querySelectorAll(`[id="qty-label-${key}"]`).forEach(el => {
+                        el.textContent = nextQty;
+                    });
 
-                    const retailTotalSpan = document.getElementById(`retail-total-${key}`);
-                    if (retailTotalSpan) retailTotalSpan.textContent = formatRupiah(data.item.retail_total);
+                    document.querySelectorAll(`[id="unit-price-${key}"]`).forEach(el => {
+                        el.textContent = formatRupiah(data.item.unit_price);
+                    });
 
-                    const tierBadge = document.getElementById(`tier-badge-${key}`);
-                    if (tierBadge && data.item.tier_label) tierBadge.textContent = data.item.tier_label;
+                    document.querySelectorAll(`[id="subtotal-${key}"]`).forEach(el => {
+                        el.textContent = formatRupiah(data.item.subtotal);
+                    });
 
-                    const savingsBadge = document.getElementById(`savings-badge-${key}`);
-                    const savingsAmountSpan = document.getElementById(`savings-amount-${key}`);
-                    if (savingsBadge && savingsAmountSpan) {
+                    document.querySelectorAll(`[id="retail-total-${key}"]`).forEach(el => {
+                        el.textContent = formatRupiah(data.item.retail_total);
+                    });
+
+                    document.querySelectorAll(`[id="tier-badge-${key}"]`).forEach(el => {
+                        if (data.item.tier_label) el.textContent = data.item.tier_label;
+                    });
+
+                    document.querySelectorAll(`[id="savings-badge-${key}"]`).forEach(badge => {
                         if (data.item.savings > 0) {
-                            savingsBadge.classList.remove('hidden');
-                            savingsAmountSpan.textContent = formatRupiah(data.item.savings);
+                            badge.classList.remove('hidden');
                         } else {
-                            savingsBadge.classList.add('hidden');
+                            badge.classList.add('hidden');
                         }
-                    }
+                    });
+
+                    document.querySelectorAll(`[id="savings-amount-${key}"]`).forEach(el => {
+                        el.textContent = formatRupiah(data.item.savings);
+                    });
                 }
 
-                const summaryCount = document.getElementById('summary-count');
-                if (summaryCount) summaryCount.textContent = data.count;
+                document.querySelectorAll('[id="summary-count"]').forEach(el => {
+                    el.textContent = data.count;
+                });
 
-                const summaryTotal = document.getElementById('summary-total');
-                if (summaryTotal) summaryTotal.textContent = formatRupiah(data.total);
+                document.querySelectorAll('[id="summary-total"]').forEach(el => {
+                    el.textContent = formatRupiah(data.total);
+                });
 
-                const summarySavings = document.getElementById('summary-savings');
-                if (summarySavings) summarySavings.textContent = formatRupiah(data.total_savings);
+                document.querySelectorAll('[id="summary-savings"]').forEach(el => {
+                    el.textContent = formatRupiah(data.total_savings);
+                });
 
                 applyMoqProgress(data.moq_progress);
 

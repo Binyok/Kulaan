@@ -34,8 +34,8 @@ class Product extends Model
     protected static function boot()
     {
         parent::boot();
-        static::creating(function ($product) {
-            if (empty($product->slug)) {
+        static::saving(function ($product) {
+            if ($product->isDirty('name') || empty($product->slug)) {
                 $product->slug = Str::slug($product->name);
             }
         });

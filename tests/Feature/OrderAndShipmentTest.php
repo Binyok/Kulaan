@@ -8,9 +8,12 @@ use App\Models\Courier;
 use App\Models\Distributor;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\PurchaseRequest;
 use App\Models\Shipment;
+use App\Models\SupplierProduct;
 use App\Models\Umkm;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -290,5 +293,91 @@ class OrderAndShipmentTest extends TestCase
         $repeat->assertRedirect(route('kurir.shipments.index'));
         $repeat->assertSessionHas('error');
         $this->assertEquals(OrderStatus::DELIVERED, $order->fresh()->status);
+    }
+
+    public function test_distributor_can_cancel_paid_order_and_process_void_refund(): void
+    {
+        $distUser = User::factory()->create();
+        $distUser->assignRole('distributor');
+        $distributor = Distributor::create(['user_id' => $distUser->id, 'company_name' => 'PT Borneo Jaya', 'address' => 'Jl. Trisakti']);
+
+        $category = ProductCategory::create(['name' => 'Sembako']);
+        $product = Product::create(['category_id' => $category->id, 'name' => 'Gula Pasir', 'unit' => 'kg', 'benchmark_retail_price' => 15000]);
+
+        $supplierProduct = SupplierProduct::create([
+            'distributor_id' => $distributor->id,
+            'product_id' => $product->id,
+            'base_retail_price' => 15000,
+            'moq' => 10,
+            'stock_available' => 50,
+            'is_active' => true,
+        ]);
+
+        $umkmUser = User::factory()->create();
+        $umkmUser->assignRole('umkm');
+        $umkm = Umkm::create(['user_id' => $umkmUser->id, 'business_name' => 'Kedai Maju', 'address' => 'Jl. A Yani']);
+
+        $req = PurchaseRequest::create([
+            'umkm_id' => $umkm->id,
+            'product_id' => $product->id,
+            'quantity' => 10,
+            'unit' => 'kg',
+            'deadline' => now()->addHours(24),
+            'urgency' => 'sedang',
+            'delivery_district' => 'Banjarmasin Tengah',
+            'delivery_address' => 'Jl. A Yani',
+            'status' => 'ORDERED',
+        ]);
+
+        $order = Order::create([
+            'distributor_id' => $distributor->id,
+            'total_amount' => 140000,
+            'total_quantity' => 10,
+            'status' => OrderStatus::PAID->value,
+        ]);
+
+        $orderItem = OrderItem::create([
+            'order_id' => $order->id,
+            'umkm_id' => $umkm->id,
+            'purchase_request_id' => $req->id,
+            'product_id' => $product->id,
+            'quantity' => 10,
+            'unit_price' => 14000,
+            'subtotal' => 140000,
+            'benchmark_retail_price' => 15000,
+            'savings_amount' => 10000,
+            'payment_status' => PaymentStatus::PAID->value,
+            'delivery_district' => 'Banjarmasin Tengah',
+            'delivery_address' => 'Jl. A Yani',
+        ]);
+
+        $payment = Payment::create([
+            'order_id' => $order->id,
+            'order_item_id' => $orderItem->id,
+            'umkm_id' => $umkm->id,
+            'amount' => 140000,
+            'payment_status' => PaymentStatus::PAID->value,
+            'payment_reference' => 'REF-CANCEL-TEST-1',
+            'paid_at' => now(),
+        ]);
+
+        $response = $this->actingAs($distUser)->post(route('distributor.orders.update-status', $order), [
+            'status' => 'CANCELLED',
+            'cancel_reason' => 'Stok mendadak rusak',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertEquals(OrderStatus::CANCELLED, $order->fresh()->status);
+        $this->assertEquals(PaymentStatus::CANCELLED, $orderItem->fresh()->payment_status);
+        $this->assertEquals(PaymentStatus::CANCELLED, $payment->fresh()->payment_status);
+        $this->assertEquals('CANCELLED', $req->fresh()->status->value);
+        $this->assertEquals(60.0, (float) $supplierProduct->fresh()->stock_available);
+
+        $this->assertDatabaseHas('payment_events', [
+            'payment_id' => $payment->id,
+            'event_type' => 'VOID_OR_REFUND_SIMULATED',
+        ]);
     }
 }

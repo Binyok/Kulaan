@@ -290,21 +290,5 @@
         </div>
     </div>
 
-    <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line px-2 pt-2 pb-5 flex items-start justify-around">
-        <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 w-14 text-forest">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m2.25 12 8.95-8.95a1.13 1.13 0 0 1 1.6 0l8.95 8.95M4.5 9.75V19.5a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75V9.75"/></svg>
-            <span class="text-[10px] font-bold">Beranda</span>
-        </a>
-        <a href="{{ route('kurir.shipments.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted relative">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 8h6M9 12h4"/></svg>
-            <span class="text-[10px] font-semibold">Tugas</span>
-            @if ($assignedShipmentsCount > 0)
-                <span class="absolute top-0 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-white text-[10px] font-bold flex items-center justify-center">{{ $assignedShipmentsCount }}</span>
-            @endif
-        </a>
-        <a href="{{ route('profile.complete') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.98 18.72a6 6 0 0 0-8.46 0M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-9.75 8.25a9 9 0 1 1 13.5 0"/></svg>
-            <span class="text-[10px] font-semibold">Akun</span>
-        </a>
-    </div>
+    <x-mobile-tab role="kurir" active="dashboard" :badges="['shipments' => $assignedShipmentsCount]" />
 </x-layouts.app>

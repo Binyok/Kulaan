@@ -4,10 +4,12 @@ namespace App\Services\Payment;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\PurchaseRequestStatus;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\PaymentEvent;
+use App\Models\SupplierProduct;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -80,17 +82,25 @@ class MidtransService
             $snapToken = 'SNAP-TOKEN-'.strtoupper(substr(md5($payment->payment_reference), 0, 16));
             $redirectUrl = 'https://app.sandbox.midtrans.com/snap/v2/vtweb/'.$snapToken;
 
-            if (config('services.midtrans.is_production', false)) {
+            if ($this->isProduction) {
                 try {
                     $response = Http::withBasicAuth($this->serverKey, '')
+                        ->timeout(15)
                         ->post($this->snapApiUrl, $payload);
 
-                    if ($response->successful()) {
-                        $snapToken = $response->json('token');
-                        $redirectUrl = $response->json('redirect_url');
+                    if (! $response->successful()) {
+                        throw new \RuntimeException('Midtrans returned HTTP '.$response->status().'.');
+                    }
+
+                    $snapToken = $response->json('token');
+                    $redirectUrl = $response->json('redirect_url');
+
+                    if (! is_string($snapToken) || $snapToken === '' || ! is_string($redirectUrl) || $redirectUrl === '') {
+                        throw new \RuntimeException('Midtrans response did not contain valid payment credentials.');
                     }
                 } catch (\Throwable $e) {
-                    Log::warning('Midtrans API unreachable, fallback to simulation mode: '.$e->getMessage());
+                    Log::error('Midtrans payment creation failed: '.$e->getMessage());
+                    throw $e;
                 }
             }
 
@@ -148,7 +158,7 @@ class MidtransService
             if (
                 in_array($transactionStatus, ['capture', 'settlement'], true)
                 && isset($payload['gross_amount'])
-                && (float) $payload['gross_amount'] !== (float) $payment->amount
+                && (int) round((float) $payload['gross_amount']) !== (int) round((float) $payment->amount)
             ) {
                 return ['status' => 'rejected', 'message' => 'Gross amount does not match invoice amount'];
             }
@@ -200,6 +210,123 @@ class MidtransService
             }
 
             return ['status' => 'pending', 'payment_status' => 'PENDING'];
+        });
+    }
+
+    /**
+     * Call Midtrans Void / Cancel API or Refund API depending on transaction state.
+     */
+    public function cancelOrRefundTransaction(Payment $payment, string $reason = 'Pembatalan pesanan'): array
+    {
+        $ref = $payment->payment_reference;
+        $baseUrl = $this->isProduction
+            ? 'https://api.midtrans.com/v2/'
+            : 'https://api.sandbox.midtrans.com/v2/';
+
+        if ($this->isProduction) {
+            try {
+                // Try Cancel / Void API first
+                $cancelUrl = $baseUrl.$ref.'/cancel';
+                $response = Http::withBasicAuth($this->serverKey, '')
+                    ->timeout(15)
+                    ->post($cancelUrl);
+
+                if ($response->successful() && in_array($response->json('status_code'), ['200', '201', '412'], true)) {
+                    PaymentEvent::create([
+                        'payment_id' => $payment->id,
+                        'event_type' => 'VOID_SUCCESS',
+                        'payload' => $response->json(),
+                    ]);
+
+                    return ['status' => 'success', 'action' => 'void', 'response' => $response->json()];
+                }
+
+                // If void is not possible (e.g. settled transaction), attempt Refund
+                $refundUrl = $baseUrl.$ref.'/refund';
+                $refundResponse = Http::withBasicAuth($this->serverKey, '')
+                    ->timeout(15)
+                    ->post($refundUrl, ['reason' => $reason]);
+
+                if ($refundResponse->successful()) {
+                    PaymentEvent::create([
+                        'payment_id' => $payment->id,
+                        'event_type' => 'REFUND_SUCCESS',
+                        'payload' => $refundResponse->json(),
+                    ]);
+
+                    return ['status' => 'success', 'action' => 'refund', 'response' => $refundResponse->json()];
+                }
+
+                Log::warning('Midtrans cancel/refund failed for payment '.$ref.': '.$refundResponse->body());
+            } catch (\Throwable $e) {
+                Log::error('Midtrans cancelOrRefundTransaction exception: '.$e->getMessage());
+            }
+        }
+
+        // Mock / Development sandbox fallback
+        $mockPayload = [
+            'status_code' => '200',
+            'status_message' => 'Success, transaction is canceled/refunded (mocked)',
+            'transaction_id' => $payment->transaction_id ?? 'TRX-MOCK-'.strtoupper(substr(md5($ref), 0, 8)),
+            'order_id' => $ref,
+            'reason' => $reason,
+        ];
+
+        PaymentEvent::create([
+            'payment_id' => $payment->id,
+            'event_type' => 'VOID_OR_REFUND_SIMULATED',
+            'payload' => $mockPayload,
+        ]);
+
+        return ['status' => 'success', 'action' => 'simulated_void', 'response' => $mockPayload];
+    }
+
+    /**
+     * Cancel an order (including paid orders), void/refund payments with Midtrans,
+     * restore supplier product stock, and update associated purchase requests.
+     */
+    public function cancelPaidOrder(Order $order, string $reason = 'Pembatalan oleh distributor'): void
+    {
+        DB::transaction(function () use ($order, $reason) {
+            $order->load(['items.payment', 'items.purchaseRequest', 'matchingGroup']);
+
+            $productId = $order->matchingGroup?->product_id ?? $order->items->first()?->product_id;
+
+            foreach ($order->items as $item) {
+                if ($item->payment) {
+                    if ($item->payment_status === PaymentStatus::PAID) {
+                        $this->cancelOrRefundTransaction($item->payment, $reason);
+                    }
+                    $item->payment->update([
+                        'payment_status' => PaymentStatus::CANCELLED->value,
+                    ]);
+                }
+
+                $item->update([
+                    'payment_status' => PaymentStatus::CANCELLED->value,
+                ]);
+
+                if ($item->purchaseRequest) {
+                    $item->purchaseRequest->update([
+                        'status' => PurchaseRequestStatus::CANCELLED->value,
+                    ]);
+                }
+            }
+
+            // Restore supplier product stock if deducted
+            if ($productId) {
+                $supplierProduct = SupplierProduct::where('distributor_id', $order->distributor_id)
+                    ->where('product_id', $productId)
+                    ->first();
+
+                if ($supplierProduct && $supplierProduct->stock_available !== null && $order->total_quantity > 0) {
+                    $supplierProduct->increment('stock_available', (float) $order->total_quantity);
+                }
+            }
+
+            $order->update([
+                'status' => OrderStatus::CANCELLED->value,
+            ]);
         });
     }
 }

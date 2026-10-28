@@ -82,24 +82,44 @@ class PurchaseRequestController extends Controller
         // Proactively trigger matching check for compatible pending requests
         $matchingEngine->processMatchingForProduct($product->id);
 
+        $distributorName = $purchaseRequest->preferredDistributor?->company_name ?? 'Distributor';
+
         return redirect()->route('umkm.requests.index')
-            ->with('success', 'Pengajuan kebutuhan '.$product->name.' ke '.$purchaseRequest->preferredDistributor->company_name.' berhasil dibuat. Sistem sedang mengumpulkan kuota dari UMKM lain.');
+            ->with('success', 'Pengajuan kebutuhan '.$product->name.' ke '.$distributorName.' berhasil dibuat. Sistem sedang mengumpulkan kuota dari UMKM lain.');
     }
 
     public function cancel(Request $request, PurchaseRequest $purchaseRequest): RedirectResponse
     {
         $umkm = $request->user()->umkm;
-        if ($purchaseRequest->umkm_id !== $umkm->id) {
+        if (! $umkm || $purchaseRequest->umkm_id !== $umkm->id) {
             abort(403);
         }
 
-        if ($purchaseRequest->status !== PurchaseRequestStatus::PENDING_MATCH) {
-            return back()->with('error', 'Hanya pengajuan dengan status pencarian matching yang dapat dibatalkan.');
+        if (! in_array($purchaseRequest->status, [PurchaseRequestStatus::PENDING_MATCH, PurchaseRequestStatus::FAILED_MATCH_FALLBACK], true)) {
+            return back()->with('error', 'Pengajuan ini tidak dapat dibatalkan.');
         }
 
-        $purchaseRequest->update([
-            'status' => PurchaseRequestStatus::CANCELLED->value,
-        ]);
+        DB::transaction(function () use ($purchaseRequest) {
+            $purchaseRequest->update([
+                'status' => PurchaseRequestStatus::CANCELLED->value,
+            ]);
+
+            if ($purchaseRequest->matching_group_id) {
+                $group = MatchingGroup::find($purchaseRequest->matching_group_id);
+                if ($group && $group->status === MatchingGroupStatus::PENDING) {
+                    MatchingMember::where('matching_group_id', $group->id)
+                        ->where('purchase_request_id', $purchaseRequest->id)
+                        ->delete();
+
+                    $newTotal = (float) MatchingMember::where('matching_group_id', $group->id)->sum('quantity');
+                    if ($newTotal <= 0) {
+                        $group->delete();
+                    } else {
+                        $group->update(['total_quantity' => $newTotal]);
+                    }
+                }
+            }
+        });
 
         return back()->with('success', 'Pengajuan kebutuhan berhasil dibatalkan.');
     }

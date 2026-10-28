@@ -219,15 +219,23 @@
                                     <button type="button" @click="dec({{ $d->id }})" class="w-9 h-9 rounded-xl bg-white border border-line flex items-center justify-center text-ink cursor-pointer">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14"/></svg>
                                     </button>
-                                    <input type="number" x-model.number="quantities[{{ $d->id }}]" @input="normalizeQty({{ $d->id }})" min="1" step="1" :max="maxQty" class="w-14 text-center font-extrabold text-base bg-transparent outline-none tnum">
+                                    <input type="number" x-model.number="quantities[{{ $d->id }}]" @change="normalizeQty({{ $d->id }})" @blur="normalizeQty({{ $d->id }})" min="1" step="1" :max="maxQty" aria-label="Jumlah kebutuhan" class="w-20 text-center font-extrabold text-base bg-transparent outline-none tnum">
                                     <button type="button" @click="inc({{ $d->id }})" class="w-9 h-9 rounded-xl bg-forest text-white flex items-center justify-center cursor-pointer">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                     </button>
                                 </div>
-                                <div class="text-right shrink-0">
+                                 <div class="text-right shrink-0">
                                     <p class="text-[11px] text-muted">Harga <span class="font-semibold">(estimasi)</span></p>
                                     <p class="text-xl font-extrabold text-ink tnum whitespace-nowrap">Rp <span x-text="formatNumber(getPrice({{ $d->id }}))">{{ number_format($offer['unit_price'], 0, ',', '.') }}</span><span class="text-xs font-semibold text-muted">/{{ $product->unit }}</span></p>
                                 </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 mt-2.5 flex-wrap text-[11px]">
+                                <span class="text-muted font-bold">Pintasan:</span>
+                                <button type="button" @click="addQty({{ $d->id }}, 10)" class="font-bold px-2 py-0.5 rounded-lg bg-white border border-line hover:border-forest text-ink transition cursor-pointer">+10</button>
+                                <button type="button" @click="addQty({{ $d->id }}, 50)" class="font-bold px-2 py-0.5 rounded-lg bg-white border border-line hover:border-forest text-ink transition cursor-pointer">+50</button>
+                                <button type="button" @click="addQty({{ $d->id }}, 100)" class="font-bold px-2 py-0.5 rounded-lg bg-white border border-line hover:border-forest text-ink transition cursor-pointer">+100</button>
+                                <button type="button" @click="setDirectQty({{ $d->id }}, 100)" class="font-bold px-2 py-0.5 rounded-lg bg-forest/10 text-forest border border-forest/20 hover:bg-forest hover:text-white transition cursor-pointer">100 {{ $product->unit }}</button>
+                                <button type="button" @click="setDirectQty({{ $d->id }}, 500)" class="font-bold px-2 py-0.5 rounded-lg bg-forest/10 text-forest border border-forest/20 hover:bg-forest hover:text-white transition cursor-pointer">500 {{ $product->unit }}</button>
                             </div>
                             <div class="flex items-center justify-between mt-2 text-[11px]">
                                 <span class="text-muted">Subtotal kebutuhan</span>
@@ -473,7 +481,7 @@
                                                     <button type="button" @click="dec({{ $d->id }})" class="w-10 h-10 rounded-xl bg-white border border-line flex items-center justify-center text-ink cursor-pointer">
                                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14"/></svg>
                                                     </button>
-                                                    <input type="number" x-model.number="quantities[{{ $d->id }}]" @input="normalizeQty({{ $d->id }})" min="1" step="1" :max="maxQty" class="w-16 text-center font-extrabold text-lg bg-transparent outline-none tnum">
+                                                    <input type="number" x-model.number="quantities[{{ $d->id }}]" @change="normalizeQty({{ $d->id }})" @blur="normalizeQty({{ $d->id }})" min="1" step="1" :max="maxQty" aria-label="Jumlah kebutuhan" class="w-24 text-center font-extrabold text-lg bg-transparent outline-none tnum">
                                                     <button type="button" @click="inc({{ $d->id }})" class="w-10 h-10 rounded-xl bg-forest text-white flex items-center justify-center cursor-pointer">
                                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                                     </button>
@@ -482,6 +490,14 @@
                                                     <p class="text-[11px] text-muted">Harga <span class="font-semibold">(estimasi)</span></p>
                                                     <p class="text-xl font-extrabold text-ink tnum whitespace-nowrap">Rp <span x-text="formatNumber(getPrice({{ $d->id }}))">{{ number_format($offer['unit_price'], 0, ',', '.') }}</span><span class="text-xs font-semibold text-muted">/{{ $product->unit }}</span></p>
                                                 </div>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 mt-2.5 flex-wrap text-[11px]">
+                                                <span class="text-muted font-bold">Pintasan:</span>
+                                                <button type="button" @click="addQty({{ $d->id }}, 10)" class="font-bold px-2 py-0.5 rounded-lg bg-white border border-line hover:border-forest text-ink transition cursor-pointer">+10</button>
+                                                <button type="button" @click="addQty({{ $d->id }}, 50)" class="font-bold px-2 py-0.5 rounded-lg bg-white border border-line hover:border-forest text-ink transition cursor-pointer">+50</button>
+                                                <button type="button" @click="addQty({{ $d->id }}, 100)" class="font-bold px-2 py-0.5 rounded-lg bg-white border border-line hover:border-forest text-ink transition cursor-pointer">+100</button>
+                                                <button type="button" @click="setDirectQty({{ $d->id }}, 100)" class="font-bold px-2 py-0.5 rounded-lg bg-forest/10 text-forest border border-forest/20 hover:bg-forest hover:text-white transition cursor-pointer">100 {{ $product->unit }}</button>
+                                                <button type="button" @click="setDirectQty({{ $d->id }}, 500)" class="font-bold px-2 py-0.5 rounded-lg bg-forest/10 text-forest border border-forest/20 hover:bg-forest hover:text-white transition cursor-pointer">500 {{ $product->unit }}</button>
                                             </div>
                                             <div class="flex items-center justify-between mt-2 text-[11px]">
                                                 <span class="text-muted">Subtotal kebutuhan</span>
@@ -574,19 +590,25 @@
 
                 getQty(distId) {
                     const val = parseInt(this.quantities[distId], 10);
-                    return isNaN(val) || val < 1 ? 1 : Math.min(val, this.maxQty);
+                    return isNaN(val) || val < 1 ? 1 : (this.maxQty > 0 ? Math.min(val, this.maxQty) : val);
                 },
                 setQty(distId, val) {
                     let parsed = parseInt(val, 10);
                     if (isNaN(parsed) || parsed < 1) parsed = 1;
-                    if (parsed > this.maxQty) parsed = this.maxQty;
+                    if (this.maxQty > 0 && parsed > this.maxQty) parsed = this.maxQty;
                     this.quantities[distId] = parsed;
                 },
-                inc(distId) {
-                    this.setQty(distId, this.getQty(distId) + 1);
+                inc(distId, step = 1) {
+                    this.setQty(distId, this.getQty(distId) + step);
                 },
-                dec(distId) {
-                    this.setQty(distId, this.getQty(distId) - 1);
+                dec(distId, step = 1) {
+                    this.setQty(distId, this.getQty(distId) - step);
+                },
+                addQty(distId, amount) {
+                    this.setQty(distId, this.getQty(distId) + amount);
+                },
+                setDirectQty(distId, amount) {
+                    this.setQty(distId, amount);
                 },
                 normalizeQty(distId) {
                     this.setQty(distId, this.quantities[distId]);

@@ -13,19 +13,34 @@
 </head>
 <body class="bg-cream text-ink min-h-screen font-sans">
     {{-- ============================ MOBILE MOCKUP (< md) ============================ --}}
-    <div class="md:hidden">
+    <div class="md:hidden overflow-x-clip">
         <!-- floating header -->
-        <div class="px-3 pt-2 sticky top-0 z-20">
-            <div class="bg-white/90 backdrop-blur border border-black/[0.05] shadow rounded-2xl h-14 px-3 flex items-center justify-between">
-                <span class="flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-xl bg-forest text-white flex items-center justify-center font-extrabold">K</span>
-                    <span class="font-extrabold text-lg tracking-tight">Kula'an</span>
-                </span>
-                @auth
-                    <a href="{{ route('dashboard') }}" class="text-[0.6875rem] py-2 px-3.5 font-bold bg-forest text-white rounded-xl">Dashboard</a>
-                @else
-                    <a href="{{ route('register') }}" class="text-[0.6875rem] py-2 px-3.5 font-bold bg-forest text-white rounded-xl">Daftar</a>
-                @endauth
+        <div class="px-3 pt-2 sticky top-0 z-20" x-data="{ menuOpen: false }">
+            <div class="bg-white/90 backdrop-blur border border-black/[0.05] shadow rounded-2xl">
+                <div class="h-14 px-2.5 flex items-center justify-between gap-2">
+                    <span class="flex items-center gap-2 min-w-0">
+                        <span class="w-8 h-8 shrink-0 rounded-xl bg-forest text-white flex items-center justify-center font-extrabold">K</span>
+                        <span class="font-extrabold text-base tracking-tight truncate">Kula'an</span>
+                    </span>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        @auth
+                            <a href="{{ route('dashboard') }}" class="text-[0.6875rem] py-2 px-3 font-bold bg-forest text-white rounded-xl whitespace-nowrap">Dashboard</a>
+                        @else
+                            <a href="{{ route('login') }}" class="text-[0.6875rem] py-2 px-3 font-bold text-ink border border-line rounded-xl whitespace-nowrap">Masuk</a>
+                            <a href="{{ route('register') }}" class="text-[0.6875rem] py-2 px-3 font-bold bg-forest text-white rounded-xl whitespace-nowrap">Daftar</a>
+                        @endauth
+                        <button type="button" @click="menuOpen = !menuOpen" class="w-8 h-8 shrink-0 inline-flex items-center justify-center rounded-xl text-ink hover:bg-black/[0.04]" :aria-expanded="menuOpen ? 'true' : 'false'" aria-label="Buka menu navigasi">
+                            <svg x-show="!menuOpen" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+                            <svg x-show="menuOpen" x-cloak class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <nav x-show="menuOpen" x-cloak class="border-t border-black/[0.05] p-2">
+                    <a href="#cara-kerja-mobile" @click="menuOpen = false" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-medium text-muted hover:bg-black/[0.03] hover:text-ink">Cara Kerja</a>
+                    <a href="#kalkulator" @click="menuOpen = false" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-medium text-muted hover:bg-black/[0.03] hover:text-ink">Simulasi Hemat</a>
+                    <a href="#katalog-mobile" @click="menuOpen = false" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-medium text-muted hover:bg-black/[0.03] hover:text-ink">Katalog Bahan</a>
+                    <a href="#spk-mobile" @click="menuOpen = false" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-medium text-muted hover:bg-black/[0.03] hover:text-ink">Metode SPK</a>
+                </nav>
             </div>
         </div>
 
@@ -117,7 +132,7 @@
         </div>
 
         <!-- cara kerja -->
-        <div class="px-4 pb-10">
+        <div id="cara-kerja-mobile" class="px-4 pb-10">
             <span class="eyebrow">Alur Sistem</span>
             <h2 class="font-extrabold tracking-tight text-2xl leading-[1.15] mt-3">Bagaimana Kula'an bekerja</h2>
             <ol class="mt-5 border-t border-forest/15">
@@ -141,7 +156,7 @@
         </div>
 
         <!-- katalog preview -->
-        <div class="px-4 pb-10">
+        <div id="katalog-mobile" class="px-4 pb-10">
             <span class="eyebrow">Katalog Pilihan</span>
             <h2 class="font-extrabold tracking-tight text-2xl leading-[1.15] mt-3">Bahan baku siap pengadaan</h2>
             <div class="grid grid-cols-2 gap-3 mt-5">
@@ -158,7 +173,7 @@
         </div>
 
         <!-- SPK panel -->
-        <div class="px-4 pb-10">
+        <div id="spk-mobile" class="px-4 pb-10">
             <div class="texture-grain bg-forest rounded-3xl p-6">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.5625rem] font-bold bg-white/10 text-white uppercase tracking-[0.14em]">Metodologi Multi-Kriteria</span>
                 <h2 class="font-extrabold text-white tracking-tight text-2xl leading-[1.15] mt-4">Keputusan adil &amp; transparan melalui AHP + TOPSIS</h2>

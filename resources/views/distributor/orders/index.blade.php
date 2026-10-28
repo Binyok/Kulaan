@@ -1,7 +1,7 @@
 <x-layouts.app>
     <x-slot name="title">Kelola Pesanan Kolektif</x-slot>
 
-    <div x-data="{ openCourierModal: false, selectedOrder: null, openDetailModal: false, selectedDetail: null }">
+    <div x-data="{ openCourierModal: false, selectedOrder: null, openDetailModal: false, selectedDetail: null, openCancelModal: false }">
 
         <div class="lg:hidden bg-cream min-h-screen">
             <div class="pb-24">
@@ -146,7 +146,10 @@
                                 @else
                                     <span class="block text-center text-xs text-muted py-2">Tidak ada aksi</span>
                                 @endif
-                                <button type="button" @click="selectedDetail = {{ json_encode($order) }}; openDetailModal = true" class="mt-2 w-full text-center text-xs font-bold text-forest border border-line rounded-2xl py-2.5 cursor-pointer">Lihat Detail</button>
+                                 @if (in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING', 'READY_TO_SHIP'], true))
+                                     <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCancelModal = true" class="mt-2 w-full text-center text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 rounded-2xl py-2.5 transition cursor-pointer">Batalkan Pesanan</button>
+                                 @endif
+                                 <button type="button" @click="selectedDetail = {{ json_encode($order) }}; openDetailModal = true" class="mt-2 w-full text-center text-xs font-bold text-forest border border-line rounded-2xl py-2.5 cursor-pointer">Lihat Detail</button>
                             </div>
                         </article>
                     @empty
@@ -166,24 +169,7 @@
                 </div>
             </div>
 
-            <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line px-2 pt-2 pb-5 flex items-start justify-around">
-                <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m2.25 12 8.95-8.95a1.13 1.13 0 0 1 1.6 0l8.95 8.95M4.5 9.75V19.5a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75V9.75"/></svg>
-                    <span class="text-[10px] font-semibold">Beranda</span>
-                </a>
-                <a href="{{ route('distributor.products.index') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
-                    <span class="text-[10px] font-semibold">Katalog</span>
-                </a>
-                <a href="{{ route('distributor.orders.index') }}" class="flex flex-col items-center gap-1 w-14 text-forest">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 17h6m-5 4h4M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 8h6M9 12h4"/></svg>
-                    <span class="text-[10px] font-bold">Pesanan</span>
-                </a>
-                <a href="{{ route('profile.complete') }}" class="flex flex-col items-center gap-1 w-14 text-muted">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.98 18.72a6 6 0 0 0-8.46 0M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-9.75 8.25a9 9 0 1 1 13.5 0"/></svg>
-                    <span class="text-[10px] font-semibold">Akun</span>
-                </a>
-            </div>
+            <x-mobile-tab role="distributor" active="orders" />
         </div>
 
         <div class="hidden lg:flex min-h-screen">
@@ -361,7 +347,10 @@
                                     @else
                                         <span class="text-xs text-muted">Tidak ada aksi</span>
                                     @endif
-                                    <button type="button" @click="selectedDetail = {{ json_encode($order) }}; openDetailModal = true" class="mt-2 text-center text-xs font-bold text-forest border border-line rounded-2xl px-6 py-2.5 cursor-pointer">Lihat Detail</button>
+                                     @if (in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING', 'READY_TO_SHIP'], true))
+                                         <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCancelModal = true" class="mt-2 text-center text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 rounded-2xl px-6 py-2.5 transition cursor-pointer">Batalkan Pesanan</button>
+                                     @endif
+                                     <button type="button" @click="selectedDetail = {{ json_encode($order) }}; openDetailModal = true" class="mt-2 text-center text-xs font-bold text-forest border border-line rounded-2xl px-6 py-2.5 cursor-pointer">Lihat Detail</button>
                                 </div>
                             </article>
                         @empty
@@ -459,6 +448,28 @@
                         <button type="button" @click="openDetailModal = false" class="btn-ghost text-sm py-3 px-6">Tutup</button>
                     </div>
                 </div>
+            </template>
+        </x-modal>
+
+        <x-modal open="openCancelModal" size="sm"
+                 eyebrow="Konfirmasi Pembatalan"
+                 title="Batalkan Pesanan & Process Void/Refund">
+            <template x-if="selectedOrder">
+                <form :action="`/distributor/orders/${selectedOrder.id}/status`" method="POST" class="pt-5 space-y-4">
+                    @csrf
+                    <input type="hidden" name="status" value="CANCELLED">
+                    <p class="text-xs text-muted leading-relaxed">
+                        Apakah Anda yakin ingin membatalkan pesanan kolektif <span class="font-bold text-ink" x-text="selectedOrder.order_number"></span>? Pembayaran UMKM terkait akan secara otomatis diajukan Void/Refund ke gateway Midtrans dan stok produk akan dikembalikan.
+                    </p>
+                    <fieldset>
+                        <label for="cancel_reason" class="block text-xs font-bold mb-1">Alasan Pembatalan <span class="text-muted font-normal">(opsional)</span></label>
+                        <input type="text" name="cancel_reason" id="cancel_reason" placeholder="Contoh: Stok bahan baku habis / Kendala operasional" class="w-full bg-cream border border-line rounded-2xl px-4 py-3 text-xs outline-none focus:border-danger">
+                    </fieldset>
+                    <div class="flex items-center gap-3 pt-3">
+                        <button type="button" @click="openCancelModal = false" class="flex-1 border border-line text-muted text-xs font-bold py-3 rounded-2xl cursor-pointer">Batal</button>
+                        <button type="submit" class="flex-1 bg-danger hover:bg-danger/90 text-white text-xs font-bold py-3 rounded-2xl shadow-sm cursor-pointer transition">Ya, Batalkan Pesanan</button>
+                    </div>
+                </form>
             </template>
         </x-modal>
     </div>

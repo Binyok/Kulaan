@@ -8,6 +8,7 @@ use App\Models\Courier;
 use App\Models\Distributor;
 use App\Models\Order;
 use App\Models\Shipment;
+use App\Services\Payment\MidtransService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,10 @@ use Illuminate\View\View;
 
 class OrderManagementController extends Controller
 {
+    public function __construct(
+        private MidtransService $midtransService,
+    ) {}
+
     public function index(Request $request): View
     {
         $distributor = $request->user()->distributor;
@@ -61,6 +66,7 @@ class OrderManagementController extends Controller
 
         $request->validate([
             'status' => ['required', 'string', 'in:CONFIRMED,PREPARING,READY_TO_SHIP,CANCELLED'],
+            'cancel_reason' => ['nullable', 'string', 'max:255'],
         ]);
 
         $transitions = [
@@ -76,6 +82,13 @@ class OrderManagementController extends Controller
             throw ValidationException::withMessages([
                 'status' => 'Transisi status dari '.$order->status->label().' ke '.OrderStatus::from($request->status)->label().' tidak diizinkan.',
             ]);
+        }
+
+        if ($request->status === 'CANCELLED') {
+            $reason = $request->input('cancel_reason') ?: 'Dibatalkan oleh distributor';
+            $this->midtransService->cancelPaidOrder($order, $reason);
+
+            return back()->with('success', 'Pesanan berhasil dibatalkan dan transaksi pembayaran telah diproses untuk void/refund.');
         }
 
         $order->update(['status' => $request->status]);
@@ -119,6 +132,8 @@ class OrderManagementController extends Controller
                 'estimated_arrival_at' => now()->addHours(2),
                 'notes' => $request->notes,
             ]);
+
+            $courier->update(['is_available' => false]);
 
             $order->update(['status' => OrderStatus::ASSIGNED_TO_COURIER->value]);
         });

@@ -136,7 +136,7 @@
                             <form method="POST" action="{{ route('umkm.requests.cancel', $req) }}" id="cancel-form-m-{{ $req->id }}" class="shrink-0">
                                 @csrf
                                 <button type="button"
-                                                        @click="window.kulaanConfirm({
+                                        onclick="window.kulaanConfirm({
                                             title: 'Batalkan Pengajuan?',
                                             message: 'Apakah Anda yakin ingin membatalkan pengajuan {{ addslashes($req->product->name) }} ini? Kuota Anda akan ditarik dari grup pengadaan.',
                                             confirmText: 'Ya, Batalkan',
@@ -177,6 +177,21 @@
                                     <button type="submit" class="w-full bg-white border-2 border-forest text-forest text-xs font-bold py-3 rounded-2xl cursor-pointer">Ulangi Matching</button>
                                 </form>
                             </div>
+                            <form method="POST" action="{{ route('umkm.requests.cancel', $req) }}" id="cancel-form-fb-m-{{ $req->id }}" class="mt-2 text-center">
+                                @csrf
+                                <button type="button"
+                                        onclick="window.kulaanConfirm({
+                                            title: 'Batalkan Pengajuan?',
+                                            message: 'Apakah Anda yakin ingin membatalkan pengajuan {{ addslashes($req->product->name) }} ini?',
+                                            confirmText: 'Ya, Batalkan',
+                                            cancelText: 'Kembali',
+                                            isDanger: true,
+                                            onConfirm: () => document.getElementById('cancel-form-fb-m-{{ $req->id }}').submit()
+                                        })"
+                                        class="text-xs font-bold text-danger py-1 px-2 cursor-pointer">
+                                    Batalkan Pengajuan
+                                </button>
+                            </form>
                             <p class="text-[11px] text-muted mt-2.5 leading-relaxed"><span class="font-bold text-ink">Bayar Langsung:</span> bayar di harga saat ini tanpa menunggu kuota terkumpul.</p>
                         </div>
                     @endforeach
@@ -301,7 +316,7 @@
                                             <form method="POST" action="{{ route('umkm.requests.cancel', $req) }}" id="cancel-form-d-{{ $req->id }}" class="shrink-0">
                                                 @csrf
                                                 <button type="button"
-                                        @click="window.kulaanConfirm({
+                                                        onclick="window.kulaanConfirm({
                                                             title: 'Batalkan Pengajuan?',
                                                             message: 'Apakah Anda yakin ingin membatalkan pengajuan {{ addslashes($req->product->name) }} ini? Kuota Anda akan ditarik dari grup pengadaan.',
                                                             confirmText: 'Ya, Batalkan',
@@ -371,7 +386,7 @@
                                                 </div>
                                             </div>
                                             <p class="text-xs text-muted mt-3 leading-relaxed">Kuota urunan belum tercapai. Pilih langkah selanjutnya.</p>
-                                            <div class="flex flex-col gap-2 mt-3">
+                                             <div class="flex flex-col gap-2 mt-3">
                                                 <form method="POST" action="{{ route('umkm.requests.direct-buy', $req) }}">
                                                     @csrf
                                                     <button type="submit" class="w-full bg-forest text-white text-sm font-bold py-3 rounded-2xl shadow-sm cursor-pointer">Bayar Langsung</button>
@@ -379,6 +394,21 @@
                                                 <form method="POST" action="{{ route('umkm.requests.retry-matching', $req) }}">
                                                     @csrf
                                                     <button type="submit" class="w-full bg-white border-2 border-forest text-forest text-sm font-bold py-3 rounded-2xl cursor-pointer">Ulangi Matching</button>
+                                                </form>
+                                                <form method="POST" action="{{ route('umkm.requests.cancel', $req) }}" id="cancel-form-fb-d-{{ $req->id }}" class="text-center mt-1">
+                                                    @csrf
+                                                    <button type="button"
+                                                            onclick="window.kulaanConfirm({
+                                                                title: 'Batalkan Pengajuan?',
+                                                                message: 'Apakah Anda yakin ingin membatalkan pengajuan {{ addslashes($req->product->name) }} ini?',
+                                                                confirmText: 'Ya, Batalkan',
+                                                                cancelText: 'Kembali',
+                                                                isDanger: true,
+                                                                onConfirm: () => document.getElementById('cancel-form-fb-d-{{ $req->id }}').submit()
+                                                            })"
+                                                            class="text-xs font-bold text-danger py-1 px-2 cursor-pointer">
+                                                        Batalkan Pengajuan
+                                                    </button>
                                                 </form>
                                             </div>
                                             <p class="text-[11px] text-muted mt-3 leading-relaxed"><span class="font-bold text-ink">Bayar Langsung:</span> bayar di harga saat ini tanpa menunggu kuota terkumpul.</p>

@@ -28,8 +28,8 @@ class ProductCategory extends Model
     protected static function boot()
     {
         parent::boot();
-        static::creating(function ($category) {
-            if (empty($category->slug)) {
+        static::saving(function ($category) {
+            if ($category->isDirty('name') || empty($category->slug)) {
                 $category->slug = Str::slug($category->name);
             }
         });

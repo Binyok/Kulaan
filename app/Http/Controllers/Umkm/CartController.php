@@ -216,7 +216,7 @@ class CartController extends Controller
             $unpaidOrderItem = OrderItem::whereIn('purchase_request_id', $createdRequestIds)
                 ->where('umkm_id', $umkm->id)
                 ->where('payment_status', PaymentStatus::UNPAID)
-                ->latest()
+                ->oldest()
                 ->first();
         }
 

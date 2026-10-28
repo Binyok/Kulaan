@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Umkm;
 
 use App\Http\Controllers\Controller;
+use App\Models\Courier;
 use App\Models\Shipment;
 use App\Models\Umkm;
 use Illuminate\Database\Eloquent\Builder;
@@ -120,9 +121,9 @@ class TrackingController extends Controller
             'shipment_status' => $shipment->status,
             'delivered_at' => $shipment->delivered_at?->format('H:i, d M Y'),
             'courier' => [
-                'name' => $shipment->courier?->user->name ?? 'Kurir Armada',
-                'vehicle' => $shipment->courier?->vehicle_type.' ('.$shipment->courier?->vehicle_number.')',
-                'phone' => $shipment->courier?->user->phone ?? '-',
+                'name' => $shipment->courier?->user?->name ?? 'Kurir Armada',
+                'vehicle' => $this->formatCourierVehicle($shipment->courier),
+                'phone' => $shipment->courier?->user?->phone ?? '-',
             ],
             'current_location' => $latestLocation ? [
                 'lat' => (float) $latestLocation->latitude,
@@ -138,19 +139,28 @@ class TrackingController extends Controller
     }
 
     /**
-     * Lenient YYYY-MM-DD parsing for the history date filter.
-     * Anything unparseable is ignored instead of failing validation,
-     * so a bad query string can never break the tracking page.
+     * Strict YYYY-MM-DD parsing for the history date filter.
      */
     private function cleanDate(mixed $value): ?string
     {
-        if (! is_string($value) || trim($value) === '') {
+        if (! is_string($value) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', trim($value))) {
             return null;
         }
 
-        $timestamp = strtotime($value);
+        $timestamp = strtotime(trim($value));
 
         return $timestamp === false ? null : date('Y-m-d', $timestamp);
+    }
+
+    private function formatCourierVehicle(?Courier $courier): string
+    {
+        if (! $courier || ! $courier->vehicle_type) {
+            return '-';
+        }
+
+        return $courier->vehicle_number
+            ? $courier->vehicle_type.' ('.$courier->vehicle_number.')'
+            : $courier->vehicle_type;
     }
 
     /**
@@ -182,9 +192,9 @@ class TrackingController extends Controller
         return [
             'courier_id' => $first->courier_id,
             'courier' => [
-                'name' => $first->courier?->user->name ?? 'Kurir Armada',
-                'vehicle' => $first->courier?->vehicle_type.' ('.$first->courier?->vehicle_number.')',
-                'phone' => $first->courier?->user->phone ?? '-',
+                'name' => $first->courier?->user?->name ?? 'Kurir Armada',
+                'vehicle' => $this->formatCourierVehicle($first->courier),
+                'phone' => $first->courier?->user?->phone ?? '-',
             ],
             'current_location' => $latestLocation ? [
                 'lat' => (float) $latestLocation->latitude,

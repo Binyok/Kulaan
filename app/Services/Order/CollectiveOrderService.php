@@ -43,6 +43,11 @@ class CollectiveOrderService
             $wholesaleUnitPrice = $supplierProduct->getPriceForQuantity((float) $group->total_quantity);
             $totalAmount = $wholesaleUnitPrice * (float) $group->total_quantity;
 
+            if ($supplierProduct->stock_available !== null) {
+                $newStock = max(0, (float) $supplierProduct->stock_available - (float) $group->total_quantity);
+                $supplierProduct->update(['stock_available' => $newStock]);
+            }
+
             // 3. Create Collective Order
             $order = Order::create([
                 'matching_group_id' => $group->id,

@@ -68,9 +68,9 @@ class CourierShipmentController extends Controller
         }
 
         $request->validate([
-            'latitude' => ['required', 'numeric'],
-            'longitude' => ['required', 'numeric'],
-            'speed' => ['nullable', 'numeric'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'speed' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $location = DB::transaction(function () use ($courier, $request, $shipment) {
@@ -122,16 +122,26 @@ class CourierShipmentController extends Controller
 
         $path = $request->file('proof')->store('proofs/shipments', 'public');
 
-        DB::transaction(function () use ($shipment, $path) {
+        DB::transaction(function () use ($shipment, $courier, $path) {
             $shipment->update([
                 'status' => 'DELIVERED',
                 'delivered_at' => now(),
                 'proof_image_path' => $path,
             ]);
 
-            $shipment->order->update([
-                'status' => OrderStatus::DELIVERED->value,
-            ]);
+            if ($courier) {
+                $courier->update(['is_available' => true]);
+            }
+
+            $allDelivered = $shipment->order->shipments()
+                ->where('status', '!=', 'DELIVERED')
+                ->count() === 0;
+
+            if ($allDelivered) {
+                $shipment->order->update([
+                    'status' => OrderStatus::DELIVERED->value,
+                ]);
+            }
         });
 
         return back()->with('success', 'Pengiriman selesai. Foto bukti terkirim ke UMKM penerima untuk dikonfirmasi.');

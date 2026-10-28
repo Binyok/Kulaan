@@ -41,9 +41,7 @@ class DistributorReview extends Model
         $distributor = $this->distributor;
         if ($distributor) {
             $avg = self::where('distributor_id', $distributor->id)->avg('rating');
-            if ($avg !== null) {
-                $distributor->update(['rating' => round($avg, 2)]);
-            }
+            $distributor->update(['rating' => $avg !== null ? round($avg, 2) : null]);
         }
     }
 
