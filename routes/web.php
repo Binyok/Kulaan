@@ -17,6 +17,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LiveRevisionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Public\PublicCatalogController;
 use App\Http\Controllers\Umkm\CartController;
 use App\Http\Controllers\Umkm\CatalogController;
 use App\Http\Controllers\Umkm\OrderController;
@@ -26,6 +27,10 @@ use Illuminate\Support\Facades\Route;
 
 // Public Landing Page
 Route::get('/', HomeController::class)->name('home');
+
+// Public Catalog Routes
+Route::get('jelajahi', [PublicCatalogController::class, 'index'])->name('public.catalog.index');
+Route::get('jelajahi/{product}', [PublicCatalogController::class, 'show'])->name('public.catalog.show');
 
 // Auth routes (guest only)
 Route::middleware('guest')->group(function () {
