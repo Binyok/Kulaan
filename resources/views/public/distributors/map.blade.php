@@ -13,7 +13,7 @@
         <div class="mt-6 grid lg:grid-cols-[380px_1fr] gap-6 items-start">
 
             <!-- PANEL DAFTAR -->
-            <section class="bg-white border border-line rounded-3xl p-5 shadow-xs">
+            <section class="order-2 lg:order-1 bg-white border border-line rounded-3xl p-5 shadow-xs">
                 <div class="flex items-center gap-2.5 bg-cream border border-line rounded-xl px-3.5 py-3 focus-within:border-forest">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6B60" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
                     <input type="text" id="searchInput" placeholder="Cari distributor..." class="bg-transparent outline-none w-full text-xs sm:text-sm placeholder:text-muted/70">

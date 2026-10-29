@@ -69,7 +69,7 @@
         <section class="mt-6 grid lg:grid-cols-[260px_1fr] gap-6 items-start">
 
             <!-- SIDEBAR FILTER -->
-            <aside class="bg-white border border-line rounded-3xl p-5 lg:sticky lg:top-24 shadow-xs">
+            <aside class="hidden lg:block bg-white border border-line rounded-3xl p-5 lg:sticky lg:top-24 shadow-xs">
                 <h2 class="font-extrabold flex items-center gap-2 text-ink">
                     <svg class="w-5 h-5 text-forest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h3.75"/></svg>Filter
                 </h2>
