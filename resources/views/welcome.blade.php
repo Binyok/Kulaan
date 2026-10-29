@@ -39,10 +39,10 @@
                     </div>
                 </div>
                 <nav x-show="menuOpen" x-cloak class="border-t border-black/[0.05] p-2">
+                    <a href="{{ route('public.catalog.index') }}" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-bold text-forest hover:bg-black/[0.03]">Jelajahi Produk</a>
+                    <a href="{{ route('public.distributors.map') }}" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-bold text-forest hover:bg-black/[0.03]">Peta Distributor</a>
                     <a href="#cara-kerja-mobile" @click="menuOpen = false" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-medium text-muted hover:bg-black/[0.03] hover:text-ink">Cara Kerja</a>
                     <a href="#kalkulator" @click="menuOpen = false" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-medium text-muted hover:bg-black/[0.03] hover:text-ink">Simulasi Hemat</a>
-                    <a href="#katalog-mobile" @click="menuOpen = false" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-medium text-muted hover:bg-black/[0.03] hover:text-ink">Katalog Bahan</a>
-                    <a href="#spk-mobile" @click="menuOpen = false" class="block px-3 py-2.5 rounded-xl text-[0.8125rem] font-medium text-muted hover:bg-black/[0.03] hover:text-ink">Metode SPK</a>
                 </nav>
             </div>
         </div>
@@ -208,10 +208,10 @@
                             <span class="font-extrabold text-[1.375rem] tracking-tight">Kula'an</span>
                         </a>
                         <nav class="hidden md:flex items-center gap-6 text-[0.8125rem] font-medium text-muted">
+                            <a href="{{ route('public.catalog.index') }}" class="font-bold text-forest hover:underline">Jelajahi Produk</a>
+                            <a href="{{ route('public.distributors.map') }}" class="font-bold text-forest hover:underline">Peta Distributor</a>
                             <a href="#cara-kerja" class="hover:text-ink">Cara Kerja</a>
                             <a href="#kalkulator" class="hover:text-ink">Simulasi Hemat</a>
-                            <a href="#katalog" class="hover:text-ink">Katalog Bahan</a>
-                            <a href="#spk" class="hover:text-ink">Metode SPK</a>
                         </nav>
                     </div>
                     <div class="flex items-center gap-3">
