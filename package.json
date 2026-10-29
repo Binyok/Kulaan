@@ -14,6 +14,7 @@
         "vite": "^8.0.0"
     },
     "dependencies": {
+        "@hotwired/turbo": "^8.0.23",
         "alpinejs": "^3.17.4",
         "axios": "^1.20.0"
     }

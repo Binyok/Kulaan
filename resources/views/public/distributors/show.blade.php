@@ -94,13 +94,18 @@
                         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
                         <div id="miniMap" class="relative mt-4 rounded-2xl overflow-hidden border border-line z-10" style="height:200px;"></div>
                         <script>
-                            document.addEventListener('DOMContentLoaded', function() {
+                            function initMiniMap() {
+                                const container = document.getElementById('miniMap');
+                                if (!container || typeof L === 'undefined' || container.dataset.initialized) return;
+                                container.dataset.initialized = 'true';
                                 const lat = {{ (float)$distributor->latitude }};
                                 const lng = {{ (float)$distributor->longitude }};
-                                const miniMap = L.map('miniMap', { zoomControl: false, dragging: false }).setView([lat, lng], 13);
+                                const miniMap = L.map(container, { zoomControl: false, dragging: false }).setView([lat, lng], 13);
                                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);
                                 L.marker([lat, lng]).addTo(miniMap);
-                            });
+                            }
+                            document.addEventListener('turbo:load', initMiniMap);
+                            document.addEventListener('DOMContentLoaded', initMiniMap);
                         </script>
                     @else
                         <div class="mt-4 bg-cream border border-line rounded-2xl p-6 text-center text-xs text-muted">

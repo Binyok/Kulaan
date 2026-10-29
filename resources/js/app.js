@@ -1,7 +1,9 @@
 import './bootstrap';
+import * as Turbo from '@hotwired/turbo';
 import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
+window.Turbo = Turbo;
 
 // Global confirmation dialog. Triggers call window.kulaanConfirm({...}); the
 // <x-layouts.*> confirm modal listens for the event on window, so the dialog
@@ -60,9 +62,14 @@ const revealObserver = new IntersectionObserver((entries) => {
     }
 }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
 
-for (const el of document.querySelectorAll('[data-reveal]')) {
-    revealObserver.observe(el);
-}
+const initReveals = () => {
+    for (const el of document.querySelectorAll('[data-reveal]:not(.is-revealed)')) {
+        revealObserver.observe(el);
+    }
+};
+
+document.addEventListener('turbo:load', initReveals);
+document.addEventListener('DOMContentLoaded', initReveals);
 
 // Submit buttons inside <form data-loading>: lock against double-submit and
 // swap the label while the request flies. Skipped when another handler

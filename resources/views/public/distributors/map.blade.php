@@ -103,7 +103,15 @@
         const defaultLat = -8.17211;
         const defaultLng = 113.70011;
 
-        document.addEventListener('DOMContentLoaded', function() {
+        function initDistributorMap() {
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer || typeof L === 'undefined') return;
+
+            if (map) {
+                map.remove();
+                map = null;
+            }
+
             map = L.map('map').setView([defaultLat, defaultLng], 12);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -137,40 +145,49 @@
             });
 
             // Search filter JS
-            document.getElementById('searchInput').addEventListener('input', function(e) {
-                const query = e.target.value.toLowerCase();
-                rawDistributors.forEach(d => {
-                    const card = document.getElementById('card-' + d.id);
-                    if (card) {
-                        const match = d.name.toLowerCase().includes(query) || d.area.toLowerCase().includes(query) || d.categories.toLowerCase().includes(query);
-                        card.style.display = match ? 'block' : 'none';
-                    }
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const query = e.target.value.toLowerCase();
+                    rawDistributors.forEach(d => {
+                        const card = document.getElementById('card-' + d.id);
+                        if (card) {
+                            const match = d.name.toLowerCase().includes(query) || d.area.toLowerCase().includes(query) || d.categories.toLowerCase().includes(query);
+                            card.style.display = match ? 'block' : 'none';
+                        }
+                    });
                 });
-            });
+            }
 
             // Location button JS
-            document.getElementById('btnMyLocation').addEventListener('click', function() {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(pos) {
-                        userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                        
-                        if (userMarker) { map.removeLayer(userMarker); }
-                        userMarker = L.marker([userPos.lat, userPos.lng], {
-                            icon: L.divIcon({
-                                className: 'user-pin',
-                                html: '<div class="bg-brass text-white text-[10px] font-extrabold px-2 py-1 rounded-full shadow border-2 border-white">LOKASI SAYA</div>'
-                            })
-                        }).addTo(map);
+            const btnMyLocation = document.getElementById('btnMyLocation');
+            if (btnMyLocation) {
+                btnMyLocation.addEventListener('click', function() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(function(pos) {
+                            userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                            
+                            if (userMarker) { map.removeLayer(userMarker); }
+                            userMarker = L.marker([userPos.lat, userPos.lng], {
+                                icon: L.divIcon({
+                                    className: 'user-pin',
+                                    html: '<div class="bg-brass text-white text-[10px] font-extrabold px-2 py-1 rounded-full shadow border-2 border-white">LOKASI SAYA</div>'
+                                })
+                            }).addTo(map);
 
-                        map.setView([userPos.lat, userPos.lng], 13);
-                        updateDistances();
-                        document.getElementById('locationNote').innerText = 'Jarak terhitung dari posisi lokasi Anda saat ini.';
-                    }, function(err) {
-                        alert('Izin lokasi tidak diberikan atau tidak tersedia.');
-                    });
-                }
-            });
-        });
+                            map.setView([userPos.lat, userPos.lng], 13);
+                            updateDistances();
+                            document.getElementById('locationNote').innerText = 'Jarak terhitung dari posisi lokasi Anda saat ini.';
+                        }, function(err) {
+                            alert('Izin lokasi tidak diberikan atau tidak tersedia.');
+                        });
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('turbo:load', initDistributorMap);
+        document.addEventListener('DOMContentLoaded', initDistributorMap);
 
         function selectDistributor(id, panTo = true) {
             document.querySelectorAll('.dist-card').forEach(c => c.classList.remove('border-forest', 'bg-cream/40'));
