@@ -11,7 +11,7 @@
 
     @auth
         <meta name="kulaan-live-endpoint" content="{{ route('live.revision') }}">
-        <meta name="kulaan-live-interval" content="10000">
+        <meta name="kulaan-live-interval" content="30000">
     @endauth
 
     <title>{{ $title ?? "Kulaan" }} - Platform Pengadaan Kolektif</title>
