@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('business_type')->nullable(); // kuliner, kerajinan, dll.
             $table->text('address');
             $table->string('district')->nullable(); // kecamatan/area untuk matching geografi
-            $table->string('city')->default('Banjarmasin');
+            $table->string('city')->default('Kabupaten Sidoarjo');
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
             $table->timestamps();
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('company_name');
             $table->text('address');
             $table->string('district')->nullable();
-            $table->string('city')->default('Banjarmasin');
+            $table->string('city')->default('Kabupaten Sidoarjo');
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
             $table->decimal('rating', 3, 2)->default(5.00);

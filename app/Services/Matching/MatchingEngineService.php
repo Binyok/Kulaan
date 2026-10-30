@@ -76,7 +76,7 @@ class MatchingEngineService
                 $matchingGroup = MatchingGroup::create([
                     'group_code' => 'GRP-'.strtoupper(Str::random(8)),
                     'product_id' => $productId,
-                    'district' => $locked->first()->delivery_district ?? 'Banjarmasin',
+                    'district' => $locked->first()->delivery_district ?? 'Sidoarjo',
                     'total_quantity' => $totalQuantity,
                     'target_moq' => $minMoq,
                     'status' => MatchingGroupStatus::COMPLETED->value,

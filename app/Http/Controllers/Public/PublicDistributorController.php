@@ -22,9 +22,9 @@ class PublicDistributorController extends Controller
             return [
                 'id' => $d->id,
                 'name' => $d->company_name,
-                'district' => $d->district ?? 'Kaliwates',
-                'city' => $d->city ?? 'Jember',
-                'area' => ($d->district ? $d->district.', ' : '').($d->city ?? 'Jember'),
+                'district' => $d->district ?? 'Waru',
+                'city' => $d->city ?? 'Sidoarjo',
+                'area' => ($d->district ? $d->district.', ' : '').($d->city ?? 'Sidoarjo'),
                 'rating' => round((float) ($d->rating ?? 5.0), 1),
                 'review_count' => $d->reviews->count(),
                 'product_count' => $availableProducts->count(),

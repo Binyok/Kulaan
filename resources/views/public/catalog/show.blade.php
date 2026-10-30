@@ -114,7 +114,7 @@
         <!-- PENAWARAN DISTRIBUTOR -->
         <section class="mt-10">
             <h2 class="text-xl font-extrabold text-ink">Penawaran Distributor Mitra</h2>
-            <p class="text-xs sm:text-sm text-muted mt-1">Daftar distributor yang menyediakan produk ini di wilayah Jember &amp; sekitarnya.</p>
+            <p class="text-xs sm:text-sm text-muted mt-1">Daftar distributor yang menyediakan produk ini di wilayah Sidoarjo &amp; sekitarnya.</p>
 
             <div class="grid gap-4 mt-4">
                 @forelse($offers as $offer)
@@ -129,7 +129,7 @@
                                     </span>
                                 @endif
                             </div>
-                            <p class="text-xs text-muted mt-1">{{ $dist->subdistrict ?? 'Kaliwates' }}, {{ $dist->city ?? 'Jember' }}</p>
+                            <p class="text-xs text-muted mt-1">{{ $dist->district ?? 'Waru' }}, {{ $dist->city ?? 'Sidoarjo' }}</p>
                         </div>
                         <div class="flex items-center gap-4">
                             <div class="text-right">

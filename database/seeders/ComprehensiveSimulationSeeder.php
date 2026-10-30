@@ -49,7 +49,7 @@ class ComprehensiveSimulationSeeder extends Seeder
         $group1 = MatchingGroup::create([
             'group_code' => 'GRP-BERAS-COLLECTIVE-01',
             'product_id' => $productBeras->id,
-            'district' => 'Banjarmasin Utara',
+            'district' => 'Waru',
             'total_quantity' => 10.00,
             'target_moq' => 10.00,
             'status' => 'ORDERED',
@@ -192,7 +192,7 @@ class ComprehensiveSimulationSeeder extends Seeder
             'courier_id' => $courier1->id,
             'status' => 'IN_TRANSIT',
             'estimated_arrival_at' => now()->addMinutes(45),
-            'notes' => 'Pengantaran beras kolektif wilayah Banjarmasin.',
+            'notes' => 'Pengantaran beras kolektif wilayah Sidoarjo.',
         ]);
 
         $gpsTrail = [

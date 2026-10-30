@@ -99,9 +99,9 @@
         const markers = {};
         let userPos = null;
 
-        // Default center: Jember (-8.17211, 113.70011)
-        const defaultLat = -8.17211;
-        const defaultLng = 113.70011;
+        // Default center: Sidoarjo (-7.4478, 112.7183)
+        const defaultLat = -7.4478;
+        const defaultLng = 112.7183;
 
         function initDistributorMap() {
             const mapContainer = document.getElementById('map');

@@ -33,7 +33,7 @@
                     <div class="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs sm:text-sm text-muted">
                         <span class="flex items-center gap-1.5">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
-                            {{ $distributor->district ? $distributor->district.', ' : '' }}{{ $distributor->city ?? 'Jember' }}
+                            {{ $distributor->district ? $distributor->district.', ' : '' }}{{ $distributor->city ?? 'Sidoarjo' }}
                         </span>
                         <span class="flex items-center gap-1.5">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
@@ -87,7 +87,7 @@
             <div class="space-y-6">
                 <section class="bg-white border border-line rounded-3xl p-6 shadow-xs">
                     <h2 class="font-extrabold text-base text-ink">Lokasi Distributor</h2>
-                    <p class="text-xs text-muted mt-1">{{ $distributor->district ? $distributor->district.', ' : '' }}{{ $distributor->city ?? 'Jember' }}</p>
+                    <p class="text-xs text-muted mt-1">{{ $distributor->district ? $distributor->district.', ' : '' }}{{ $distributor->city ?? 'Sidoarjo' }}</p>
 
                     @if($distributor->latitude && $distributor->longitude)
                         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />

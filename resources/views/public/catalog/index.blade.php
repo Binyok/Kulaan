@@ -72,7 +72,7 @@
             <div class="flex items-end justify-between mb-4 flex-wrap gap-2">
                 <div>
                     <h2 class="text-xl font-extrabold text-ink">Semua Produk</h2>
-                    <p class="text-xs sm:text-sm text-muted mt-0.5">Menampilkan {{ $products->count() }} dari {{ $products->total() }} produk · Jember &amp; sekitarnya</p>
+                    <p class="text-xs sm:text-sm text-muted mt-0.5">Menampilkan {{ $products->count() }} dari {{ $products->total() }} produk · Sidoarjo &amp; sekitarnya</p>
                 </div>
                 <p class="text-xs text-muted">Harga berlabel <span class="font-bold text-brass">Estimasi</span></p>
             </div>
