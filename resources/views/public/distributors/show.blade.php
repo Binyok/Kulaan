@@ -53,7 +53,7 @@
                             </a>
                         @endif
                     @else
-                        <button type="button" onclick="document.getElementById('gateModal').classList.remove('hidden')" class="text-center px-6 py-3 rounded-xl bg-forest text-white font-extrabold text-xs sm:text-sm hover:bg-forest-dark shadow-xs transition cursor-pointer">
+                        <button type="button" @click="$dispatch('open-gate-modal')" onclick="window.dispatchEvent(new CustomEvent('open-gate-modal'))" class="text-center px-6 py-3 rounded-xl bg-forest text-white font-extrabold text-xs sm:text-sm hover:bg-forest-dark shadow-xs transition cursor-pointer">
                             Login untuk Memesan
                         </button>
                     @endauth

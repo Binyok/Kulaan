@@ -1,6 +1,12 @@
-<div id="gateModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" x-data="{ open: false }" x-show="open" x-cloak @keydown.escape.window="open = false">
+<div id="gateModal"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     x-data="{ open: false }"
+     x-show="open"
+     x-cloak
+     @open-gate-modal.window="open = true"
+     @keydown.escape.window="open = false">
     <div class="fixed inset-0 bg-ink/60 transition-opacity" @click="open = false"></div>
-    <div class="relative bg-white rounded-[1.75rem] max-w-md w-full p-7 shadow-2xl transform transition-all z-10">
+    <div class="relative bg-white rounded-[1.75rem] max-w-md w-full p-7 shadow-2xl transform transition-all z-10" @click.stop>
         <button type="button" @click="open = false" aria-label="Tutup" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-cream border border-line flex items-center justify-center hover:bg-line transition cursor-pointer">
             <svg class="w-4 h-4 text-ink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18 18 6M6 6l12 12"/></svg>
         </button>

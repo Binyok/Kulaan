@@ -97,11 +97,11 @@
                                 </a>
                             @endif
                         @else
-                            <button type="button" onclick="document.getElementById('gateModal').classList.remove('hidden')" class="border border-forest text-forest font-bold px-5 py-3.5 rounded-xl hover:bg-forest/5 flex items-center justify-center gap-2 cursor-pointer transition text-sm">
+                            <button type="button" @click="$dispatch('open-gate-modal')" onclick="window.dispatchEvent(new CustomEvent('open-gate-modal'))" class="border border-forest text-forest font-bold px-5 py-3.5 rounded-xl hover:bg-forest/5 flex items-center justify-center gap-2 cursor-pointer transition text-sm">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
                                 Tambah ke Keranjang
                             </button>
-                            <button type="button" onclick="document.getElementById('gateModal').classList.remove('hidden')" class="bg-forest hover:bg-forest-dark text-white font-bold px-5 py-3.5 rounded-xl cursor-pointer transition text-sm">
+                            <button type="button" @click="$dispatch('open-gate-modal')" onclick="window.dispatchEvent(new CustomEvent('open-gate-modal'))" class="bg-forest hover:bg-forest-dark text-white font-bold px-5 py-3.5 rounded-xl cursor-pointer transition text-sm">
                                 Beli Sekarang
                             </button>
                         @endauth
@@ -143,7 +143,7 @@
                                     <a href="{{ route('dashboard') }}" class="bg-forest text-white text-xs font-bold px-4 py-2.5 rounded-xl">Dashboard</a>
                                 @endif
                             @else
-                                <button type="button" onclick="document.getElementById('gateModal').classList.remove('hidden')" class="bg-forest hover:bg-forest-dark text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer transition">
+                                <button type="button" @click="$dispatch('open-gate-modal')" onclick="window.dispatchEvent(new CustomEvent('open-gate-modal'))" class="bg-forest hover:bg-forest-dark text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer transition">
                                     Pilih Distributor
                                 </button>
                             @endauth
