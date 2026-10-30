@@ -28,7 +28,33 @@ class PublicCatalogController extends Controller
             ->when($search !== '', fn ($q) => $q->where('name', 'like', '%'.$search.'%'))
             ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId));
 
-        $products = $query->orderBy('name')->paginate(12)->withQueryString();
+        match ($sort) {
+            'termurah' => $query->select('products.*')
+                ->selectSub(
+                    SupplierProduct::selectRaw('MIN(COALESCE(supplier_price_tiers.unit_price, supplier_products.base_retail_price))')
+                        ->leftJoin('supplier_price_tiers', 'supplier_price_tiers.supplier_product_id', '=', 'supplier_products.id')
+                        ->whereColumn('supplier_products.product_id', 'products.id')
+                        ->where('supplier_products.is_available', true),
+                    'min_price_tier'
+                )
+                ->orderByRaw('COALESCE(min_price_tier, benchmark_retail_price) ASC')
+                ->orderBy('name'),
+            'rating' => $query->select('products.*')
+                ->selectSub(
+                    SupplierProduct::selectRaw('MAX(distributors.rating)')
+                        ->join('distributors', 'distributors.id', '=', 'supplier_products.distributor_id')
+                        ->whereColumn('supplier_products.product_id', 'products.id')
+                        ->where('supplier_products.is_available', true),
+                    'max_distributor_rating'
+                )
+                ->orderByRaw('COALESCE(max_distributor_rating, 0) DESC')
+                ->orderBy('name'),
+            default => $query->withSum('orderItems as total_sold', 'quantity')
+                ->orderByRaw('COALESCE(total_sold, 0) DESC')
+                ->orderBy('name'),
+        };
+
+        $products = $query->paginate(12)->withQueryString();
 
         $stats = [
             'total_products' => Product::where('is_active', true)->count(),

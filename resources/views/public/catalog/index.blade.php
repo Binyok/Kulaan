@@ -15,6 +15,9 @@
                     @if($categoryId)
                         <input type="hidden" name="category" value="{{ $categoryId }}">
                     @endif
+                    @if($sort)
+                        <input type="hidden" name="sort" value="{{ $sort }}">
+                    @endif
                     <button type="submit" class="bg-forest hover:bg-forest-dark text-white text-xs sm:text-sm font-bold px-4 sm:px-6 py-2.5 rounded-xl cursor-pointer">Cari</button>
                 </form>
             </div>
@@ -53,12 +56,12 @@
 
         <!-- CHIPS KATEGORI -->
         <section class="mt-8 flex flex-wrap gap-2">
-            <a href="{{ route('public.catalog.index', array_filter(['q' => $search])) }}"
+            <a href="{{ route('public.catalog.index', array_filter(['q' => $search, 'sort' => $sort])) }}"
                class="{{ ! $categoryId ? 'bg-forest text-white' : 'bg-white border border-line text-ink hover:border-forest/40' }} text-xs sm:text-sm font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full transition">
                Semua
             </a>
             @foreach($categories as $cat)
-                <a href="{{ route('public.catalog.index', array_filter(['category' => $cat->id, 'q' => $search])) }}"
+                <a href="{{ route('public.catalog.index', array_filter(['category' => $cat->id, 'q' => $search, 'sort' => $sort])) }}"
                    class="{{ (string)$categoryId === (string)$cat->id ? 'bg-forest text-white' : 'bg-white border border-line text-ink hover:border-forest/40' }} text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full transition">
                    {{ $cat->name }}
                 </a>
@@ -69,12 +72,28 @@
         <section class="mt-6">
 
             <!-- HEADER GRID -->
-            <div class="flex items-end justify-between mb-4 flex-wrap gap-2">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <div>
                     <h2 class="text-xl font-extrabold text-ink">Semua Produk</h2>
                     <p class="text-xs sm:text-sm text-muted mt-0.5">Menampilkan {{ $products->count() }} dari {{ $products->total() }} produk · Sidoarjo &amp; sekitarnya</p>
                 </div>
-                <p class="text-xs text-muted">Harga berlabel <span class="font-bold text-brass">Estimasi</span></p>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-muted">Urutkan:</span>
+                    <div class="inline-flex bg-white border border-line rounded-2xl p-1 gap-1 text-xs font-bold shadow-xs">
+                        <a href="{{ route('public.catalog.index', array_filter(['sort' => 'laris', 'category' => $categoryId, 'q' => $search])) }}"
+                           class="px-3 py-1.5 rounded-xl transition {{ $sort === 'laris' ? 'bg-forest text-white' : 'text-muted hover:text-ink' }}">
+                           Paling Laris
+                        </a>
+                        <a href="{{ route('public.catalog.index', array_filter(['sort' => 'termurah', 'category' => $categoryId, 'q' => $search])) }}"
+                           class="px-3 py-1.5 rounded-xl transition {{ $sort === 'termurah' ? 'bg-forest text-white' : 'text-muted hover:text-ink' }}">
+                           Termurah
+                        </a>
+                        <a href="{{ route('public.catalog.index', array_filter(['sort' => 'rating', 'category' => $categoryId, 'q' => $search])) }}"
+                           class="px-3 py-1.5 rounded-xl transition {{ $sort === 'rating' ? 'bg-forest text-white' : 'text-muted hover:text-ink' }}">
+                           Rating Tertinggi
+                        </a>
+                    </div>
+                </div>
             </div>
 
             @if($products->isEmpty())
