@@ -183,6 +183,38 @@ Total 10 akun dari `RoleAndUserSeeder`. Semua akun menggunakan kata sandi: `pass
 
 ---
 
+## ⚡ Menjalankan di Produksi / Demo
+
+Untuk performa optimal saat presentasi, pengujian menyeluruh, atau deployment server:
+
+1. **Konfigurasi Environment:**
+   Pastikan pengaturan `.env` siap produksi:
+   ```env
+   APP_ENV=production
+   APP_DEBUG=false
+   ```
+
+2. **Optimasi Cache Framework & Aset:**
+   Jalankan kompilasi aset Vite dan caching konfigurasi/rute/view Laravel:
+   ```bash
+   npm run build
+   php artisan optimize
+   ```
+   *(Untuk mengembalikan mode pengembangan: `php artisan optimize:clear`)*
+
+3. **OPcache PHP:**
+   Pastikan ekstensi PHP OPcache aktif di `php.ini` (`opcache.enable=1`) untuk mengeliminasi overhead parsing skrip PHP di setiap request.
+
+4. **Catatan Lingkungan Server (Penting untuk Penilaian Kecepatan):**
+   - **Windows:** Disarankan menjalankan web server multithreaded nyata seperti **Laragon (Apache/Nginx)** atau **Laravel Herd** / **WSL2**.
+   - **PHP Built-in Server (`php artisan serve`):** Secara bawaan bersifat *single-threaded / serial* (request aset dan polling antre bergantian). Jika tetap menggunakan `php artisan serve` di lingkungan Linux/WSL2, jalankan dengan pekerja paralel:
+     ```bash
+     PHP_CLI_SERVER_WORKERS=4 php artisan serve
+     ```
+   - **Tunnel Ngrok:** Pengujian lokal melalui tunnel gratis (seperti ngrok free tier) memutar request ke server pihak ketiga di luar negeri dan dibatasi bandwidth upload lokal laptop. **Tunnel ngrok gratis bukan tolok ukur performa web.** Evaluasi performa yang valid selalu diukur langsung pada domain lokal (misal `http://kulaan.test` atau `localhost`).
+
+---
+
 ## 🧪 Menjalankan Pengujian (Testing)
 
 ```bash
