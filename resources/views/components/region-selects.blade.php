@@ -14,6 +14,8 @@
     ];
 @endphp
 
+@vite(['resources/js/region-cascade.js'])
+
 <div
     x-data="regionCascade({
         levels: {{ json_encode(array_values($fields)) }},
