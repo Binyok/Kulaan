@@ -54,14 +54,43 @@
             <h1 class="font-extrabold tracking-tight text-[2rem] leading-[1.12] mt-4">Beli bahan baku barengan, dapatkan <span class="text-forest">harga grosir</span> tanpa minimum order besar.</h1>
             <p class="text-sm text-muted leading-relaxed mt-4">Kula'an menggabungkan kebutuhan bahan baku UMKM di sekitar Anda dan mencocokkan kuantitas otomatis — dengan rekomendasi distributor <strong class="font-bold text-ink">AHP + TOPSIS</strong>.</p>
             <div class="flex flex-col gap-2.5 pt-6">
-                <a href="{{ auth()->check() ? route('dashboard') : route('register') }}" class="bg-forest text-white text-sm font-bold py-3.5 px-6 rounded-2xl text-center shadow-lg">Mulai Pengadaan Kolektif</a>
-                <a href="#kalkulator" class="border border-line bg-white text-sm font-bold py-3.5 px-6 rounded-2xl text-center">Hitung Penghematan</a>
+                <a href="{{ route('public.catalog.index') }}" class="bg-forest text-white text-sm font-bold py-3.5 px-6 rounded-2xl text-center shadow-lg">Jelajahi Produk</a>
+                <a href="{{ route('public.distributors.map') }}" class="border border-line bg-white text-ink text-sm font-bold py-3.5 px-6 rounded-2xl text-center">Peta Distributor</a>
             </div>
             <dl class="grid grid-cols-3 gap-3 pt-7 mt-7 border-t border-forest/10">
                 <div><dd class="font-extrabold text-ink text-xl leading-none">{{ number_format($stats['total_umkm'] ?? 0, 0, ',', '.') }}</dd><dt class="text-[0.625rem] text-muted mt-1 font-medium">UMKM Bergabung</dt></div>
                 <div><dd class="font-extrabold text-ink text-xl leading-none">{{ number_format($stats['total_distributor'] ?? 0, 0, ',', '.') }}</dd><dt class="text-[0.625rem] text-muted mt-1 font-medium">Distributor Terpilih</dt></div>
                 <div><dd class="font-extrabold text-brass text-xl leading-none">Hingga 28%</dd><dt class="text-[0.625rem] text-muted mt-1 font-medium">Efisiensi Biaya</dt></div>
             </dl>
+        </div>
+
+        <!-- Dashboard Pengunjung (Mobile) -->
+        <div class="px-4 pb-10">
+            <div class="bg-white rounded-3xl border border-line shadow-sm p-5">
+                <span class="eyebrow"><span class="w-1.5 h-1.5 rounded-full bg-forest"></span>Akses Terbuka</span>
+                <h2 class="font-extrabold text-xl tracking-tight text-ink mt-2">Dashboard Pengunjung</h2>
+                <p class="text-xs text-muted leading-relaxed mt-1.5">Semua data publik dapat diakses bebas tanpa login. Masuk atau daftar hanya jika ingin memesan.</p>
+                <div class="grid grid-cols-2 gap-2.5 mt-4">
+                    <a href="{{ route('public.catalog.index') }}" class="bg-cream hover:bg-line/60 border border-line rounded-2xl p-3.5 flex flex-col justify-between transition">
+                        <span class="w-8 h-8 rounded-xl bg-forest/10 text-forest flex items-center justify-center font-bold text-xs">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
+                        </span>
+                        <div class="mt-2.5">
+                            <p class="font-extrabold text-xs text-ink">Jelajahi Produk</p>
+                            <p class="text-[10px] text-muted mt-0.5">Cek harga grosir & tier</p>
+                        </div>
+                    </a>
+                    <a href="{{ route('public.distributors.map') }}" class="bg-cream hover:bg-line/60 border border-line rounded-2xl p-3.5 flex flex-col justify-between transition">
+                        <span class="w-8 h-8 rounded-xl bg-brass-soft text-brass flex items-center justify-center font-bold text-xs">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                        </span>
+                        <div class="mt-2.5">
+                            <p class="font-extrabold text-xs text-ink">Peta Distributor</p>
+                            <p class="text-[10px] text-muted mt-0.5">Mitra & radius area</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- snapshot card -->
@@ -173,7 +202,7 @@
                     </div>
                 @endforeach
             </div>
-            <a href="{{ auth()->check() ? route('dashboard') : route('register') }}" class="block text-center text-xs font-bold bg-forest text-white rounded-2xl py-3.5 mt-4">Daftar untuk Memesan</a>
+            <a href="{{ route('public.catalog.index') }}" class="block text-center text-xs font-bold bg-forest text-white rounded-2xl py-3.5 mt-4">Lihat Semua Produk</a>
         </div>
 
         <!-- SPK panel -->
@@ -235,8 +264,8 @@
                     <h1 class="font-extrabold tracking-tight text-[2.5rem] sm:text-6xl leading-[1.08] mt-5">Beli bahan baku barengan, dapatkan <span class="text-forest">harga grosir</span> tanpa minimum order besar.</h1>
                     <p class="text-base sm:text-lg text-muted max-w-xl leading-relaxed mt-5">Kula'an menggabungkan kebutuhan bahan baku pelaku UMKM di sekitar Anda, mencocokkan kuantitas secara otomatis, dan Anda yang memilih distributor terbaik berbekal rekomendasi sistem pendukung keputusan <strong class="font-bold text-ink">AHP + TOPSIS</strong>.</p>
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-7">
-                        <a href="{{ auth()->check() ? route('dashboard') : route('register') }}" class="bg-forest text-white text-sm font-bold py-3.5 px-7 rounded-2xl text-center shadow-lg hover:bg-forest-dark">Mulai Pengadaan Kolektif</a>
-                        <a href="#kalkulator" class="border border-line bg-white text-sm font-bold py-3.5 px-6 rounded-2xl text-center hover:border-forest/40">Hitung Penghematan</a>
+                        <a href="{{ route('public.catalog.index') }}" class="bg-forest text-white text-sm font-bold py-3.5 px-7 rounded-2xl text-center shadow-lg hover:bg-forest-dark">Jelajahi Produk</a>
+                        <a href="{{ route('public.distributors.map') }}" class="border border-line bg-white text-sm font-bold py-3.5 px-6 rounded-2xl text-center hover:border-forest/40">Peta Distributor</a>
                     </div>
                     <dl class="grid grid-cols-3 gap-4 pt-8 mt-8 border-t border-forest/10">
                         <div class="flex flex-col">
@@ -295,6 +324,57 @@
                             <p class="text-lg font-extrabold text-forest shrink-0">Rp 6.500 <span class="text-xs font-normal text-muted">/ kg</span></p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Pengunjung (Desktop) -->
+        <section class="py-12 px-6 lg:px-8 border-t border-forest/10">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
+                    <div>
+                        <span class="eyebrow"><span class="w-1.5 h-1.5 rounded-full bg-forest"></span>Akses Terbuka</span>
+                        <h2 class="font-extrabold tracking-tight text-3xl sm:text-[2.5rem] leading-[1.1] mt-3">Dashboard Pengunjung</h2>
+                        <p class="text-sm text-muted mt-2">Jelajahi katalog dan jaringan distributor secara transparan tanpa perlu mendaftar terlebih dahulu.</p>
+                    </div>
+                </div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <a href="{{ route('public.catalog.index') }}" class="bg-white rounded-3xl border border-line p-6 hover:border-forest/40 hover:shadow-lg transition flex flex-col justify-between">
+                        <span class="w-12 h-12 rounded-2xl bg-forest/10 text-forest flex items-center justify-center">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.25 7.5l-.63 10.63a2.25 2.25 0 0 1-2.25 2.12H6.63a2.25 2.25 0 0 1-2.25-2.12L3.75 7.5M10 11.25h4M3.38 7.5h17.25c.62 0 1.12-.5 1.12-1.12v-1.5C21.75 4.26 21.25 3.75 20.63 3.75H3.38c-.62 0-1.13.5-1.13 1.12v1.5c0 .63.5 1.13 1.12 1.13Z"/></svg>
+                        </span>
+                        <div class="mt-4">
+                            <h3 class="font-extrabold text-base text-ink">Jelajahi Produk</h3>
+                            <p class="text-xs text-muted leading-relaxed mt-1">Lihat komoditas sembako dan harga grosir estimasi bebas tanpa akun.</p>
+                        </div>
+                    </a>
+                    <a href="{{ route('public.distributors.map') }}" class="bg-white rounded-3xl border border-line p-6 hover:border-forest/40 hover:shadow-lg transition flex flex-col justify-between">
+                        <span class="w-12 h-12 rounded-2xl bg-brass-soft text-brass flex items-center justify-center">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.14-7.5 11.25-7.5 11.25S4.5 17.64 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                        </span>
+                        <div class="mt-4">
+                            <h3 class="font-extrabold text-base text-ink">Peta Distributor</h3>
+                            <p class="text-xs text-muted leading-relaxed mt-1">Cari distributor terdekat di Sidoarjo dan lihat radius jangkauan.</p>
+                        </div>
+                    </a>
+                    <a href="#kalkulator" class="bg-white rounded-3xl border border-line p-6 hover:border-forest/40 hover:shadow-lg transition flex flex-col justify-between">
+                        <span class="w-12 h-12 rounded-2xl bg-forest/10 text-forest flex items-center justify-center">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        </span>
+                        <div class="mt-4">
+                            <h3 class="font-extrabold text-base text-ink">Simulasi Hemat</h3>
+                            <p class="text-xs text-muted leading-relaxed mt-1">Hitung potensi penghematan belanja bahan baku kolektif hingga 28%.</p>
+                        </div>
+                    </a>
+                    <a href="{{ route('register') }}" class="bg-forest-deep text-white rounded-3xl p-6 hover:bg-forest transition flex flex-col justify-between">
+                        <span class="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center font-bold">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.765Z"/></svg>
+                        </span>
+                        <div class="mt-4">
+                            <h3 class="font-extrabold text-base text-white">Daftar UMKM Gratis</h3>
+                            <p class="text-xs text-white/75 leading-relaxed mt-1">Buka fitur pemesanan, keranjang kolektif, dan rekomendasi SPK.</p>
+                        </div>
+                    </a>
                 </div>
             </div>
         </section>
@@ -398,14 +478,14 @@
         <!-- Catalog -->
         <section id="katalog" class="py-16 sm:py-20 px-6 lg:px-8 border-t border-forest/10">
             <div class="max-w-7xl mx-auto">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-                    <div class="max-w-xl">
-                        <span class="eyebrow">Katalog Pilihan</span>
-                        <h2 class="font-extrabold tracking-tight text-3xl sm:text-[2.75rem] leading-[1.1] mt-4">Bahan baku siap pengadaan</h2>
-                        <p class="text-[0.8125rem] text-muted mt-2">Komoditas pokok standar dengan spesifikasi mutu terjamin.</p>
-                    </div>
-                    <a href="{{ auth()->check() ? route('dashboard') : route('register') }}" class="text-xs py-2.5 px-5 font-bold bg-forest text-white rounded-xl shrink-0">Daftar untuk Memesan</a>
-                </div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                     <div class="max-w-xl">
+                         <span class="eyebrow">Katalog Pilihan</span>
+                         <h2 class="font-extrabold tracking-tight text-3xl sm:text-[2.75rem] leading-[1.1] mt-4">Bahan baku siap pengadaan</h2>
+                         <p class="text-[0.8125rem] text-muted mt-2">Komoditas pokok standar dengan spesifikasi mutu terjamin.</p>
+                     </div>
+                     <a href="{{ route('public.catalog.index') }}" class="text-xs py-2.5 px-5 font-bold bg-forest text-white rounded-xl shrink-0">Lihat Semua Produk</a>
+                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-8">
                     @foreach ($products->take(4) as $product)
                         <div class="bg-white rounded-3xl border border-line shadow-sm p-5 flex flex-col h-full">
@@ -418,6 +498,31 @@
                             </div>
                         </div>
                     @endforeach
+                </div>
+            </div>
+        </section>
+
+        <!-- Teaser Peta Distributor (Desktop) -->
+        <section class="py-12 sm:py-16 px-6 lg:px-8 border-t border-forest/10">
+            <div class="max-w-7xl mx-auto">
+                <div class="bg-gradient-to-r from-forest-deep to-forest rounded-[2rem] p-8 sm:p-12 text-white flex flex-col lg:flex-row items-center justify-between gap-8 shadow-xl">
+                    <div class="max-w-xl">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-cream">
+                            <span class="w-2 h-2 rounded-full bg-brass"></span> Peta Interaktif
+                        </span>
+                        <h2 class="font-extrabold text-2xl sm:text-4xl mt-4 leading-tight">Cari Distributor Terdekat dari Lokasimu</h2>
+                        <p class="text-sm text-white/80 mt-3 leading-relaxed">
+                            Cek sebaran distributor mitra di Sidoarjo &amp; sekitarnya, telusuri produk yang mereka sediakan, dan periksa radius jangkauan pengiriman — terbuka untuk publik tanpa perlu login.
+                        </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 shrink-0">
+                        <a href="{{ route('public.distributors.map') }}" class="bg-brass hover:bg-brass/90 text-white font-extrabold text-sm px-7 py-3.5 rounded-xl text-center shadow-lg transition">
+                            Buka Peta Distributor
+                        </a>
+                        <a href="{{ route('public.catalog.index') }}" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-sm px-6 py-3.5 rounded-xl text-center transition">
+                            Lihat Katalog
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>

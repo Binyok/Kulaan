@@ -18,6 +18,7 @@ class HomeController extends Controller
             ->get();
 
         $stats = [
+            'total_products' => Product::where('is_active', true)->count(),
             'total_umkm' => Umkm::count(),
             'total_distributor' => Distributor::count(),
             'total_savings' => OrderItem::sum('savings_amount'),
