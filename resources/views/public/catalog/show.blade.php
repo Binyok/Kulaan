@@ -118,35 +118,58 @@
 
             <div class="grid gap-4 mt-4">
                 @forelse($offers as $offer)
-                    @php $dist = $offer['distributor']; @endphp
-                    <div class="bg-white border border-line rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-extrabold text-ink text-base">{{ $dist->business_name }}</h3>
-                                @if($dist->rating)
-                                    <span class="inline-flex items-center gap-1 bg-brass-soft text-brass text-xs font-bold px-2 py-0.5 rounded-full">
-                                        ★ {{ number_format((float)$dist->rating, 1) }}
-                                    </span>
-                                @endif
+                    @php
+                        $dist = $offer['distributor'];
+                        $sp = $offer['supplier_product'];
+                        $moqVal = (float) ($sp->moq ?? 10.0);
+                        $pooledVal = (float) ($offer['pooled_quantity'] ?? 0);
+                        $pct = $moqVal > 0 ? min(100, ($pooledVal / $moqVal) * 100) : 100;
+                        $remaining = max(0, $moqVal - $pooledVal);
+                    @endphp
+                    <div class="bg-white border border-line rounded-3xl p-5 shadow-xs">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-extrabold text-ink text-base">{{ $dist->business_name }}</h3>
+                                    @if($dist->rating)
+                                        <span class="inline-flex items-center gap-1 bg-brass-soft text-brass text-xs font-bold px-2 py-0.5 rounded-full">
+                                            ★ {{ number_format((float)$dist->rating, 1) }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-muted mt-1">{{ $dist->district ?? 'Waru' }}, {{ $dist->city ?? 'Sidoarjo' }}</p>
                             </div>
-                            <p class="text-xs text-muted mt-1">{{ $dist->district ?? 'Waru' }}, {{ $dist->city ?? 'Sidoarjo' }}</p>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="text-right">
-                                <p class="text-[11px] text-muted">Estimasi Harga Satuan</p>
-                                <p class="text-base font-extrabold text-forest">Rp {{ number_format($offer['unit_price'], 0, ',', '.') }}</p>
-                            </div>
-                            @auth
-                                @if(auth()->user()->hasRole('umkm'))
-                                    <a href="{{ route('umkm.catalog.show', $product) }}" class="bg-forest text-white text-xs font-bold px-4 py-2.5 rounded-xl">Pilih</a>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <p class="text-[11px] text-muted">Estimasi Harga Satuan</p>
+                                    <p class="text-base font-extrabold text-forest">Rp {{ number_format($offer['unit_price'], 0, ',', '.') }}</p>
+                                </div>
+                                @auth
+                                    @if(auth()->user()->hasRole('umkm'))
+                                        <a href="{{ route('umkm.catalog.show', $product) }}" class="bg-forest text-white text-xs font-bold px-4 py-2.5 rounded-xl">Pilih</a>
+                                    @else
+                                        <a href="{{ route('dashboard') }}" class="bg-forest text-white text-xs font-bold px-4 py-2.5 rounded-xl">Dashboard</a>
+                                    @endif
                                 @else
-                                    <a href="{{ route('dashboard') }}" class="bg-forest text-white text-xs font-bold px-4 py-2.5 rounded-xl">Dashboard</a>
-                                @endif
-                            @else
-                                <button type="button" @click="$dispatch('open-gate-modal')" onclick="window.dispatchEvent(new CustomEvent('open-gate-modal'))" class="bg-forest hover:bg-forest-dark text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer transition">
-                                    Pilih Distributor
-                                </button>
-                            @endauth
+                                    <button type="button" @click="$dispatch('open-gate-modal')" onclick="window.dispatchEvent(new CustomEvent('open-gate-modal'))" class="bg-forest hover:bg-forest-dark text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer transition">
+                                        Pilih Distributor
+                                    </button>
+                                @endauth
+                            </div>
+                        </div>
+
+                        <!-- PROGRES KUOTA PENAWARAN -->
+                        <div class="mt-4 pt-3 border-t border-line">
+                            <div class="flex items-center justify-between text-xs font-bold text-ink">
+                                <span>Progress Kulaan Distributor Ini</span>
+                                <span class="text-forest">{{ number_format($pooledVal, 0, ',', '.') }}/{{ number_format($moqVal, 0, ',', '.') }} {{ $product->unit }}</span>
+                            </div>
+                            <div class="w-full bg-cream rounded-full h-2 mt-1.5 overflow-hidden border border-line">
+                                <div class="bg-forest h-full rounded-full transition-all duration-300" style="width: {{ $pct }}%"></div>
+                            </div>
+                            <p class="text-[11px] text-muted mt-1.5">
+                                Terkumpul <span class="font-bold text-ink">{{ number_format($pooledVal, 0, ',', '.') }}/{{ number_format($moqVal, 0, ',', '.') }} {{ $product->unit }}</span> — kurang <span class="font-bold text-ink">{{ number_format($remaining, 0, ',', '.') }} {{ $product->unit }}</span> lagi menuju minimum pemesanan
+                            </p>
                         </div>
                     </div>
                 @empty

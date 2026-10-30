@@ -86,11 +86,17 @@ class PublicCatalogController extends Controller
 
             $unitPrice = $sp->getPriceForQuantity($quantity);
 
+            $pooled = (float) PurchaseRequest::where('product_id', $product->id)
+                ->where('preferred_distributor_id', $distributor->id)
+                ->where('status', PurchaseRequestStatus::PENDING_MATCH)
+                ->sum('quantity');
+
             $offers[] = [
                 'supplier_product' => $sp,
                 'distributor' => $distributor,
                 'unit_price' => $unitPrice,
                 'rating' => (float) ($distributor->rating ?? 0),
+                'pooled_quantity' => $pooled,
             ];
         }
 
@@ -102,22 +108,9 @@ class PublicCatalogController extends Controller
             return $a['unit_price'] <=> $b['unit_price'];
         });
 
-        $collectedQty = (float) PurchaseRequest::where('product_id', $product->id)
-            ->where('status', PurchaseRequestStatus::PENDING_MATCH)
-            ->sum('quantity');
-
-        $moq = 0;
-        foreach ($supplierProducts as $sp) {
-            foreach ($sp->priceTiers as $tier) {
-                if ($tier->min_quantity > 0 && ($moq === 0 || $tier->min_quantity < $moq)) {
-                    $moq = (float) $tier->min_quantity;
-                }
-            }
-        }
-        if ($moq === 0) {
-            $moq = 10.0;
-        }
-
+        $topOffer = $offers[0] ?? null;
+        $collectedQty = $topOffer ? (float) $topOffer['pooled_quantity'] : 0.0;
+        $moq = $topOffer ? (float) ($topOffer['supplier_product']->moq ?? 10.0) : 10.0;
         $remainingMoq = max(0.0, $moq - $collectedQty);
 
         return view('public.catalog.show', compact('product', 'offers', 'quantity', 'collectedQty', 'moq', 'remainingMoq'));
