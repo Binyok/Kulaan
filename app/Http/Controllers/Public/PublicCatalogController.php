@@ -11,6 +11,7 @@ use App\Models\PurchaseRequest;
 use App\Models\SupplierProduct;
 use App\Models\Umkm;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class PublicCatalogController extends Controller
@@ -21,7 +22,9 @@ class PublicCatalogController extends Controller
         $categoryId = $request->query('category');
         $sort = $request->query('sort', 'laris');
 
-        $categories = ProductCategory::where('is_active', true)->get();
+        $categories = Cache::remember('public.categories', 300, function () {
+            return ProductCategory::where('is_active', true)->get();
+        });
 
         $query = Product::with(['category', 'supplierProducts.distributor', 'supplierProducts.priceTiers'])
             ->where('is_active', true)
@@ -56,11 +59,13 @@ class PublicCatalogController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
-        $stats = [
-            'total_products' => Product::where('is_active', true)->count(),
-            'total_distributor' => Distributor::count(),
-            'total_umkm' => Umkm::count(),
-        ];
+        $stats = Cache::remember('public.stats', 300, function () {
+            return [
+                'total_products' => Product::where('is_active', true)->count(),
+                'total_distributor' => Distributor::count(),
+                'total_umkm' => Umkm::count(),
+            ];
+        });
 
         return view('public.catalog.index', compact('products', 'categories', 'search', 'categoryId', 'sort', 'stats'));
     }
