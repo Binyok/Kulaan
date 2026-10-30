@@ -66,100 +66,79 @@
         </section>
 
         <!-- FILTER + GRID -->
-        <section class="mt-6 grid lg:grid-cols-[260px_1fr] gap-6 items-start">
+        <section class="mt-6">
 
-            <!-- SIDEBAR FILTER -->
-            <aside class="hidden lg:block bg-white border border-line rounded-3xl p-5 lg:sticky lg:top-24 shadow-xs">
-                <h2 class="font-extrabold flex items-center gap-2 text-ink">
-                    <svg class="w-5 h-5 text-forest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h3.75"/></svg>Filter
-                </h2>
-                <p class="text-xs font-bold uppercase tracking-wider text-muted mt-5 mb-2">Kategori</p>
-                <div class="space-y-2 text-xs sm:text-sm font-medium">
-                    <a href="{{ route('public.catalog.index', array_filter(['q' => $search])) }}"
-                       class="flex items-center gap-2.5 {{ ! $categoryId ? 'bg-cream border border-forest/30 font-bold text-forest' : 'border border-line hover:border-forest/40' }} rounded-xl px-3 py-2">
-                       Semua kategori
-                    </a>
-                    @foreach($categories as $cat)
-                        <a href="{{ route('public.catalog.index', array_filter(['category' => $cat->id, 'q' => $search])) }}"
-                           class="flex items-center gap-2.5 {{ (string)$categoryId === (string)$cat->id ? 'bg-cream border border-forest/30 font-bold text-forest' : 'border border-line hover:border-forest/40' }} rounded-xl px-3 py-2">
-                           {{ $cat->name }}
-                        </a>
+            <!-- HEADER GRID -->
+            <div class="flex items-end justify-between mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 class="text-xl font-extrabold text-ink">Semua Produk</h2>
+                    <p class="text-xs sm:text-sm text-muted mt-0.5">Menampilkan {{ $products->count() }} dari {{ $products->total() }} produk · Jember &amp; sekitarnya</p>
+                </div>
+                <p class="text-xs text-muted">Harga berlabel <span class="font-bold text-brass">Estimasi</span></p>
+            </div>
+
+            @if($products->isEmpty())
+                <div class="bg-white border border-line rounded-3xl p-12 text-center">
+                    <p class="text-base font-bold text-ink">Tidak ada produk ditemukan</p>
+                    <p class="text-xs text-muted mt-1">Coba kata kunci atau kategori lain.</p>
+                </div>
+            @else
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    @foreach($products as $prod)
+                        @php
+                            $available = $prod->supplierProducts->where('is_available', true);
+                            $availablePrices = $available->flatMap(fn ($sp) => collect([(float) $sp->base_retail_price])->merge($sp->priceTiers->pluck('unit_price')->map(fn ($p) => (float) $p)));
+                            $minPrice = $availablePrices->min() ?? (float) $prod->benchmark_retail_price;
+                            $discountPct = (float) $prod->benchmark_retail_price > 0 && $minPrice < (float) $prod->benchmark_retail_price
+                                ? (int) round((1 - $minPrice / (float) $prod->benchmark_retail_price) * 100)
+                                : null;
+                            $distributorCount = $available->pluck('distributor_id')->unique()->count();
+                            $initialLetter = strtoupper(substr($prod->name, 0, 1));
+                            $tones = ['bg-forest/10 text-forest', 'bg-brass-soft text-brass', 'bg-cream border border-line text-muted'];
+                            $tone = $tones[$loop->index % 3];
+                        @endphp
+                        <article class="bg-white border border-line rounded-3xl p-3 sm:p-4 hover:border-forest/40 hover:shadow-lg hover:shadow-forest/5 transition flex flex-col justify-between">
+                            <div>
+                                <div class="relative h-24 sm:h-32 rounded-2xl {{ $tone }} flex items-center justify-center">
+                                    <span class="text-4xl sm:text-5xl font-extrabold">{{ $initialLetter }}</span>
+                                    @if($discountPct !== null && $discountPct > 0)
+                                        <span class="absolute top-2 left-2 bg-danger text-white text-[10px] font-bold px-2 py-0.5 rounded-full">-{{ $discountPct }}%</span>
+                                    @endif
+                                </div>
+                                <h3 class="font-extrabold mt-2.5 text-ink text-sm leading-snug">{{ $prod->name }}</h3>
+                                <p class="text-[11px] text-muted mt-0.5">{{ $prod->unit }} · {{ $distributorCount }} distributor</p>
+                                <p class="text-[10px] text-muted mt-2.5">mulai dari · <span class="font-semibold text-brass">Estimasi</span></p>
+                                <p class="font-extrabold text-base leading-tight text-ink">
+                                    Rp {{ number_format($minPrice, 0, ',', '.') }}
+                                    @if((float)$prod->benchmark_retail_price > $minPrice)
+                                        <span class="text-[11px] font-semibold text-muted line-through">Rp {{ number_format($prod->benchmark_retail_price, 0, ',', '.') }}</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <div class="flex gap-1.5 sm:gap-2 mt-3">
+                                <a href="{{ route('public.catalog.show', $prod) }}" class="flex-1 text-center border border-forest text-forest text-xs font-bold px-2 sm:px-3 py-2 rounded-xl hover:bg-forest/5 transition">Lihat</a>
+                                @auth
+                                    @if(auth()->user()->hasRole('umkm'))
+                                        <a href="{{ route('umkm.catalog.show', $prod) }}" class="bg-forest hover:bg-forest-dark text-white px-3 py-2 rounded-xl flex items-center justify-center text-xs font-bold transition">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
+                                        </a>
+                                    @else
+                                        <a href="{{ route('dashboard') }}" class="bg-forest hover:bg-forest-dark text-white px-3 py-2 rounded-xl flex items-center justify-center text-xs font-bold transition">+</a>
+                                    @endif
+                                @else
+                                    <button type="button" onclick="document.getElementById('gateModal').classList.remove('hidden')" aria-label="Tambah {{ $prod->name }} ke keranjang" class="bg-forest hover:bg-forest-dark text-white px-3 py-2 rounded-xl flex items-center justify-center text-xs font-bold cursor-pointer transition">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
+                                    </button>
+                                @endauth
+                            </div>
+                        </article>
                     @endforeach
                 </div>
-                <div class="text-[11px] text-muted leading-relaxed mt-6 bg-brass-soft/70 rounded-xl p-3 border border-brass/20">
-                    Urutan rekomendasi SPK yang personal tersedia setelah login sebagai UMKM.
+                <div class="mt-6">
+                    {{ $products->links() }}
                 </div>
-            </aside>
-
-            <!-- GRID PRODUK -->
-            <div>
-                <div class="flex items-end justify-between mb-4">
-                    <div>
-                        <h2 class="text-xl font-extrabold text-ink">Semua Produk</h2>
-                        <p class="text-xs sm:text-sm text-muted mt-0.5">Menampilkan {{ $products->count() }} dari {{ $products->total() }} produk · Jember &amp; sekitarnya</p>
-                    </div>
-                    <p class="hidden md:block text-xs text-muted">Harga berlabel <span class="font-bold text-brass">Estimasi</span></p>
-                </div>
-
-                @if($products->isEmpty())
-                    <div class="bg-white border border-line rounded-3xl p-12 text-center">
-                        <p class="text-base font-bold text-ink">Tidak ada produk ditemukan</p>
-                        <p class="text-xs text-muted mt-1">Coba kata kunci atau kategori lain.</p>
-                    </div>
-                @else
-                    <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                        @foreach($products as $prod)
-                            @php
-                                $available = $prod->supplierProducts->where('is_available', true);
-                                $availablePrices = $available->flatMap(fn ($sp) => collect([(float) $sp->base_retail_price])->merge($sp->priceTiers->pluck('unit_price')->map(fn ($p) => (float) $p)));
-                                $minPrice = $availablePrices->min() ?? (float) $prod->benchmark_retail_price;
-                                $discountPct = (float) $prod->benchmark_retail_price > 0 && $minPrice < (float) $prod->benchmark_retail_price
-                                    ? (int) round((1 - $minPrice / (float) $prod->benchmark_retail_price) * 100)
-                                    : null;
-                                $distributorCount = $available->pluck('distributor_id')->unique()->count();
-                                $initialLetter = strtoupper(substr($prod->name, 0, 1));
-                            @endphp
-                            <article class="bg-white border border-line rounded-3xl p-4 hover:border-forest/40 hover:shadow-lg hover:shadow-forest/5 transition flex flex-col justify-between">
-                                <div>
-                                    <div class="relative h-32 rounded-2xl bg-forest/10 flex items-center justify-center">
-                                        <span class="text-5xl font-extrabold text-forest">{{ $initialLetter }}</span>
-                                        @if($discountPct !== null && $discountPct > 0)
-                                            <span class="absolute top-3 left-3 bg-danger text-white text-[11px] font-bold px-2 py-0.5 rounded-full">-{{ $discountPct }}%</span>
-                                        @endif
-                                    </div>
-                                    <h3 class="font-extrabold mt-3 text-ink text-base">{{ $prod->name }}</h3>
-                                    <p class="text-xs text-muted mt-0.5">{{ $prod->unit }} · {{ $distributorCount }} distributor</p>
-                                    <p class="text-[11px] text-muted mt-3">mulai dari · <span class="font-semibold text-brass">Estimasi</span></p>
-                                    <p class="font-extrabold text-lg leading-tight text-ink">
-                                        Rp {{ number_format($minPrice, 0, ',', '.') }}
-                                        @if((float)$prod->benchmark_retail_price > $minPrice)
-                                            <span class="text-xs font-semibold text-muted line-through">Rp {{ number_format($prod->benchmark_retail_price, 0, ',', '.') }}</span>
-                                        @endif
-                                    </p>
-                                </div>
-                                <div class="flex gap-2 mt-4">
-                                    <a href="{{ route('public.catalog.show', $prod) }}" class="flex-1 text-center border border-forest text-forest text-xs sm:text-sm font-bold px-3 py-2.5 rounded-xl hover:bg-forest/5 transition">Lihat</a>
-                                    @auth
-                                        @if(auth()->user()->hasRole('umkm'))
-                                            <a href="{{ route('umkm.catalog.show', $prod) }}" class="bg-forest hover:bg-forest-dark text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold transition">+</a>
-                                        @else
-                                            <a href="{{ route('dashboard') }}" class="bg-forest hover:bg-forest-dark text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold transition">+</a>
-                                        @endif
-                                    @else
-                                        <button type="button" onclick="document.getElementById('gateModal').classList.remove('hidden')" aria-label="Tambah {{ $prod->name }} ke keranjang" class="bg-forest hover:bg-forest-dark text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold cursor-pointer transition">
-                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 3h1.39c.51 0 .96.34 1.09.84l.38 1.44M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.22c1.12-2.3 2.1-4.68 2.92-7.14a60.11 60.11 0 0 0-16.54-1.84M7.5 14.25 5.11 5.27M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-                                        </button>
-                                    @endauth
-                                </div>
-                            </article>
-                        @endforeach
-                    </div>
-                    <div class="mt-6">
-                        {{ $products->links() }}
-                    </div>
-                @endif
-                <p class="text-xs text-muted mt-4">Harga estimasi — harga final mengikuti total quantity kelompok kulaan.</p>
-            </div>
+            @endif
+            <p class="text-xs text-muted mt-4">Harga estimasi — harga final mengikuti total quantity kelompok kulaan.</p>
         </section>
 
         <!-- BANNER TEASER SPK -->
