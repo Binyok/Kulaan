@@ -226,7 +226,7 @@
 
                                             @if ($hasProof)
                                                 <button type="button" @click="openLightbox('{{ asset('storage/'.$shipment->proof_image_path) }}')" class="mt-3 w-full flex items-center gap-3 p-2.5 rounded-xl bg-cream/60 border border-line text-left cursor-pointer">
-                                                    <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-14 h-14 rounded-lg object-cover border border-line">
+                                                    <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" loading="lazy" decoding="async" width="56" height="56" class="w-14 h-14 rounded-lg object-cover border border-line">
                                                     <div class="min-w-0 flex-1">
                                                         <p class="text-[11px] font-bold text-ink">Bukti pengiriman kurir</p>
                                                         <p class="text-[11px] text-muted truncate">{{ $shipment->courier?->user?->name ?? 'Kurir Kulaan' }} &bull; {{ optional($shipment->delivered_at)->format('d M Y, H:i') }}</p>
@@ -290,7 +290,7 @@
 
                                         @if ($shipment && $shipment->proof_image_path)
                                             <button type="button" @click="openLightbox('{{ asset('storage/'.$shipment->proof_image_path) }}')" class="mt-3 w-full flex items-center gap-3 p-2.5 rounded-xl bg-cream/60 border border-line text-left cursor-pointer">
-                                                <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-14 h-14 rounded-lg object-cover border border-line">
+                                                <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" loading="lazy" decoding="async" width="56" height="56" class="w-14 h-14 rounded-lg object-cover border border-line">
                                                 <div class="min-w-0 flex-1">
                                                     <p class="text-[11px] font-bold text-ink">Bukti pengiriman kurir</p>
                                                     <p class="text-[11px] text-muted truncate">{{ $shipment->courier?->user?->name ?? 'Kurir Kulaan' }} &bull; {{ optional($shipment->delivered_at)->format('d M Y, H:i') }}</p>
@@ -492,7 +492,7 @@
                                                         @endif
                                                         @if ($hasProof)
                                                             <button type="button" @click="openLightbox('{{ asset('storage/'.$shipment->proof_image_path) }}')" class="mt-3 flex items-center gap-3 p-2.5 rounded-xl bg-cream/60 border border-line text-left cursor-pointer">
-                                                                <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-16 h-16 rounded-lg object-cover border border-line">
+                                                                <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" loading="lazy" decoding="async" width="64" height="64" class="w-16 h-16 rounded-lg object-cover border border-line">
                                                                 <div class="min-w-0">
                                                                     <p class="text-xs font-bold text-ink">Bukti pengiriman kurir</p>
                                                                     <p class="text-xs text-muted truncate">{{ $shipment->courier?->user?->name ?? 'Kurir Kulaan' }} &bull; {{ optional($shipment->delivered_at)->format('d M Y, H:i') }}</p>
@@ -559,7 +559,7 @@
 
                                                 @if ($shipment && $shipment->proof_image_path)
                                                     <button type="button" @click="openLightbox('{{ asset('storage/'.$shipment->proof_image_path) }}')" class="mt-3 flex items-center gap-3 p-2.5 rounded-xl bg-cream/60 border border-line text-left cursor-pointer">
-                                                        <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-16 h-16 rounded-lg object-cover border border-line">
+                                                        <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" loading="lazy" decoding="async" width="64" height="64" class="w-16 h-16 rounded-lg object-cover border border-line">
                                                         <div class="min-w-0">
                                                             <p class="text-xs font-bold text-ink">Bukti pengiriman kurir</p>
                                                             <p class="text-xs text-muted truncate">{{ $shipment->courier?->user?->name ?? 'Kurir Kulaan' }} &bull; {{ optional($shipment->delivered_at)->format('d M Y, H:i') }}</p>
@@ -632,7 +632,7 @@
             <button type="button" @click="closeLightbox()" class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/15 text-white flex items-center justify-center cursor-pointer" aria-label="Tutup">
                 <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
             </button>
-            <img :src="lightboxSrc" alt="Bukti pengiriman diperbesar" class="max-h-[85vh] max-w-full rounded-2xl border border-white/20 shadow-2xl object-contain">
+            <img :src="lightboxSrc" alt="Bukti pengiriman diperbesar" loading="lazy" decoding="async" class="max-h-[85vh] max-w-full rounded-2xl border border-white/20 shadow-2xl object-contain">
         </div>
 
         <!-- Rating Modal -->

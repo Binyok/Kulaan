@@ -149,7 +149,7 @@
                                         </form>
                                     @else
                                         @if ($shipment->proof_image_path)
-                                            <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-full h-32 object-cover rounded-2xl border border-line mb-3">
+                                            <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" loading="lazy" decoding="async" width="640" height="320" class="w-full h-32 object-cover rounded-2xl border border-line mb-3">
                                         @endif
                                         <p class="text-xs font-bold text-success">Tiba &amp; selesai &mdash; makasih!</p>
                                     @endif
@@ -332,7 +332,7 @@
                                         </form>
                                     @else
                                         @if ($shipment->proof_image_path)
-                                            <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-full h-36 object-cover rounded-2xl border border-line mb-3">
+                                            <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" loading="lazy" decoding="async" width="640" height="360" class="w-full h-36 object-cover rounded-2xl border border-line mb-3">
                                         @endif
                                         <p class="text-sm font-bold text-success">Tiba &amp; selesai &mdash; makasih!</p>
                                     @endif

@@ -20,7 +20,7 @@
     <header class="bg-white border-b border-line sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-5 lg:px-8 h-16 flex items-center justify-between gap-6">
             <a href="{{ route('home') }}" class="shrink-0" aria-label="Kulaan">
-                <img src="{{ asset('images/logo.svg') }}" alt="Kulaan" class="w-32 h-auto">
+                <img src="{{ asset('images/logo.svg') }}" alt="Kulaan" width="128" height="32" class="w-32 h-auto">
             </a>
             <nav class="hidden md:flex items-center gap-7 text-sm font-semibold" aria-label="Navigasi utama">
                 <a href="{{ route('home') }}" class="text-muted hover:text-forest transition">Beranda</a>

@@ -116,7 +116,7 @@
                                         <p class="text-[11px] text-muted">{{ $shipment->courier->vehicle_type }} &bull; {{ $shipment->courier->vehicle_number }} &bull; {{ $shipment->courier->user?->phone ?? '-' }}</p>
                                     @endif
                                     @if ($shipment->proof_image_path)
-                                        <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-full h-28 object-cover rounded-xl border border-line">
+                                        <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" loading="lazy" decoding="async" width="400" height="112" class="w-full h-28 object-cover rounded-xl border border-line">
                                     @endif
                                 </div>
                             @endif
@@ -317,7 +317,7 @@
                                             <p class="text-xs text-muted">{{ $shipment->courier->vehicle_type }} &bull; {{ $shipment->courier->vehicle_number }} &bull; {{ $shipment->courier->user?->phone ?? '-' }}</p>
                                         @endif
                                         @if ($shipment->proof_image_path)
-                                            <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" class="w-full h-32 object-cover rounded-xl border border-line">
+                                            <img src="{{ asset('storage/'.$shipment->proof_image_path) }}" alt="Bukti pengiriman" loading="lazy" decoding="async" width="400" height="128" class="w-full h-32 object-cover rounded-xl border border-line">
                                         @endif
                                     </div>
                                 @endif
@@ -440,7 +440,7 @@
                             <p class="text-xs text-muted" x-text="'Kurir: ' + (selectedDetail.shipments[0].courier?.user?.name ?? 'Belum ditugaskan')"></p>
                             <p class="text-xs text-muted" x-text="(selectedDetail.shipments[0].courier?.vehicle_type ?? '-') + ' • ' + (selectedDetail.shipments[0].courier?.vehicle_number ?? '-') + ' • ' + (selectedDetail.shipments[0].courier?.user?.phone ?? '-')"></p>
                             <template x-if="selectedDetail.shipments[0].proof_image_path">
-                                <img :src="'{{ asset('storage') }}/' + selectedDetail.shipments[0].proof_image_path" alt="Bukti pengiriman" class="w-full h-48 object-cover rounded-xl border border-line">
+                                <img :src="'{{ asset('storage') }}/' + selectedDetail.shipments[0].proof_image_path" alt="Bukti pengiriman" loading="lazy" decoding="async" width="400" height="192" class="w-full h-48 object-cover rounded-xl border border-line">
                             </template>
                         </div>
                     </template>

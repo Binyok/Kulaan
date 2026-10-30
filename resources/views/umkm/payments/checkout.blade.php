@@ -122,7 +122,7 @@
                         <div x-show="selectedMethod === 'qris'" class="px-4 pb-4">
                             <div class="bg-cream border border-line rounded-2xl p-4 flex flex-col items-center">
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode('QRIS:KULAAN-MIDTRANS-'. $payment->payment_reference .'-RP'. (int)$orderItem->subtotal) }}"
-                                     alt="QRIS Code Kulaan" loading="lazy" class="w-40 h-40 rounded-lg">
+                                     alt="QRIS Code Kulaan" loading="lazy" decoding="async" width="160" height="160" class="w-40 h-40 rounded-lg">
                                 <p class="text-[11px] font-bold text-muted mt-2">NMID: ID1020038921820 &bull; KULAAN</p>
                             </div>
                             <ol class="mt-3 space-y-1.5 text-xs text-muted list-decimal list-inside leading-relaxed">
@@ -312,7 +312,7 @@
                                     <div class="flex flex-col sm:flex-row gap-6 items-center">
                                         <div class="bg-cream border border-line rounded-2xl p-4 shrink-0">
                                             <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode('QRIS:KULAAN-MIDTRANS-'. $payment->payment_reference .'-RP'. (int)$orderItem->subtotal) }}"
-                                                 alt="QRIS Code Kulaan" loading="lazy" class="w-44 h-44 rounded-lg">
+                                                 alt="QRIS Code Kulaan" loading="lazy" decoding="async" width="176" height="176" class="w-44 h-44 rounded-lg">
                                             <p class="text-[11px] font-bold text-muted text-center mt-2">NMID: ID1020038921820 &bull; KULAAN</p>
                                         </div>
                                         <div class="flex-1">
