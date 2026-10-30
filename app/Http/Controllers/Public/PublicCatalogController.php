@@ -22,9 +22,10 @@ class PublicCatalogController extends Controller
         $categoryId = $request->query('category');
         $sort = $request->query('sort', 'laris');
 
-        $categories = Cache::remember('public.categories', 300, function () {
-            return ProductCategory::where('is_active', true)->get();
+        $categoriesData = Cache::remember('public.categories', 300, function () {
+            return ProductCategory::where('is_active', true)->select('id', 'name')->get()->toArray();
         });
+        $categories = collect($categoriesData)->map(fn ($c) => (object) $c);
 
         $query = Product::with(['category', 'supplierProducts.distributor', 'supplierProducts.priceTiers'])
             ->where('is_active', true)

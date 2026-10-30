@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Distributor;
 use App\Models\Product;
 use App\Models\ProductCategory;
-use App\Models\SupplierProduct;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -117,5 +116,24 @@ class PublicAccessTest extends TestCase
         ]);
 
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_guest_can_sort_public_catalog(): void
+    {
+        $category = ProductCategory::create(['name' => 'Sembako', 'is_active' => true]);
+        Product::create(['category_id' => $category->id, 'name' => 'Beras A', 'unit' => 'kg', 'benchmark_retail_price' => 10000, 'is_active' => true]);
+        Product::create(['category_id' => $category->id, 'name' => 'Beras B', 'unit' => 'kg', 'benchmark_retail_price' => 20000, 'is_active' => true]);
+
+        $resTermurah = $this->get(route('public.catalog.index', ['sort' => 'termurah']));
+        $resTermurah->assertStatus(200);
+        $resTermurah->assertSee('Termurah');
+
+        $resRating = $this->get(route('public.catalog.index', ['sort' => 'rating']));
+        $resRating->assertStatus(200);
+        $resRating->assertSee('Rating Tertinggi');
+
+        $resLaris = $this->get(route('public.catalog.index', ['sort' => 'laris']));
+        $resLaris->assertStatus(200);
+        $resLaris->assertSee('Paling Laris');
     }
 }

@@ -12,12 +12,12 @@ class PublicDistributorController extends Controller
 {
     public function map(Request $request): View
     {
-        [$distributors, $distributorList] = Cache::remember('public.distributors.map', 300, function () {
+        $distributorList = Cache::remember('public.distributors.map', 300, function () {
             $distributors = Distributor::with(['supplierProducts.product.category', 'reviews'])
                 ->where('is_active', true)
                 ->get();
 
-            $distributorList = $distributors->map(function ($d) {
+            return $distributors->map(function ($d) {
                 $availableProducts = $d->supplierProducts->where('is_available', true);
                 $categories = $availableProducts->pluck('product.category.name')->filter()->unique()->values()->all();
 
@@ -35,13 +35,10 @@ class PublicDistributorController extends Controller
                     'lng' => $d->longitude !== null ? (float) $d->longitude : null,
                     'created_year' => $d->created_at ? $d->created_at->format('Y') : '2021',
                 ];
-            });
-
-            return [$distributors, $distributorList];
+            })->values()->all();
         });
 
         return view('public.distributors.map', [
-            'distributors' => $distributors,
             'distributorList' => $distributorList,
             'distributorsJson' => json_encode($distributorList),
         ]);
