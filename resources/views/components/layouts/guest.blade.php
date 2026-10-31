@@ -23,9 +23,8 @@
     <div class="min-h-screen lg:grid lg:grid-cols-[5fr_6fr]">
         <!-- BRAND: compact header on mobile, sticky side panel on desktop -->
         <aside class="texture-grain bg-forest text-white px-5 pt-6 pb-10 lg:px-10 lg:py-12 flex flex-col lg:gap-8 lg:min-h-screen lg:sticky lg:top-0">
-            <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5 lg:gap-3 self-start">
-                <span class="w-10 h-10 lg:w-11 lg:h-11 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center font-extrabold text-lg lg:text-xl">K</span>
-                <span class="font-extrabold text-xl lg:text-[1.75rem] tracking-tight">Kula'an</span>
+            <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5 lg:gap-3 self-start" aria-label="Kulaan">
+                <img src="{{ asset('images/logo-reversed.svg') }}" alt="Kulaan" class="h-9 lg:h-10 w-auto">
             </a>
 
             <h2 class="lg:hidden font-extrabold tracking-tight text-[1.65rem] leading-[1.15] mt-5">Belanja bahan baku barengan, hemat sampai 28%.</h2>

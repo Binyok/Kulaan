@@ -24,6 +24,15 @@ class ShareNavigation
 
         View::share('navNotifications', $items);
         View::share('navNotificationCount', $items->sum('count'));
+        $hour = (int) now()->timezone(config('app.timezone', 'Asia/Jakarta'))->format('G');
+        $greeting = match (true) {
+            $hour >= 5 && $hour < 11 => 'Selamat pagi',
+            $hour >= 11 && $hour < 15 => 'Selamat siang',
+            $hour >= 15 && $hour < 18 => 'Selamat sore',
+            default => 'Selamat malam',
+        };
+
+        View::share('greeting', $greeting);
 
         return $next($request);
     }

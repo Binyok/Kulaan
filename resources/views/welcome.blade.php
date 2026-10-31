@@ -26,10 +26,9 @@
         <div class="px-3 pt-2 sticky top-0 z-20" x-data="{ menuOpen: false }">
             <div class="bg-white/90 backdrop-blur border border-black/[0.05] shadow rounded-2xl">
                 <div class="h-14 px-2.5 flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2 min-w-0">
-                        <span class="w-8 h-8 shrink-0 rounded-xl bg-forest text-white flex items-center justify-center font-extrabold">K</span>
-                        <span class="font-extrabold text-base tracking-tight truncate">Kula'an</span>
-                    </span>
+                    <a href="{{ route('home') }}" class="flex items-center gap-2 min-w-0" aria-label="Kulaan">
+                        <img src="{{ asset('images/logo.svg') }}" alt="Kulaan" class="h-7 w-auto">
+                    </a>
                     <div class="flex items-center gap-1.5 shrink-0">
                         @auth
                             <a href="{{ route('dashboard') }}" class="text-[0.6875rem] py-2 px-3 font-bold bg-forest text-white rounded-xl whitespace-nowrap">Dashboard</a>
@@ -222,8 +221,7 @@
         <!-- footer -->
         <footer class="bg-forest text-white/70 px-5 py-8 mt-2">
             <div class="flex items-center gap-2">
-                <span class="w-7 h-7 rounded-lg bg-white/10 text-white flex items-center justify-center font-extrabold text-sm">K</span>
-                <span class="font-extrabold text-white">Kula'an</span>
+                <img src="{{ asset('images/logo-reversed.svg') }}" alt="Kulaan" class="h-7 w-auto">
             </div>
             <p class="text-[0.6875rem] mt-3">Smart Collective Procurement &copy; {{ date('Y') }}</p>
             <p class="text-[0.6875rem] mt-1">Sidoarjo, Jawa Timur &middot; Hak Cipta Dilindungi</p>
@@ -237,9 +235,8 @@
             <div class="max-w-7xl mx-auto">
                 <div class="bg-white/85 backdrop-blur-xl border border-black/[0.05] shadow rounded-2xl h-16 px-6 flex items-center justify-between">
                     <div class="flex items-center gap-8">
-                        <a href="{{ route('home') }}" class="flex items-center gap-2.5">
-                            <span class="w-9 h-9 rounded-xl bg-forest text-white flex items-center justify-center font-extrabold text-lg">K</span>
-                            <span class="font-extrabold text-[1.375rem] tracking-tight">Kula'an</span>
+                        <a href="{{ route('home') }}" class="flex items-center gap-2.5" aria-label="Kulaan">
+                            <img src="{{ asset('images/logo.svg') }}" alt="Kulaan" class="h-8 w-auto">
                         </a>
                         <nav class="hidden md:flex items-center gap-6 text-[0.8125rem] font-medium text-muted">
                             <a href="{{ route('public.catalog.index') }}" class="font-bold text-forest hover:underline">Jelajahi Produk</a>
@@ -551,8 +548,7 @@
         <footer class="bg-forest text-white/70 mt-auto">
             <div class="max-w-7xl mx-auto px-6 lg:px-8 py-10 flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-xs">
                 <div class="flex items-center gap-2.5">
-                    <span class="w-7 h-7 rounded-lg bg-white/10 text-white flex items-center justify-center font-extrabold text-sm">K</span>
-                    <span class="font-extrabold text-white text-base">Kula'an</span>
+                    <img src="{{ asset('images/logo-reversed.svg') }}" alt="Kulaan" class="h-7 w-auto">
                     <span>&middot; Smart Collective Procurement &copy; {{ date('Y') }}</span>
                 </div>
                 <p>Sidoarjo, Jawa Timur &middot; Hak Cipta Dilindungi</p>

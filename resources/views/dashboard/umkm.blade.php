@@ -22,7 +22,7 @@
                     </div>
                 </div>
                 <div>
-                    <p class="text-[11px] text-muted">Selamat pagi,</p>
+                    <p class="text-[11px] text-muted">{{ $greeting }},</p>
                     <p class="text-[15px] font-extrabold leading-tight">{{ $displayName }}</p>
                 </div>
             </div>
@@ -146,7 +146,7 @@
             <header class="bg-white/70 backdrop-blur border-b border-line sticky top-0 z-10">
                 <div class="px-8 h-[72px] flex items-center gap-4">
                     <div>
-                        <h1 class="text-lg font-extrabold leading-tight">Selamat pagi, {{ $displayName }}</h1>
+                        <h1 class="text-lg font-extrabold leading-tight">{{ $greeting }}, {{ $displayName }}</h1>
                         <p class="text-xs text-muted">{{ now()->translatedFormat('l, d F Y') }}</p>
                     </div>
                     <div class="ml-auto flex items-center gap-3">

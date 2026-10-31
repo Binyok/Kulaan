@@ -21,7 +21,7 @@
                     </div>
                 </div>
                 <div>
-                    <p class="text-[11px] text-muted">Selamat pagi,</p>
+                    <p class="text-[11px] text-muted">{{ $greeting }},</p>
                     <p class="text-[15px] font-extrabold leading-tight">{{ $user->name }}</p>
                 </div>
             </div>

@@ -26,7 +26,7 @@
                     </div>
                 </div>
                 <div>
-                    <p class="text-[11px] text-muted">Selamat pagi,</p>
+                    <p class="text-[11px] text-muted">{{ $greeting }},</p>
                     <p class="text-[15px] font-extrabold leading-tight">{{ $displayName }}</p>
                 </div>
             </div>
@@ -49,7 +49,7 @@
         @if ($requests->isEmpty())
             <div class="px-4 mt-5">
                 <section class="bg-white rounded-3xl border border-line p-10 text-center shadow-sm">
-                    <div class="w-14 h-14 rounded-2xl bg-forest/10 text-forest flex items-center justify-center mx-auto font-extrabold text-2xl">K</div>
+                    <div class="w-14 h-14 rounded-2xl bg-forest/10 flex items-center justify-center mx-auto"><img src="{{ asset('images/logo-mark.svg') }}" alt="Kulaan" class="w-8 h-8"></div>
                     @if ($tab === 'riwayat')
                         <h2 class="font-extrabold text-ink text-lg mt-4">Belum Ada Riwayat Pengajuan</h2>
                         <p class="text-xs text-muted mt-2 leading-relaxed">
@@ -236,7 +236,7 @@
             <header class="bg-white/70 backdrop-blur border-b border-line sticky top-0 z-10">
                 <div class="px-8 h-[72px] flex items-center gap-4">
                     <div>
-                        <h1 class="text-lg font-extrabold leading-tight">Selamat pagi, {{ $displayName }}</h1>
+                        <h1 class="text-lg font-extrabold leading-tight">{{ $greeting }}, {{ $displayName }}</h1>
                         <p class="text-xs text-muted">{{ now()->translatedFormat('l, d F Y') }}</p>
                     </div>
                     <div class="ml-auto flex items-center gap-3">
@@ -267,7 +267,7 @@
 
                 @if ($requests->isEmpty())
                     <section class="bg-white rounded-3xl border border-line p-10 sm:p-16 text-center max-w-lg mx-auto shadow-sm mt-6">
-                        <div class="w-14 h-14 rounded-2xl bg-forest/10 text-forest flex items-center justify-center mx-auto font-extrabold text-2xl">K</div>
+                        <div class="w-14 h-14 rounded-2xl bg-forest/10 flex items-center justify-center mx-auto"><img src="{{ asset('images/logo-mark.svg') }}" alt="Kulaan" class="w-8 h-8"></div>
                         @if ($tab === 'riwayat')
                             <h2 class="font-extrabold text-ink text-lg sm:text-xl mt-4">Belum Ada Riwayat Pengajuan</h2>
                             <p class="text-xs sm:text-sm text-muted mt-2 leading-relaxed">

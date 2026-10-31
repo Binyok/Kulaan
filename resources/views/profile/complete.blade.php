@@ -1,7 +1,7 @@
 <x-layouts.app title="Pengaturan Profil Akun">
     @php
         $isAdmin = ! $isUmkm && ! $isDistributor && ! $isCourier;
-        $greetingEyebrow = $isAdmin ? 'Kontrol Pusat,' : 'Selamat pagi,';
+        $greetingEyebrow = $isAdmin ? 'Kontrol Pusat,' : (($greeting ?? 'Selamat pagi') . ',');
         $displayName = $isUmkm
             ? ($umkm?->business_name ?? $user->name)
             : ($isDistributor ? ($distributor?->company_name ?? $user->name) : $user->name);

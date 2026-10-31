@@ -132,7 +132,7 @@
                         </div>
                     </div>
                     <div>
-                        <p class="text-[11px] text-muted">Selamat pagi,</p>
+                        <p class="text-[11px] text-muted">{{ $greeting }},</p>
                         <p class="text-[15px] font-extrabold leading-tight">{{ $displayName }}</p>
                     </div>
                 </div>
@@ -339,7 +339,7 @@
             @else
                 <section class="px-4">
                     <div class="bg-white rounded-2xl border border-line p-10 text-center shadow-sm">
-                        <div class="w-14 h-14 rounded-2xl bg-brass-soft text-brass flex items-center justify-center mx-auto font-display font-bold text-2xl">K</div>
+                        <div class="w-14 h-14 rounded-2xl bg-brass-soft flex items-center justify-center mx-auto"><img src="{{ asset('images/logo-mark.svg') }}" alt="Kulaan" class="w-8 h-8"></div>
                         @if ($tab === 'aktif')
                             <h2 class="font-display font-bold text-ink text-lg mt-4">Tidak Ada Pesanan Aktif</h2>
                             <p class="text-xs text-muted mt-2 leading-relaxed max-w-sm mx-auto">
@@ -391,7 +391,7 @@
                 <header class="bg-white/70 backdrop-blur border-b border-line sticky top-0 z-10">
                     <div class="px-8 h-[72px] flex items-center gap-4">
                         <div>
-                            <h1 class="text-lg font-extrabold leading-tight">Selamat pagi, {{ $displayName }}</h1>
+                            <h1 class="text-lg font-extrabold leading-tight">{{ $greeting }}, {{ $displayName }}</h1>
                             <p class="text-xs text-muted">{{ now()->translatedFormat('l, d F Y') }}</p>
                         </div>
                         <div class="ml-auto flex items-center gap-3">
@@ -603,7 +603,7 @@
                         <div class="pt-6">{{ $orderItems->links() }}</div>
                     @else
                         <section class="bg-white rounded-2xl border border-line p-16 text-center max-w-lg mx-auto shadow-sm">
-                            <div class="w-14 h-14 rounded-2xl bg-brass-soft text-brass flex items-center justify-center mx-auto font-display font-bold text-2xl">K</div>
+                            <div class="w-14 h-14 rounded-2xl bg-brass-soft flex items-center justify-center mx-auto"><img src="{{ asset('images/logo-mark.svg') }}" alt="Kulaan" class="w-8 h-8"></div>
                             @if ($tab === 'aktif')
                                 <h2 class="font-display font-bold text-ink text-xl mt-4">Tidak Ada Pesanan Aktif</h2>
                                 <p class="text-sm text-muted mt-2 leading-relaxed max-w-sm mx-auto">
