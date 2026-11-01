@@ -21,6 +21,7 @@ class Order extends Model
         'total_quantity',
         'status',
         'payment_deadline',
+        'ship_deadline_at',
     ];
 
     protected function casts(): array
@@ -30,6 +31,7 @@ class Order extends Model
             'total_quantity' => 'decimal:2',
             'status' => OrderStatus::class,
             'payment_deadline' => 'datetime',
+            'ship_deadline_at' => 'datetime',
         ];
     }
 

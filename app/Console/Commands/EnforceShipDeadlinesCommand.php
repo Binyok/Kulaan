@@ -24,7 +24,15 @@ class EnforceShipDeadlinesCommand extends Command
 
         $staleOrders = Order::query()
             ->whereIn('status', [OrderStatus::PAID->value, OrderStatus::CONFIRMED->value])
-            ->where('updated_at', '<=', $cutoff)
+            ->where(function ($query) use ($cutoff) {
+                // Primary anchor: the deadline recorded when payment completed.
+                $query->where('ship_deadline_at', '<=', now())
+                    // Legacy orders paid before ship_deadline_at existed keep the
+                    // old updated_at-based behaviour.
+                    ->orWhere(fn ($legacy) => $legacy
+                        ->whereNull('ship_deadline_at')
+                        ->where('updated_at', '<=', $cutoff));
+            })
             ->whereDoesntHave('shipments', function ($q) {
                 $q->whereIn('status', ['IN_TRANSIT', 'DELIVERED']);
             })

@@ -87,6 +87,9 @@
                                 <div>
                                     <p class="font-mono font-bold text-ink text-sm">{{ $order->order_number }}</p>
                                     <p class="text-[11px] text-muted mt-0.5">{{ number_format($order->total_quantity, 0) }} unit &bull; Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
+                                    @if ($order->ship_deadline_at && in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING', 'READY_TO_SHIP'], true))
+                                        <p class="text-[11px] font-bold {{ $order->ship_deadline_at->isPast() ? 'text-danger' : 'text-brass' }} mt-0.5">Kirim sebelum: {{ $order->ship_deadline_at->format('d M Y, H:i') }}</p>
+                                    @endif
                                 </div>
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold {{ $statusBadge }} shrink-0">{{ $order->status->label() }}</span>
                             </div>
@@ -295,6 +298,9 @@
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ $statusBadge }}">{{ $order->status->label() }}</span>
                                     </div>
                                     <p class="text-sm text-muted mt-1">{{ number_format($order->total_quantity, 0) }} unit &bull; Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
+                                    @if ($order->ship_deadline_at && in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING', 'READY_TO_SHIP'], true))
+                                        <p class="text-xs font-bold {{ $order->ship_deadline_at->isPast() ? 'text-danger' : 'text-brass' }} mt-1">Kirim sebelum: {{ $order->ship_deadline_at->format('d M Y, H:i') }}</p>
+                                    @endif
                                     <div class="mt-4 grid sm:grid-cols-2 gap-2">
                                         @foreach ($order->items as $item)
                                             @php

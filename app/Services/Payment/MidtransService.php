@@ -208,6 +208,9 @@ class MidtransService
                 if ($order->isFullyPaid()) {
                     $order->update([
                         'status' => OrderStatus::PAID->value,
+                        // Ship deadline is anchored to the payment moment so later
+                        // order activity can never shift it.
+                        'ship_deadline_at' => now()->addDays((int) config('escrow.ship_deadline_days', 2)),
                     ]);
                 }
 
