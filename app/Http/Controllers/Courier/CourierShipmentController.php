@@ -36,7 +36,9 @@ class CourierShipmentController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('kurir.shipments.index', compact('shipments', 'courier', 'tab'));
+        $assignedShipmentsCount = Shipment::where('courier_id', $courier->id)->where('status', 'PENDING')->count();
+
+        return view('kurir.shipments.index', compact('shipments', 'courier', 'tab', 'assignedShipmentsCount'));
     }
 
     public function startDelivery(Request $request, Shipment $shipment): RedirectResponse
