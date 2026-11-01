@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Umkm;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\DistributorReview;
+use App\Models\OrderDispute;
 use App\Models\OrderItem;
 use App\Services\Escrow\EscrowService;
 use Illuminate\Http\RedirectResponse;
@@ -50,6 +51,10 @@ class OrderController extends Controller
 
         if ($orderItem->received_confirmed_at !== null) {
             return back()->with('info', 'Penerimaan pesanan ini sudah kamu konfirmasi sebelumnya.');
+        }
+
+        if (OrderDispute::where('order_item_id', $orderItem->id)->where('status', 'OPEN')->exists()) {
+            return back()->with('error', 'Pesanan ini masih dalam proses komplain. Konfirmasi penerimaan dapat dilakukan setelah arbitrase admin selesai.');
         }
 
         $order = $orderItem->order;
