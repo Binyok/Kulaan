@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ProposalStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AhpWeight;
+use App\Models\ProductProposal;
 use App\Models\SpkCalculationHistory;
 use App\Models\SpkCriterion;
 use App\Services\Spk\AhpService;
@@ -20,8 +22,9 @@ class SpkCriteriaController extends Controller
         $criteria = SpkCriterion::all();
         $latestWeight = AhpWeight::latest()->first();
         $histories = SpkCalculationHistory::with('matchingGroup.product')->latest()->paginate(10);
+        $pendingProposals = ProductProposal::where('status', ProposalStatus::PENDING)->count();
 
-        return view('admin.spk.index', compact('criteria', 'latestWeight', 'histories'));
+        return view('admin.spk.index', compact('criteria', 'latestWeight', 'histories', 'pendingProposals'));
     }
 
     public function calculate(Request $request, AhpService $ahpService): RedirectResponse
