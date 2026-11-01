@@ -186,6 +186,13 @@
                     <p class="text-[13px] font-bold mt-2.5">Kriteria SPK (AHP)</p>
                     <p class="text-[10px] text-white/70 mt-0.5 leading-snug">Bobot &amp; uji konsistensi.</p>
                 </a>
+                <a href="{{ route('admin.payouts.index') }}" class="bg-white rounded-3xl border border-line p-4 text-left">
+                    <span class="w-10 h-10 rounded-2xl bg-forest/10 text-forest flex items-center justify-center">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9"/></svg>
+                    </span>
+                    <p class="text-[13px] font-bold mt-2.5">Keuangan &amp; Pencairan</p>
+                    <p class="text-[10px] text-muted mt-0.5 leading-snug">Antrean pencairan escrow ke distributor.</p>
+                </a>
             </div>
         </div>
     </div>
@@ -226,6 +233,10 @@
                 <a href="{{ route('admin.spk.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20h18M6 16v-5m6 5V8m6 8v-9"/></svg>
                     Kriteria SPK
+                </a>
+                <a href="{{ route('admin.payouts.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-muted hover:bg-cream hover:text-ink transition">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9"/></svg>
+                    Keuangan Escrow
                 </a>
             </nav>
             <div class="p-4 border-t border-line">

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DisputeArbitrationController;
+use App\Http\Controllers\Admin\PayoutController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductProposalController;
 use App\Http\Controllers\Admin\SpkCriteriaController;
@@ -118,6 +119,8 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::get('spk/history/{history}/export', [SpkCriteriaController::class, 'exportReport'])->name('spk.export');
         Route::get('disputes', [DisputeArbitrationController::class, 'index'])->name('disputes.index');
         Route::post('disputes/{dispute}/resolve', [DisputeArbitrationController::class, 'resolve'])->name('disputes.resolve');
+        Route::get('payouts', [PayoutController::class, 'index'])->name('payouts.index');
+        Route::post('payouts/{escrow}/mark-paid', [PayoutController::class, 'markPaid'])->name('payouts.mark-paid');
     });
 
     // Distributor Catalog & Orders Routes

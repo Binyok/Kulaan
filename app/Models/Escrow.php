@@ -24,6 +24,7 @@ class Escrow extends Model
         'released_at',
         'payout_reference',
         'payout_status',
+        'payout_completed_at',
     ];
 
     protected function casts(): array
@@ -35,6 +36,7 @@ class Escrow extends Model
             'delivered_at' => 'datetime',
             'release_due_at' => 'datetime',
             'released_at' => 'datetime',
+            'payout_completed_at' => 'datetime',
         ];
     }
 
