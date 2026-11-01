@@ -109,6 +109,7 @@
                                             @if ($item->escrow)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $item->escrow->status->badgeClass() }}">Dana: {{ $item->escrow->status->shortLabel() }}</span>
                                             @endif
+                                            <a href="{{ route('distributor.orders.invoice', $item) }}" target="_blank" class="text-[10px] font-bold text-forest hover:underline">Invoice</a>
                                         </div>
                                     </div>
                                 @endforeach
@@ -317,6 +318,7 @@
                                                     @if ($item->escrow)
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $item->escrow->status->badgeClass() }}">Dana: {{ $item->escrow->status->shortLabel() }}</span>
                                                     @endif
+                                                    <a href="{{ route('distributor.orders.invoice', $item) }}" target="_blank" class="text-[10px] font-bold text-forest hover:underline">Invoice</a>
                                                 </div>
                                             </div>
                                         @endforeach

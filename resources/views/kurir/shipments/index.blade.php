@@ -117,6 +117,7 @@
                                     @foreach ($shipment->order->items as $item)
                                         <p><strong class="text-ink">{{ $item->umkm->business_name }}</strong> <span class="text-muted">&bull; {{ $item->delivery_address }} ({{ $item->delivery_district }})</span></p>
                                     @endforeach
+                                    <a href="{{ route('kurir.shipments.surat-jalan', $shipment) }}" target="_blank" class="inline-block mt-1.5 text-[11px] font-bold text-forest hover:underline">Cetak Surat Jalan</a>
                                 </div>
                                 <div class="mt-3">
                                     @if ($isPending)
@@ -300,6 +301,7 @@
                                     @foreach ($shipment->order->items as $item)
                                         <p><strong class="text-ink">{{ $item->umkm->business_name }}</strong> <span class="text-muted">&bull; {{ $item->delivery_address }} ({{ $item->delivery_district }})</span></p>
                                     @endforeach
+                                    <a href="{{ route('kurir.shipments.surat-jalan', $shipment) }}" target="_blank" class="inline-block mt-1.5 text-[11px] font-bold text-forest hover:underline">Cetak Surat Jalan</a>
                                 </div>
                                 <div class="mt-5">
                                     @if ($isPending)

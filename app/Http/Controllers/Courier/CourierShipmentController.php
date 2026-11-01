@@ -49,6 +49,18 @@ class CourierShipmentController extends Controller
         return view('kurir.shipments.index', compact('shipments', 'courier', 'tab', 'assignedShipmentsCount'));
     }
 
+    public function suratJalan(Request $request, Shipment $shipment): View
+    {
+        $courier = $request->user()->courier;
+        if ($shipment->courier_id !== $courier?->id) {
+            abort(403);
+        }
+
+        $shipment->load(['order.distributor', 'order.items.umkm', 'order.items.product', 'courier.user']);
+
+        return view('print.surat-jalan', compact('shipment'));
+    }
+
     public function startDelivery(Request $request, Shipment $shipment): RedirectResponse
     {
         $courier = $request->user()->courier;

@@ -95,6 +95,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::post('requests/{purchaseRequest}/retry-matching', [PurchaseRequestController::class, 'retryMatching'])->name('requests.retry-matching');
 
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/{orderItem}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::post('orders/{order}/cancel-paid', [OrderController::class, 'cancelPaid'])->name('orders.cancel-paid');
         Route::post('orders/{orderItem}/confirm', [OrderController::class, 'confirmReceive'])->name('orders.confirm');
         Route::post('orders/{orderItem}/review', [OrderController::class, 'storeReview'])->name('orders.review');
@@ -134,6 +135,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::delete('products/proposals/{proposal}', [SupplierProductController::class, 'destroyProposal'])->name('products.proposals.destroy');
 
         Route::get('orders', [OrderManagementController::class, 'index'])->name('orders.index');
+        Route::get('orders/{orderItem}/invoice', [OrderManagementController::class, 'invoice'])->name('orders.invoice');
         Route::post('orders/{order}/status', [OrderManagementController::class, 'updateStatus'])->name('orders.update-status');
         Route::post('orders/{order}/assign-courier', [OrderManagementController::class, 'assignCourier'])->name('orders.assign-courier');
     });
@@ -141,6 +143,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     // Courier Routes
     Route::middleware('role:kurir')->prefix('kurir')->name('kurir.')->group(function () {
         Route::get('shipments', [CourierShipmentController::class, 'index'])->name('shipments.index');
+        Route::get('shipments/{shipment}/surat-jalan', [CourierShipmentController::class, 'suratJalan'])->name('shipments.surat-jalan');
         Route::post('shipments/{shipment}/start', [CourierShipmentController::class, 'startDelivery'])->name('shipments.start');
         Route::post('shipments/{shipment}/gps', [CourierShipmentController::class, 'postGpsLocation'])->name('shipments.gps');
         Route::post('shipments/{shipment}/complete', [CourierShipmentController::class, 'completeDelivery'])->name('shipments.complete');

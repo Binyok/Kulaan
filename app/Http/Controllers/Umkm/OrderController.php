@@ -83,6 +83,18 @@ class OrderController extends Controller
             ->with('success', 'Terima kasih! Pesanan ditandai selesai. Jangan lupa beri ulasan untuk distributor mitramu.');
     }
 
+    public function invoice(Request $request, OrderItem $orderItem): View
+    {
+        $umkm = $request->user()->umkm;
+        if (! $umkm || $orderItem->umkm_id !== $umkm->id) {
+            abort(403);
+        }
+
+        $orderItem->load(['order.distributor', 'product', 'payment', 'escrow', 'umkm']);
+
+        return view('print.invoice', compact('orderItem'));
+    }
+
     public function cancelPaid(Request $request, Order $order, MidtransService $midtransService): RedirectResponse
     {
         $umkm = $request->user()->umkm;

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Courier;
 use App\Models\Distributor;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Shipment;
 use App\Services\Payment\MidtransService;
 use Illuminate\Database\Eloquent\Builder;
@@ -55,6 +56,18 @@ class OrderManagementController extends Controller
         $couriers = $this->availableCouriers($distributor)->get();
 
         return view('distributor.orders.index', compact('orders', 'couriers', 'distributor', 'tab'));
+    }
+
+    public function invoice(Request $request, OrderItem $orderItem): View
+    {
+        $distributor = $request->user()->distributor;
+        if (! $distributor || $orderItem->order->distributor_id !== $distributor->id) {
+            abort(403);
+        }
+
+        $orderItem->load(['order.distributor', 'product', 'payment', 'escrow', 'umkm']);
+
+        return view('print.invoice', compact('orderItem'));
     }
 
     public function updateStatus(Request $request, Order $order): RedirectResponse

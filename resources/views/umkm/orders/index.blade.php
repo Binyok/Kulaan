@@ -294,6 +294,7 @@
                                                 <button type="button" @click="cancelOrder = {{ $item->order->id }}; cancelOpen = true" class="text-xs font-bold text-danger border border-danger/30 rounded-lg px-3 py-1.5 hover:bg-danger/10 cursor-pointer">Batalkan Pesanan</button>
                                             @endif
 
+                                            <a href="{{ route('umkm.orders.invoice', $item) }}" target="_blank" class="text-xs font-semibold text-forest border border-forest/30 rounded-lg px-3 py-1.5 hover:bg-forest/5">Cetak</a>
                                             <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-1.5 ml-auto">Invoice</a>
                                         </div>
                                     </article>
@@ -356,6 +357,7 @@
                                                 <button type="button" @click="openDelivery({{ $item->id }})" class="inline-flex items-center gap-1 text-[11px] font-semibold text-forest bg-forest/10 rounded-lg border border-forest/20 px-3 py-1.5 cursor-pointer">Detail Pengiriman</button>
                                             @endif
 
+                                            <a href="{{ route('umkm.orders.invoice', $item) }}" target="_blank" class="text-xs font-semibold text-forest border border-forest/30 rounded-lg px-3 py-1.5 hover:bg-forest/5">Cetak</a>
                                             <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-1.5 ml-auto">Invoice</a>
                                         </div>
 
@@ -588,6 +590,7 @@
                                                         <button type="button" @click="cancelOrder = {{ $item->order->id }}; cancelOpen = true" class="text-xs font-bold text-danger border border-danger/30 rounded-lg px-3 py-2 hover:bg-danger/10 cursor-pointer">Batalkan Pesanan</button>
                                                     @endif
 
+                                                    <a href="{{ route('umkm.orders.invoice', $item) }}" target="_blank" class="text-xs font-semibold text-forest border border-forest/30 rounded-lg px-3 py-2 hover:bg-forest/5">Cetak</a>
                                                     <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-2 ml-auto">Invoice</a>
                                                 </div>
                                             </article>
@@ -651,6 +654,7 @@
                                                         <button type="button" @click="openDelivery({{ $item->id }})" class="inline-flex items-center gap-1 text-[11px] font-semibold text-forest bg-forest/10 rounded-lg border border-forest/20 px-3 py-2 cursor-pointer">Detail Pengiriman</button>
                                                     @endif
 
+                                                    <a href="{{ route('umkm.orders.invoice', $item) }}" target="_blank" class="text-xs font-semibold text-forest border border-forest/30 rounded-lg px-3 py-2 hover:bg-forest/5">Cetak</a>
                                                     <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-2 ml-auto">Invoice</a>
                                                 </div>
 
