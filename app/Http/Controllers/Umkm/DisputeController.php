@@ -30,6 +30,10 @@ class DisputeController extends Controller
             return back()->with('error', 'Dana pesanan ini sudah dicairkan ke distributor, komplain tidak dapat diajukan.');
         }
 
+        if (OrderDispute::where('order_item_id', $orderItem->id)->where('status', 'OPEN')->exists()) {
+            return back()->with('error', 'Komplain untuk pesanan ini masih diproses admin. Satu komplain aktif saja ya — tunggu hasil arbitrasenya dulu.');
+        }
+
         $validated = $request->validate([
             'reason' => ['required', 'string', 'max:150'],
             'description' => ['required', 'string', 'max:1000'],
