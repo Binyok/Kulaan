@@ -6,6 +6,7 @@ use App\Enums\EscrowStatus;
 use App\Enums\OrderStatus;
 use App\Models\Escrow;
 use App\Models\Order;
+use App\Models\SupplierProduct;
 use App\Services\Payment\MidtransService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +51,18 @@ class EnforceShipDeadlinesCommand extends Command
                     'released_at' => now(),
                     'payout_status' => 'AUTO_REFUNDED_SHIP_TIMEOUT',
                 ]);
+
+                // Restore supplier product stock if deducted (same as MidtransService::cancelPaidOrder)
+                $productId = $lockedOrder->matchingGroup?->product_id ?? $lockedOrder->items->first()?->product_id;
+                if ($productId) {
+                    $supplierProduct = SupplierProduct::where('distributor_id', $lockedOrder->distributor_id)
+                        ->where('product_id', $productId)
+                        ->first();
+
+                    if ($supplierProduct && $supplierProduct->stock_available !== null && $lockedOrder->total_quantity > 0) {
+                        $supplierProduct->increment('stock_available', (float) $lockedOrder->total_quantity);
+                    }
+                }
 
                 // Cancel the order
                 $lockedOrder->update(['status' => OrderStatus::CANCELLED->value]);
