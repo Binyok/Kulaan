@@ -448,4 +448,92 @@ class OrderAndShipmentTest extends TestCase
         $this->assertEquals(13.0, (float) $offerA->fresh()->stock_available);
         $this->assertEquals(25.0, (float) $offerB->fresh()->stock_available);
     }
+
+    public function test_courier_cannot_complete_delivery_when_gps_is_far_from_destination(): void
+    {
+        [$courierUser, $shipment] = $this->createInTransitShipmentWithDestination();
+
+        // Courier "delivers" from roughly 9 km away
+        $this->actingAs($courierUser)->postJson(route('kurir.shipments.gps', $shipment), [
+            'latitude' => -7.3000,
+            'longitude' => 112.6700,
+        ])->assertOk();
+
+        $this->actingAs($courierUser)
+            ->from(route('kurir.shipments.index'))
+            ->post(route('kurir.shipments.complete', $shipment), [
+                'proof' => UploadedFile::fake()->image('proof.jpg'),
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertEquals('IN_TRANSIT', $shipment->fresh()->status);
+    }
+
+    public function test_courier_can_complete_delivery_when_gps_is_near_destination(): void
+    {
+        [$courierUser, $shipment] = $this->createInTransitShipmentWithDestination();
+
+        // Courier is about 75 meters from the UMKM storefront
+        $this->actingAs($courierUser)->postJson(route('kurir.shipments.gps', $shipment), [
+            'latitude' => -7.3605,
+            'longitude' => 112.7305,
+        ])->assertOk();
+
+        $this->actingAs($courierUser)
+            ->post(route('kurir.shipments.complete', $shipment), [
+                'proof' => UploadedFile::fake()->image('proof.jpg'),
+            ])
+            ->assertRedirect();
+
+        $this->assertEquals('DELIVERED', $shipment->fresh()->status);
+    }
+
+    /**
+     * @return array{0: User, 1: Shipment}
+     */
+    private function createInTransitShipmentWithDestination(): array
+    {
+        $courierUser = User::factory()->create();
+        $courierUser->assignRole('kurir');
+        $courier = Courier::create(['user_id' => $courierUser->id, 'vehicle_type' => 'Motor']);
+
+        $umkmUser = User::factory()->create();
+        $umkmUser->assignRole('umkm');
+        $umkm = Umkm::create([
+            'user_id' => $umkmUser->id,
+            'business_name' => 'Kedai Tropodo',
+            'address' => 'Jl. Tropodo 45',
+            'district' => 'Waru',
+            'city' => 'Sidoarjo',
+            'latitude' => -7.3600,
+            'longitude' => 112.7300,
+        ]);
+
+        $category = ProductCategory::create(['name' => 'Sembako']);
+        $product = Product::create(['category_id' => $category->id, 'name' => 'Beras', 'unit' => 'kg', 'benchmark_retail_price' => 10000]);
+
+        $distributor = Distributor::create(['user_id' => User::factory()->create()->id, 'company_name' => 'PT Borneo', 'address' => 'Jl. Trisakti']);
+        $order = Order::create(['distributor_id' => $distributor->id, 'total_amount' => 65000, 'total_quantity' => 10, 'status' => OrderStatus::ASSIGNED_TO_COURIER->value]);
+
+        OrderItem::create([
+            'order_id' => $order->id,
+            'umkm_id' => $umkm->id,
+            'product_id' => $product->id,
+            'quantity' => 10,
+            'unit_price' => 6500,
+            'subtotal' => 65000,
+            'benchmark_retail_price' => 10000,
+            'savings_amount' => 0,
+            'payment_status' => PaymentStatus::PAID->value,
+            'delivery_district' => 'Waru',
+            'delivery_address' => 'Jl. Tropodo 45',
+        ]);
+
+        $shipment = Shipment::create(['order_id' => $order->id, 'courier_id' => $courier->id, 'status' => 'PENDING']);
+
+        $this->actingAs($courierUser)->post(route('kurir.shipments.start', $shipment))->assertRedirect();
+        $this->assertEquals('IN_TRANSIT', $shipment->fresh()->status);
+
+        return [$courierUser, $shipment];
+    }
 }

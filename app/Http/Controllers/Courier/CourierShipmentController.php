@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Courier;
 use App\Enums\EscrowStatus;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Courier;
 use App\Models\Escrow;
 use App\Models\Shipment;
 use App\Models\TrackingLocation;
@@ -16,6 +17,13 @@ use Illuminate\View\View;
 
 class CourierShipmentController extends Controller
 {
+    /**
+     * Maximum allowed distance (meters) between the courier's latest GPS fix
+     * and the delivery destination when completing a delivery. The tolerance
+     * covers GPS drift and map-pin offsets in the field.
+     */
+    private const MAX_DELIVERY_DISTANCE_METERS = 1000;
+
     public function index(Request $request): View
     {
         $courier = $request->user()->courier;
@@ -124,6 +132,11 @@ class CourierShipmentController extends Controller
             'proof.image' => 'Berkas bukti harus berupa gambar (JPG, PNG, atau WEBP).',
         ]);
 
+        $distanceError = $this->validateDeliveryProximity($shipment, $courier);
+        if ($distanceError !== null) {
+            return back()->with('error', $distanceError);
+        }
+
         $path = $request->file('proof')->store('proofs/shipments', 'public');
 
         DB::transaction(function () use ($shipment, $courier, $path) {
@@ -160,5 +173,62 @@ class CourierShipmentController extends Controller
         });
 
         return back()->with('success', 'Pengiriman selesai. Foto bukti terkirim ke UMKM penerima untuk dikonfirmasi.');
+    }
+
+    /**
+     * Reject completion when the courier's latest GPS fix is unreasonably far
+     * from every destination of the shipment's order. When either side has no
+     * coordinates on record the check cannot run and delivery is allowed, so
+     * legitimate flows without GPS data are never blocked.
+     */
+    private function validateDeliveryProximity(Shipment $shipment, ?Courier $courier): ?string
+    {
+        $latestLocation = $shipment->latestLocation;
+
+        $courierLat = $latestLocation?->latitude ?? $courier?->current_latitude;
+        $courierLng = $latestLocation?->longitude ?? $courier?->current_longitude;
+
+        if ($courierLat === null || $courierLng === null) {
+            return null;
+        }
+
+        $destinations = $shipment->order->items
+            ->map(fn ($item) => $item->umkm)
+            ->filter(fn ($umkm) => $umkm && $umkm->latitude !== null && $umkm->longitude !== null)
+            ->unique('id');
+
+        if ($destinations->isEmpty()) {
+            return null;
+        }
+
+        $nearestMeters = $destinations
+            ->map(fn ($umkm) => $this->haversineMeters((float) $courierLat, (float) $courierLng, (float) $umkm->latitude, (float) $umkm->longitude))
+            ->min();
+
+        if ($nearestMeters > self::MAX_DELIVERY_DISTANCE_METERS) {
+            return 'Pengiriman ditolak: lokasi GPS terakhirmu sekitar '.number_format($nearestMeters, 0, ',', '.').' meter dari alamat tujuan (batas '.number_format(self::MAX_DELIVERY_DISTANCE_METERS, 0, ',', '.').' meter). Selesaikan pengiriman saat kamu sudah berada di lokasi penerima.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Great-circle distance between two GPS coordinates in meters
+     * (same Haversine formula as DistributorRecommendationService).
+     */
+    private function haversineMeters(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadiusKm = 6371;
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadiusKm * $c * 1000;
     }
 }
