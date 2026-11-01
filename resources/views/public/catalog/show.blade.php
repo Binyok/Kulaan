@@ -14,9 +14,13 @@
         <section class="grid lg:grid-cols-2 gap-8 mt-5 items-start">
             <!-- GALERI + DESKRIPSI -->
             <div>
-                <div class="relative bg-forest/10 border border-line rounded-[2rem] h-72 sm:h-96 flex items-center justify-center">
-                    <span class="text-8xl sm:text-[10rem] leading-none font-extrabold text-forest">{{ strtoupper(substr($product->name, 0, 1)) }}</span>
-                    <span class="absolute bottom-5 right-5 bg-white/90 text-ink text-xs font-bold px-3 py-1.5 rounded-full shadow-xs">{{ $product->unit }}</span>
+                <div class="relative bg-white border border-line rounded-[2rem] h-72 sm:h-96 flex items-center justify-center p-6 shadow-xs overflow-hidden">
+                    @if ($product->image)
+                        <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-contain">
+                    @else
+                        <span class="text-8xl sm:text-[10rem] leading-none font-extrabold text-forest">{{ strtoupper(substr($product->name, 0, 1)) }}</span>
+                    @endif
+                    <span class="absolute bottom-5 right-5 bg-white/90 text-ink text-xs font-bold px-3 py-1.5 rounded-full shadow-xs border border-line">{{ $product->unit }}</span>
                 </div>
 
                 <div class="bg-white border border-line rounded-3xl p-6 mt-5 shadow-xs">

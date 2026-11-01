@@ -118,8 +118,12 @@
                         @endphp
                         <article class="bg-white border border-line rounded-3xl p-3 sm:p-4 hover:border-forest/40 hover:shadow-lg hover:shadow-forest/5 transition flex flex-col justify-between">
                             <div>
-                                <div class="relative h-24 sm:h-32 rounded-2xl {{ $tone }} flex items-center justify-center">
-                                    <span class="text-4xl sm:text-5xl font-extrabold">{{ $initialLetter }}</span>
+                                <div class="relative h-24 sm:h-32 rounded-2xl bg-white border border-line flex items-center justify-center p-2">
+                                    @if ($prod->image)
+                                        <img src="{{ asset($prod->image) }}" alt="{{ $prod->name }}" loading="lazy" decoding="async" class="h-full w-full object-contain">
+                                    @else
+                                        <span class="text-4xl sm:text-5xl font-extrabold {{ $tone }}">{{ $initialLetter }}</span>
+                                    @endif
                                     @if($discountPct !== null && $discountPct > 0)
                                         <span class="absolute top-2 left-2 bg-danger text-white text-[10px] font-bold px-2 py-0.5 rounded-full">-{{ $discountPct }}%</span>
                                     @endif

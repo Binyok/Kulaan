@@ -20,6 +20,7 @@ class Product extends Model
         'unit',
         'standard_specification',
         'benchmark_retail_price',
+        'image',
         'is_active',
     ];
 

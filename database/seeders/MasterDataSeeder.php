@@ -34,6 +34,7 @@ class MasterDataSeeder extends Seeder
                 'unit' => 'kg',
                 'spec' => 'Derajat sosoh min 95%, kadar air max 14%, butir patah max 15%',
                 'benchmark' => 9000.00,
+                'image' => 'images/products/beras.jpg',
             ],
             [
                 'category' => $sembako,
@@ -43,6 +44,7 @@ class MasterDataSeeder extends Seeder
                 'unit' => 'liter',
                 'spec' => 'Minyak kelapa sawit olahan bening, vitamin A, SNI',
                 'benchmark' => 17500.00,
+                'image' => 'images/products/minyak-goreng.jpg',
             ],
             [
                 'category' => $sembako,
@@ -52,6 +54,7 @@ class MasterDataSeeder extends Seeder
                 'unit' => 'kg',
                 'spec' => 'Gula tebu kristal putih bersih, ICUMSA max 150',
                 'benchmark' => 18000.00,
+                'image' => 'images/products/gula.jpg',
             ],
             [
                 'category' => $sembako,
@@ -61,6 +64,7 @@ class MasterDataSeeder extends Seeder
                 'unit' => 'kg',
                 'spec' => 'Kadar protein 10–11%, kadar air 14%, SNI',
                 'benchmark' => 12500.00,
+                'image' => 'images/products/tepung.jpg',
             ],
             [
                 'category' => $protein,
@@ -70,6 +74,17 @@ class MasterDataSeeder extends Seeder
                 'unit' => 'kg',
                 'spec' => 'Telur segar Grade A, berat 55–65 gram/butir',
                 'benchmark' => 28000.00,
+                'image' => 'images/products/telur.jpg',
+            ],
+            [
+                'category' => $sembako,
+                'name' => 'Bawang Merah Brebes Super',
+                'slug' => 'bawang-merah-brebes-super',
+                'sku' => 'PRD-BWG-001',
+                'unit' => 'kg',
+                'spec' => 'Bawang merah Brebes pilihan dalam kemasan jaring net bag, kering & segar',
+                'benchmark' => 38000.00,
+                'image' => 'images/products/bawang-merah.jpg',
             ],
         ];
 
@@ -84,8 +99,10 @@ class MasterDataSeeder extends Seeder
                     'unit' => $p['unit'],
                     'standard_specification' => $p['spec'],
                     'benchmark_retail_price' => $p['benchmark'],
+                    'image' => $p['image'],
                 ]
             );
+            $product->update(['image' => $p['image']]);
             $createdProducts[$p['slug']] = $product;
         }
 
@@ -127,6 +144,11 @@ class MasterDataSeeder extends Seeder
                         'stock' => 1000, 'moq' => 10, 'retail' => 27000.00,
                         'tiers' => [[1, 4.99, 27000], [5, 9.99, 26000], [10, null, 24500]],
                     ],
+                    [
+                        'product' => 'bawang-merah-brebes-super',
+                        'stock' => 1500, 'moq' => 10, 'retail' => 36000.00,
+                        'tiers' => [[1, 4.99, 36000], [5, 9.99, 34500], [10, null, 32000]],
+                    ],
                 ],
             ],
             // D2: CV Banua — Beras, Minyak, Gula (harga sedikit berbeda agar TOPSIS bermakna)
@@ -152,6 +174,11 @@ class MasterDataSeeder extends Seeder
                         'product' => 'telur-ayam-ras-segar',
                         'stock' => 800, 'moq' => 10, 'retail' => 27200.00,
                         'tiers' => [[1, 4.99, 27200], [5, 9.99, 26200], [10, null, 24800]],
+                    ],
+                    [
+                        'product' => 'bawang-merah-brebes-super',
+                        'stock' => 1200, 'moq' => 10, 'retail' => 36500.00,
+                        'tiers' => [[1, 4.99, 36500], [5, 9.99, 35000], [10, null, 32500]],
                     ],
                 ],
             ],

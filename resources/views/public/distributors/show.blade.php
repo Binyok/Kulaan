@@ -126,8 +126,12 @@
                         @php $prod = $item['product']; @endphp
                         <div class="bg-cream/50 border border-line rounded-2xl p-4 flex flex-col justify-between">
                             <div>
-                                <div class="h-24 rounded-xl bg-forest/10 flex items-center justify-center font-extrabold text-3xl text-forest mb-3">
-                                    {{ strtoupper(substr($prod->name, 0, 1)) }}
+                                <div class="h-24 rounded-xl bg-white border border-line flex items-center justify-center p-2 mb-3">
+                                    @if ($prod->image)
+                                        <img src="{{ asset($prod->image) }}" alt="{{ $prod->name }}" loading="lazy" decoding="async" class="h-full w-full object-contain">
+                                    @else
+                                        <span class="font-extrabold text-3xl text-forest">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
+                                    @endif
                                 </div>
                                 <h3 class="font-extrabold text-ink text-sm">{{ $prod->name }}</h3>
                                 <p class="text-xs text-muted mt-0.5">{{ $prod->unit }}</p>

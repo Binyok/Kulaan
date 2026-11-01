@@ -70,9 +70,13 @@
                          id="cart-card-{{ $item['key'] }}"
                          data-item-key="{{ $item['key'] }}">
                         <div class="flex gap-3">
-                            <div class="w-20 h-20 rounded-2xl {{ $loop->odd ? 'bg-forest/10' : 'bg-brass-soft' }} flex items-center justify-center shrink-0">
-                                <span class="text-3xl font-extrabold {{ $loop->odd ? 'text-forest/30' : 'text-brass/30' }}">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
-                            </div>
+                             <div class="w-20 h-20 rounded-2xl bg-white border border-line p-1.5 flex items-center justify-center shrink-0">
+                                 @if ($prod->image)
+                                     <img src="{{ asset($prod->image) }}" alt="{{ $prod->name }}" class="h-full w-full object-contain">
+                                 @else
+                                     <span class="text-3xl font-extrabold {{ $loop->odd ? 'text-forest/30' : 'text-brass/30' }}">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
+                                 @endif
+                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-extrabold leading-tight">
                                     <a href="{{ route('umkm.catalog.show', $prod) }}" class="hover:text-forest transition-colors">{{ $prod->name }}</a>
@@ -265,9 +269,13 @@
                                 <div class="bg-white rounded-3xl border border-line p-5 shadow-sm flex gap-5"
                                      id="cart-card-{{ $item['key'] }}"
                                      data-item-key="{{ $item['key'] }}">
-                                    <div class="w-28 h-28 rounded-2xl {{ $loop->odd ? 'bg-forest/10' : 'bg-brass-soft' }} flex items-center justify-center shrink-0">
-                                        <span class="text-5xl font-extrabold {{ $loop->odd ? 'text-forest/30' : 'text-brass/30' }}">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
-                                    </div>
+                                     <div class="w-28 h-28 rounded-2xl bg-white border border-line p-2 flex items-center justify-center shrink-0">
+                                         @if ($prod->image)
+                                             <img src="{{ asset($prod->image) }}" alt="{{ $prod->name }}" class="h-full w-full object-contain">
+                                         @else
+                                             <span class="text-5xl font-extrabold {{ $loop->odd ? 'text-forest/30' : 'text-brass/30' }}">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
+                                         @endif
+                                     </div>
                                     <div class="flex-1">
                                         <div class="flex items-start justify-between gap-3">
                                             <div>

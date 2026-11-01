@@ -490,6 +490,13 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-8">
                     @foreach ($products->take(4) as $product)
                         <div class="bg-white rounded-3xl border border-line shadow-sm p-5 flex flex-col h-full">
+                            <div class="h-32 rounded-2xl bg-white border border-line p-2 flex items-center justify-center mb-3">
+                                @if ($product->image)
+                                    <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" loading="lazy" decoding="async" class="h-full w-full object-contain">
+                                @else
+                                    <span class="text-4xl font-extrabold text-forest">{{ strtoupper(substr($product->name, 0, 1)) }}</span>
+                                @endif
+                            </div>
                             <p class="text-[0.6875rem] font-bold text-forest uppercase tracking-[0.12em]">{{ $product->category->name }}</p>
                             <h3 class="font-extrabold text-xl text-ink mt-1.5 leading-snug">{{ $product->name }}</h3>
                             <p class="text-[0.6875rem] text-muted mt-1.5 leading-relaxed">{{ $product->standard_specification ?? 'Spesifikasi mutu terjamin untuk kebutuhan usaha.' }}</p>
