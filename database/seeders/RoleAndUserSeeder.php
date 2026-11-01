@@ -163,11 +163,23 @@ class RoleAndUserSeeder extends Seeder
                     'city' => 'Kabupaten Sidoarjo',
                     'latitude' => $data['latitude'],
                     'longitude' => $data['longitude'],
+                    'bank_name' => 'Bank Central Asia (BCA)',
+                    'bank_account_number' => '821098'.str_pad((string) $user->id, 4, '0', STR_PAD_LEFT),
+                    'bank_account_name' => $data['company_name'],
+                    'payout_beneficiary_alias' => 'dist-'.$user->id,
+                    'payout_validated_at' => now(),
                     'rating' => $data['rating'],
                     'delivery_lead_time_days' => $data['delivery_lead_time_days'],
                     'is_active' => true,
                 ]
             );
+            $distributor->update([
+                'bank_name' => $distributor->bank_name ?? 'Bank Central Asia (BCA)',
+                'bank_account_number' => $distributor->bank_account_number ?? ('821098'.str_pad((string) $user->id, 4, '0', STR_PAD_LEFT)),
+                'bank_account_name' => $distributor->bank_account_name ?? $data['company_name'],
+                'payout_beneficiary_alias' => $distributor->payout_beneficiary_alias ?? ('dist-'.$user->id),
+                'payout_validated_at' => $distributor->payout_validated_at ?? now(),
+            ]);
             $createdDistributors[] = $distributor;
         }
 

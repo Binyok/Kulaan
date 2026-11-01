@@ -51,6 +51,20 @@
             </div>
 
             <div class="px-4 mt-4">
+                @if (! $distributor?->hasCompleteBankDetails())
+                    <div class="mb-4 bg-brass-soft border-2 border-brass/50 rounded-2xl p-4 flex flex-col gap-2.5 shadow-sm">
+                        <div class="flex items-start gap-2.5">
+                            <span class="w-7 h-7 rounded-lg bg-brass text-white flex items-center justify-center shrink-0 mt-0.5">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 7.5h.008v.008H12v-.008Z"/></svg>
+                            </span>
+                            <div>
+                                <p class="text-xs font-extrabold text-ink">Rekening Pencairan Belum Lengkap</p>
+                                <p class="text-[11px] text-muted mt-0.5">Lengkapi rekening pencairan agar bisa mengaktifkan produk dan memproses pesanan masuk.</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('profile.complete') }}" class="w-full text-center text-xs font-bold bg-brass text-white py-2 rounded-xl">Lengkapi Rekening</a>
+                    </div>
+                @endif
                 <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-forest-deep via-forest to-forest-dark text-white p-5">
                     <div class="absolute -right-10 -top-12 w-44 h-44 rounded-full bg-white/10"></div>
                     <div class="absolute right-16 -bottom-14 w-36 h-36 rounded-full bg-brass/20"></div>
@@ -191,6 +205,20 @@
             </header>
 
             <main class="px-8 py-6 max-w-6xl">
+                @if (! $distributor?->hasCompleteBankDetails())
+                    <div class="mb-6 bg-brass-soft border-2 border-brass/50 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <span class="w-9 h-9 rounded-xl bg-brass text-white flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 7.5h.008v.008H12v-.008Z"/></svg>
+                            </span>
+                            <div>
+                                <p class="text-sm font-extrabold text-ink">Rekening Pencairan Dana Belum Dilengkapi</p>
+                                <p class="text-xs text-muted mt-0.5">Lengkapi rekening pencairan agar kamu dapat mengaktifkan katalog produk dan mengonfirmasi pesanan UMKM.</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('profile.complete') }}" class="text-xs font-bold bg-brass text-white px-4 py-2.5 rounded-xl hover:bg-brass/90 transition shrink-0">Lengkapi Rekening</a>
+                    </div>
+                @endif
                 <section class="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-forest-deep via-forest to-forest-dark text-white p-8">
                     <div class="absolute -right-16 -top-20 w-72 h-72 rounded-full bg-white/10"></div>
                     <div class="absolute right-40 -bottom-24 w-56 h-56 rounded-full bg-brass/20"></div>

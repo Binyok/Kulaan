@@ -60,14 +60,16 @@ class SupplierProductController extends Controller
             'tiers.*.unit_price' => ['required_with:tiers', 'numeric', 'min:0'],
         ]);
 
-        DB::transaction(function () use ($distributor, $validated) {
+        $isAvailable = $distributor->hasCompleteBankDetails();
+
+        DB::transaction(function () use ($distributor, $validated, $isAvailable) {
             $supplierProduct = SupplierProduct::create([
                 'distributor_id' => $distributor->id,
                 'product_id' => $validated['product_id'],
                 'stock_available' => $validated['stock_available'],
                 'moq' => $validated['moq'],
                 'base_retail_price' => $validated['base_retail_price'],
-                'is_available' => true,
+                'is_available' => $isAvailable,
             ]);
 
             if (! empty($validated['tiers'])) {
@@ -83,6 +85,10 @@ class SupplierProductController extends Controller
                 }
             }
         });
+
+        if (! $isAvailable) {
+            return back()->with('warning', 'Produk ditambahkan dengan status nonaktif. Lengkapi rekening pencairan di profil untuk mengaktifkan produk.');
+        }
 
         return back()->with('success', 'Katalog produk & tingkatan harga tier berhasil ditambahkan.');
     }
@@ -101,11 +107,16 @@ class SupplierProductController extends Controller
             'is_available' => ['nullable', 'boolean'],
         ]);
 
+        $requestedAvailable = $request->has('is_available');
+        if ($requestedAvailable && ! $distributor->hasCompleteBankDetails()) {
+            return back()->with('error', 'Lengkapi rekening pencairan di profil distributor terlebih dahulu sebelum mengaktifkan penawaran produk.');
+        }
+
         $supplierProduct->update([
             'stock_available' => $validated['stock_available'],
             'moq' => $validated['moq'],
             'base_retail_price' => $validated['base_retail_price'],
-            'is_available' => $request->has('is_available'),
+            'is_available' => $requestedAvailable && $distributor->hasCompleteBankDetails(),
         ]);
 
         return back()->with('success', 'Data stok dan MOQ berhasil diperbarui.');

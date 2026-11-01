@@ -21,10 +21,30 @@ class Distributor extends Model
         'province',
         'latitude',
         'longitude',
+        'bank_name',
+        'bank_account_number',
+        'bank_account_name',
+        'payout_beneficiary_alias',
+        'payout_validated_at',
         'rating',
         'delivery_lead_time_days',
         'is_active',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'payout_validated_at' => 'datetime',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    public function hasCompleteBankDetails(): bool
+    {
+        return ! empty($this->bank_name)
+            && ! empty($this->bank_account_number)
+            && ! empty($this->bank_account_name);
+    }
 
     public function user(): BelongsTo
     {

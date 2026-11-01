@@ -2,8 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrderStatus;
 use App\Models\Courier;
 use App\Models\Distributor;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Models\SupplierProduct;
 use App\Models\Umkm;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -182,6 +187,91 @@ class ProfileCompletionTest extends TestCase
         $courier->refresh();
         $this->assertEquals('Mobil Box', $courier->vehicle_type);
         $this->assertEquals('DA 9999 ZZ', $courier->vehicle_number);
+    }
+
+    public function test_distributor_can_update_bank_account_details(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('distributor');
+        $distributor = Distributor::create([
+            'user_id' => $user->id,
+            'company_name' => 'PT Bank Test',
+            'address' => 'Jl. Bank 12',
+            'district' => 'Waru',
+            'city' => 'Sidoarjo',
+        ]);
+
+        $this->actingAs($user)->post(route('profile.complete.update'), [
+            'name' => 'PT Bank Test',
+            'phone' => '081298765432',
+            'address' => 'Jl. Bank 12',
+            'city' => 'Sidoarjo',
+            'district' => 'Waru',
+            'bank_name' => 'Bank BCA',
+            'bank_account_number' => '1234567890',
+            'bank_account_name' => 'PT Bank Test',
+        ])->assertRedirect(route('dashboard'));
+
+        $distributor->refresh();
+        $this->assertEquals('Bank BCA', $distributor->bank_name);
+        $this->assertEquals('1234567890', $distributor->bank_account_number);
+        $this->assertEquals('PT Bank Test', $distributor->bank_account_name);
+        $this->assertNotNull($distributor->payout_validated_at);
+        $this->assertTrue($distributor->hasCompleteBankDetails());
+    }
+
+    public function test_distributor_cannot_activate_product_or_confirm_order_without_bank_account(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('distributor');
+        $distributor = Distributor::create([
+            'user_id' => $user->id,
+            'company_name' => 'PT No Bank',
+            'address' => 'Jl. Tanpa Bank',
+            'city' => 'Sidoarjo',
+            'district' => 'Waru',
+        ]);
+
+        $category = ProductCategory::firstOrCreate(['slug' => 'sembako'], ['name' => 'Sembako']);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Beras Uji',
+            'unit' => 'kg',
+            'benchmark_retail_price' => 10000,
+            'is_active' => true,
+        ]);
+        $supplierProduct = SupplierProduct::create([
+            'distributor_id' => $distributor->id,
+            'product_id' => $product->id,
+            'stock_available' => 100,
+            'moq' => 5,
+            'base_retail_price' => 10000,
+            'is_available' => false,
+        ]);
+
+        // Attempt to activate product without bank details
+        $this->actingAs($user)->put(route('distributor.products.update', $supplierProduct), [
+            'stock_available' => 100,
+            'moq' => 5,
+            'base_retail_price' => 10000,
+            'is_available' => '1',
+        ])->assertSessionHas('error');
+
+        $this->assertFalse($supplierProduct->fresh()->is_available);
+
+        // Attempt to confirm order without bank details
+        $order = Order::create([
+            'distributor_id' => $distributor->id,
+            'total_amount' => 50000,
+            'total_quantity' => 5,
+            'status' => OrderStatus::PAID->value,
+        ]);
+
+        $this->actingAs($user)->post(route('distributor.orders.update-status', $order), [
+            'status' => 'CONFIRMED',
+        ])->assertSessionHas('error');
+
+        $this->assertEquals(OrderStatus::PAID, $order->fresh()->status);
     }
 
     private function mockSocialiteCallback(): void

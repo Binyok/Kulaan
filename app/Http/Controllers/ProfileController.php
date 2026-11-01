@@ -50,13 +50,21 @@ class ProfileController extends Controller
             'delivery_lead_time_days' => ['nullable', 'integer', 'min:1', 'max:30'],
             'vehicle_type' => ['nullable', 'string', 'max:100'],
             'vehicle_number' => ['nullable', 'string', 'max:50'],
+            'bank_name' => ['required_with:bank_account_number,bank_account_name', 'nullable', 'string', 'max:100'],
+            'bank_account_number' => ['required_with:bank_name,bank_account_name', 'nullable', 'digits_between:6,20'],
+            'bank_account_name' => ['required_with:bank_name,bank_account_number', 'nullable', 'string', 'max:255'],
             'password' => ['nullable', 'string', 'confirmed', 'min:8'],
-        ], [], [
+        ], [
+            'bank_account_number.digits_between' => 'Nomor rekening harus berupa 6 hingga 20 digit angka.',
+        ], [
             'business_name' => 'nama usaha/perusahaan',
             'business_type' => 'jenis usaha',
             'delivery_lead_time_days' => 'estimasi lama pengiriman',
             'vehicle_type' => 'tipe kendaraan',
             'vehicle_number' => 'nomor polisi kendaraan',
+            'bank_name' => 'nama bank',
+            'bank_account_number' => 'nomor rekening',
+            'bank_account_name' => 'nama pemilik rekening',
         ]);
 
         $userUpdate = [
@@ -111,11 +119,24 @@ class ProfileController extends Controller
         }
 
         if ($user->distributor) {
-            $user->distributor->update([
+            $distData = [
                 ...$attributes,
                 'company_name' => ($validated['business_name'] ?? null) ?: $user->distributor->company_name,
                 'delivery_lead_time_days' => $validated['delivery_lead_time_days'] ?? $user->distributor->delivery_lead_time_days ?? 2,
-            ]);
+            ];
+
+            if (array_key_exists('bank_name', $validated)) {
+                $distData['bank_name'] = $validated['bank_name'];
+                $distData['bank_account_number'] = $validated['bank_account_number'];
+                $distData['bank_account_name'] = $validated['bank_account_name'];
+                if (! empty($validated['bank_name']) && ! empty($validated['bank_account_number']) && ! empty($validated['bank_account_name'])) {
+                    $distData['payout_validated_at'] = $user->distributor->payout_validated_at ?? now();
+                } else {
+                    $distData['payout_validated_at'] = null;
+                }
+            }
+
+            $user->distributor->update($distData);
 
             return;
         }

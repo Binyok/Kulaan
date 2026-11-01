@@ -38,7 +38,14 @@ class OrderAndShipmentTest extends TestCase
     {
         $distUser = User::factory()->create();
         $distUser->assignRole('distributor');
-        $distributor = Distributor::create(['user_id' => $distUser->id, 'company_name' => 'PT Borneo', 'address' => 'Jl. Trisakti']);
+        $distributor = Distributor::create([
+            'user_id' => $distUser->id,
+            'company_name' => 'PT Borneo',
+            'address' => 'Jl. Trisakti',
+            'bank_name' => 'BCA',
+            'bank_account_number' => '1234567890',
+            'bank_account_name' => 'PT Borneo',
+        ]);
 
         $courierUser = User::factory()->create();
         $courierUser->assignRole('kurir');

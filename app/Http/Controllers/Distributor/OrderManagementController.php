@@ -34,7 +34,7 @@ class OrderManagementController extends Controller
             $tab = 'active';
         }
 
-        $orders = Order::with('items.product', 'items.umkm', 'shipments.courier.user', 'shipments.latestLocation')
+        $orders = Order::with('items.product', 'items.umkm', 'items.escrow', 'shipments.courier.user', 'shipments.latestLocation')
             ->where('distributor_id', $distributor->id)
             ->when($tab === 'active', fn ($query) => $query->whereNotIn('status', [
                 OrderStatus::DELIVERED->value,
@@ -82,6 +82,10 @@ class OrderManagementController extends Controller
             throw ValidationException::withMessages([
                 'status' => 'Transisi status dari '.$order->status->label().' ke '.OrderStatus::from($request->status)->label().' tidak diizinkan.',
             ]);
+        }
+
+        if ($request->status === 'CONFIRMED' && ! $distributor?->hasCompleteBankDetails()) {
+            return back()->with('error', 'Lengkapi rekening pencairan di profil sebelum mengonfirmasi pesanan.');
         }
 
         if ($request->status === 'CANCELLED') {

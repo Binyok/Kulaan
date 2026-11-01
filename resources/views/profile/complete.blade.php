@@ -161,6 +161,43 @@
                     </section>
                 @endif
 
+                @if ($isDistributor)
+                    <section class="bg-white rounded-3xl border border-line p-4 shadow-sm">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="w-10 h-10 rounded-full bg-forest/10 text-forest flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5h16.5a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5v-12a1.5 1.5 0 0 1 1.5-1.5Zm12 6a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/></svg>
+                            </span>
+                            <div>
+                                <h2 class="text-sm font-extrabold text-ink">Rekening Pencairan</h2>
+                                <p class="text-[11px] text-muted">Dana hasil penjualan pesanan kolektif dicairkan otomatis ke rekening ini setelah pesanan dikonfirmasi selesai.</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3.5 mt-3">
+                            <div>
+                                <label for="bank_name-mobile" class="block text-xs font-semibold text-ink mb-1.5">Nama Bank</label>
+                                <input id="bank_name-mobile" type="text" name="bank_name" value="{{ old('bank_name', $distributor?->bank_name) }}" placeholder="cth. Bank BCA / Mandiri / BRI" class="w-full bg-cream/50 border border-line rounded-2xl px-4 py-3 text-sm outline-none placeholder:text-muted/60 focus:border-forest">
+                                @error('bank_name')
+                                    <p class="text-xs text-danger font-semibold mt-1.5">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="bank_account_number-mobile" class="block text-xs font-semibold text-ink mb-1.5">Nomor Rekening</label>
+                                <input id="bank_account_number-mobile" type="text" name="bank_account_number" value="{{ old('bank_account_number', $distributor?->bank_account_number) }}" placeholder="cth. 1234567890 (6-20 digit angka)" class="w-full bg-cream/50 border border-line rounded-2xl px-4 py-3 text-sm outline-none placeholder:text-muted/60 focus:border-forest">
+                                @error('bank_account_number')
+                                    <p class="text-xs text-danger font-semibold mt-1.5">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="bank_account_name-mobile" class="block text-xs font-semibold text-ink mb-1.5">Nama Pemilik Rekening</label>
+                                <input id="bank_account_name-mobile" type="text" name="bank_account_name" value="{{ old('bank_account_name', $distributor?->bank_account_name) }}" placeholder="Sesuai buku tabungan" class="w-full bg-cream/50 border border-line rounded-2xl px-4 py-3 text-sm outline-none placeholder:text-muted/60 focus:border-forest">
+                                @error('bank_account_name')
+                                    <p class="text-xs text-danger font-semibold mt-1.5">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </section>
+                @endif
+
                 <section class="bg-white rounded-3xl border border-line p-4 shadow-sm">
                     <div class="flex items-center gap-3 mb-1">
                         <span class="w-10 h-10 rounded-full bg-success/10 text-forest flex items-center justify-center shrink-0">
@@ -439,6 +476,43 @@
                                             <input id="vehicle_number" type="text" name="vehicle_number" value="{{ old('vehicle_number', $courier?->vehicle_number) }}" placeholder="DA 1234 ABC" class="w-full bg-cream/50 border border-line rounded-2xl px-4 py-3.5 text-sm uppercase outline-none placeholder:text-muted/60 focus:border-forest">
                                         </div>
                                     @endif
+                                </div>
+                            </section>
+                        @endif
+
+                        @if ($isDistributor)
+                            <section class="bg-white rounded-3xl border border-line p-6 sm:p-8 mb-6">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <span class="w-11 h-11 rounded-full bg-forest/10 text-forest flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5h16.5a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5v-12a1.5 1.5 0 0 1 1.5-1.5Zm12 6a2.25 2.25 0 0 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/></svg>
+                                    </span>
+                                    <div>
+                                        <h2 class="font-extrabold text-ink">Rekening Pencairan</h2>
+                                        <p class="text-xs text-muted">Dana hasil penjualan pesanan kolektif dicairkan otomatis ke rekening ini setelah pesanan dikonfirmasi selesai oleh UMKM atau otomatis setelah 48 jam.</p>
+                                    </div>
+                                </div>
+                                <div class="grid sm:grid-cols-3 gap-5 mt-5">
+                                    <div>
+                                        <label for="bank_name" class="block text-sm font-semibold text-ink mb-2">Nama Bank</label>
+                                        <input id="bank_name" type="text" name="bank_name" value="{{ old('bank_name', $distributor?->bank_name) }}" placeholder="cth. Bank BCA" class="w-full bg-cream/50 border border-line rounded-2xl px-4 py-3.5 text-sm outline-none placeholder:text-muted/60 focus:border-forest">
+                                        @error('bank_name')
+                                            <p class="text-xs text-danger font-semibold mt-1.5">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="bank_account_number" class="block text-sm font-semibold text-ink mb-2">Nomor Rekening</label>
+                                        <input id="bank_account_number" type="text" name="bank_account_number" value="{{ old('bank_account_number', $distributor?->bank_account_number) }}" placeholder="cth. 1234567890" class="w-full bg-cream/50 border border-line rounded-2xl px-4 py-3.5 text-sm outline-none placeholder:text-muted/60 focus:border-forest">
+                                        @error('bank_account_number')
+                                            <p class="text-xs text-danger font-semibold mt-1.5">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="bank_account_name" class="block text-sm font-semibold text-ink mb-2">Nama Pemilik Rekening</label>
+                                        <input id="bank_account_name" type="text" name="bank_account_name" value="{{ old('bank_account_name', $distributor?->bank_account_name) }}" placeholder="Sesuai buku tabungan" class="w-full bg-cream/50 border border-line rounded-2xl px-4 py-3.5 text-sm outline-none placeholder:text-muted/60 focus:border-forest">
+                                        @error('bank_account_name')
+                                            <p class="text-xs text-danger font-semibold mt-1.5">{{ $message }}</p>
+                                        @enderror
+                                    </div>
                                 </div>
                             </section>
                         @endif
