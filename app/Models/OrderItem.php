@@ -66,6 +66,11 @@ class OrderItem extends Model
         return $this->hasOne(Payment::class);
     }
 
+    public function escrow(): HasOne
+    {
+        return $this->hasOne(Escrow::class);
+    }
+
     public function review(): HasOne
     {
         return $this->hasOne(DistributorReview::class);

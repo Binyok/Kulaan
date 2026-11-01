@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EscrowStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Distributor;
+use App\Models\Escrow;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -117,6 +119,17 @@ class PaymentTest extends TestCase
         $this->assertEquals(PaymentStatus::PAID, $payment->fresh()->payment_status);
         $this->assertEquals(PaymentStatus::PAID, $orderItem->fresh()->payment_status);
         $this->assertEquals(OrderStatus::PAID, $order->fresh()->status);
+
+        $escrow = $orderItem->fresh()->escrow;
+        $this->assertNotNull($escrow);
+        $this->assertEquals(EscrowStatus::HELD, $escrow->status);
+        $this->assertEquals(26000.00, (float) $escrow->amount);
+        $this->assertEquals($distributor->id, $escrow->distributor_id);
+        $this->assertEquals($umkm->id, $escrow->umkm_id);
+
+        // Reprocessing webhook should not duplicate escrow
+        $this->postJson(route('payment.webhook'), $webhookPayload)->assertStatus(200);
+        $this->assertEquals(1, Escrow::where('order_item_id', $orderItem->id)->count());
     }
 
     public function test_webhook_rejects_payload_without_signature(): void

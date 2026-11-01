@@ -98,6 +98,8 @@
         payments: {{ json_encode((object) $payments) }},
         reviewables: {{ json_encode($reviewableItems) }},
         autoRate: {{ (int) request('rate') }},
+        disputeOpen: false,
+        disputeItem: null,
         init() {
             const target = this.reviewables[this.autoRate];
             if (target) {
@@ -211,11 +213,14 @@
                                     @endphp
                                     <article class="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
                                         <div class="flex items-center justify-between px-4 py-3 border-b border-line/60">
-                                            <div class="flex items-center gap-2 min-w-0">
+                                            <div class="flex items-center gap-2 min-w-0 flex-wrap">
                                                 <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
                                                 <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
+                                                @if ($item->escrow)
+                                                    <span class="text-[10px] font-bold {{ $item->escrow->status->badgeClass() }} px-2 py-0.5 rounded-full">{{ $item->escrow->status->label() }}</span>
+                                                @endif
                                             </div>
-                                            <span class="text-[10px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
+                                            <span class="text-[10px] text-muted shrink-0">{{ $item->created_at->format('d M Y') }}</span>
                                         </div>
                                         <div class="px-4 py-3.5">
                                             <p class="font-bold text-ink text-sm">{{ $item->product->name }}</p>
@@ -242,14 +247,36 @@
 
                                         <div class="px-4 pb-4 pt-3 border-t border-line/60 flex items-center gap-2 flex-wrap">
                                             <p class="w-full text-[11px] font-semibold text-muted">Status: <span class="text-ink">{{ $item->order->status->label() }}</span></p>
+                                            @if ($needsConfirm && $item->escrow && $item->escrow->status === \App\Enums\EscrowStatus::HELD && $item->escrow->release_due_at)
+                                                <div class="w-full bg-brass-soft border border-brass/30 rounded-xl p-2.5 text-[11px] text-ink"
+                                                     x-data="{
+                                                         due: new Date('{{ $item->escrow->release_due_at->toIso8601String() }}').getTime(),
+                                                         countdown: '',
+                                                         updateTimer() {
+                                                             const diff = Math.max(0, this.due - new Date().getTime());
+                                                             const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+                                                             const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                                                             const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+                                                             this.countdown = `${h}:${m}:${s}`;
+                                                         }
+                                                     }"
+                                                     x-init="updateTimer(); setInterval(() => updateTimer(), 1000)">
+                                                    <span class="font-bold text-brass">Auto-confirm Escrow:</span> Dana diteruskan otomatis ke distributor dalam <strong class="font-mono text-forest" x-text="countdown"></strong> bila tidak ada komplain.
+                                                </div>
+                                            @endif
                                             @if ($needsConfirm)
-                                                <form method="POST" action="{{ route('umkm.orders.confirm', $item) }}" class="w-full">
-                                                    @csrf
-                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-white bg-forest rounded-xl px-4 py-3 cursor-pointer">
-                                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                                        Pesanan Diterima
+                                                <div class="w-full flex gap-2">
+                                                    <form method="POST" action="{{ route('umkm.orders.confirm', $item) }}" class="flex-1">
+                                                        @csrf
+                                                        <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-forest rounded-xl px-4 py-3 cursor-pointer">
+                                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                                            Pesanan Diterima
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" @click="disputeItem = {{ $item->id }}; disputeOpen = true" class="px-3 py-2 text-xs font-bold text-danger border border-danger/30 rounded-xl hover:bg-danger/10">
+                                                        Komplain
                                                     </button>
-                                                </form>
+                                                </div>
                                             @endif
 
                                             @if ($shipment && ! $isReceived)
@@ -477,11 +504,14 @@
                                             @endphp
                                             <article class="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
                                                 <div class="flex items-center justify-between px-5 py-3 border-b border-line/60">
-                                                    <div class="flex items-center gap-2">
+                                                    <div class="flex items-center gap-2 flex-wrap">
                                                         <span class="font-mono text-xs text-muted">{{ $item->order->order_number }}</span>
                                                         <span class="text-[10px] font-bold {{ $paymentPillClass($item->payment_status) }} px-2 py-0.5 rounded-full">{{ $item->payment_status->label() }}</span>
+                                                        @if ($item->escrow)
+                                                            <span class="text-[10px] font-bold {{ $item->escrow->status->badgeClass() }} px-2 py-0.5 rounded-full">{{ $item->escrow->status->label() }}</span>
+                                                        @endif
                                                     </div>
-                                                    <span class="text-[11px] text-muted">{{ $item->created_at->format('d M Y') }}</span>
+                                                    <span class="text-[11px] text-muted shrink-0">{{ $item->created_at->format('d M Y') }}</span>
                                                 </div>
                                                 <div class="px-5 py-4 flex items-start justify-between gap-4 flex-wrap">
                                                     <div class="min-w-0">
@@ -506,14 +536,36 @@
 
                                                 <div class="px-5 pb-4 pt-3 border-t border-line/60 flex items-center gap-3 flex-wrap">
                                                     <p class="w-full text-xs font-semibold text-muted">Status: <span class="text-ink">{{ $item->order->status->label() }}</span></p>
+                                                    @if ($needsConfirm && $item->escrow && $item->escrow->status === \App\Enums\EscrowStatus::HELD && $item->escrow->release_due_at)
+                                                        <div class="w-full bg-brass-soft border border-brass/30 rounded-xl p-3 text-xs text-ink"
+                                                             x-data="{
+                                                                 due: new Date('{{ $item->escrow->release_due_at->toIso8601String() }}').getTime(),
+                                                                 countdown: '',
+                                                                 updateTimer() {
+                                                                     const diff = Math.max(0, this.due - new Date().getTime());
+                                                                     const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+                                                                     const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                                                                     const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+                                                                     this.countdown = `${h}:${m}:${s}`;
+                                                                 }
+                                                             }"
+                                                             x-init="updateTimer(); setInterval(() => updateTimer(), 1000)">
+                                                            <span class="font-bold text-brass">Auto-confirm Escrow:</span> Dana diteruskan otomatis ke distributor dalam <strong class="font-mono text-forest" x-text="countdown"></strong> bila tidak ada komplain.
+                                                        </div>
+                                                    @endif
                                                     @if ($needsConfirm)
-                                                        <form method="POST" action="{{ route('umkm.orders.confirm', $item) }}">
-                                                            @csrf
-                                                            <button type="submit" class="inline-flex items-center gap-1.5 text-sm font-bold text-white bg-forest rounded-xl px-4 py-2.5 cursor-pointer">
-                                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                                                Pesanan Diterima
+                                                        <div class="flex items-center gap-2">
+                                                            <form method="POST" action="{{ route('umkm.orders.confirm', $item) }}">
+                                                                @csrf
+                                                                <button type="submit" class="inline-flex items-center gap-1.5 text-sm font-bold text-white bg-forest rounded-xl px-4 py-2.5 cursor-pointer">
+                                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                                                    Pesanan Diterima
+                                                                </button>
+                                                            </form>
+                                                            <button type="button" @click="disputeItem = {{ $item->id }}; disputeOpen = true" class="px-4 py-2.5 text-xs font-bold text-danger border border-danger/30 rounded-xl hover:bg-danger/10 cursor-pointer">
+                                                                Komplain Barang
                                                             </button>
-                                                        </form>
+                                                        </div>
                                                     @endif
 
                                                     @if ($shipment && ! $isReceived)
@@ -815,6 +867,42 @@
                 <a :href="payment.payUrl" class="btn-primary text-sm py-3 px-6 w-full sm:w-auto text-center">Bayar Sekarang</a>
                 <button type="button" @click="showPayment = false" class="btn-ghost text-sm py-3 w-full sm:w-auto">Tutup</button>
             </div>
+        </x-modal>
+
+        <!-- Modal Komplain Pesanan -->
+        <x-modal open="disputeOpen" size="lg" title="Ajukan Komplain Pesanan" eyebrow="Arbitrase Escrow">
+            <form :action="'{{ url('umkm/orders') }}/' + disputeItem + '/dispute'" method="POST" enctype="multipart/form-data" class="pt-4 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-bold text-ink mb-1.5">Alasan Komplain</label>
+                    <select name="reason" required class="w-full bg-cream/50 border border-line rounded-xl px-4 py-2.5 text-xs outline-none focus:border-forest">
+                        <option value="Barang Rusak / Cacat">Barang Rusak / Cacat Kemasan</option>
+                        <option value="Jumlah Tidak Sesuai">Jumlah / Berat Kurang</option>
+                        <option value="Produk Salah">Produk Berbeda dari Pesanan</option>
+                        <option value="Kualitas Buruk">Kualitas Tidak Sesuai Spesifikasi</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-ink mb-1.5">Deskripsi Masalah</label>
+                    <textarea name="description" rows="3" required placeholder="Jelaskan kendala barang yang kamu terima..." class="w-full bg-cream/50 border border-line rounded-xl p-3 text-xs outline-none focus:border-forest"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-ink mb-1.5">Foto Bukti (Opsional)</label>
+                    <input type="file" name="evidence" accept="image/*" class="w-full text-xs text-muted file:mr-3 file:rounded-xl file:border-0 file:bg-forest file:px-3 file:py-2 file:text-white file:text-xs file:font-bold border border-line rounded-xl p-1.5 bg-white">
+                </div>
+
+                <div class="bg-brass-soft border border-brass/30 rounded-xl p-3 text-[11px] text-ink leading-relaxed">
+                    Pengajuan komplain akan <strong>membekukan pencairan dana escrow</strong> ke distributor sampai tim admin Kulaan menyelesaikan investigasi bukti kurir dan UMKM.
+                </div>
+
+                <div class="pt-4 border-t border-line flex justify-end gap-2">
+                    <button type="button" @click="disputeOpen = false" class="btn-ghost text-xs px-4 py-2">Batal</button>
+                    <button type="submit" class="bg-danger text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer">Kirim Komplain</button>
+                </div>
+            </form>
         </x-modal>
     </div>
 </x-layouts.app>

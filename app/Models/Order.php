@@ -68,6 +68,11 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function escrows(): HasMany
+    {
+        return $this->hasMany(Escrow::class);
+    }
+
     /**
      * Check if all UMKM members have paid their order item invoices.
      */

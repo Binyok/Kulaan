@@ -2,9 +2,11 @@
 
 namespace App\Services\Payment;
 
+use App\Enums\EscrowStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\PurchaseRequestStatus;
+use App\Models\Escrow;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
@@ -188,6 +190,18 @@ class MidtransService
                 $payment->orderItem->update([
                     'payment_status' => PaymentStatus::PAID->value,
                 ]);
+
+                Escrow::firstOrCreate(
+                    ['order_item_id' => $payment->order_item_id],
+                    [
+                        'order_id' => $payment->order_id,
+                        'distributor_id' => $payment->order->distributor_id,
+                        'umkm_id' => $payment->orderItem->umkm_id,
+                        'amount' => $payment->orderItem->subtotal,
+                        'status' => EscrowStatus::HELD->value,
+                        'held_at' => now(),
+                    ]
+                );
 
                 // Check if the entire collective order is now fully paid
                 $order = $payment->order;

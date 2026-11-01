@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Courier;
 
+use App\Enums\EscrowStatus;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Escrow;
 use App\Models\Shipment;
 use App\Models\TrackingLocation;
 use Illuminate\Http\JsonResponse;
@@ -141,6 +143,17 @@ class CourierShipmentController extends Controller
                 $shipment->order->update([
                     'status' => OrderStatus::DELIVERED->value,
                 ]);
+
+                $autoConfirmHours = (int) config('escrow.auto_confirm_hours', 48);
+                $deliveredAt = now();
+                $releaseDueAt = $deliveredAt->copy()->addHours($autoConfirmHours);
+
+                Escrow::where('order_id', $shipment->order_id)
+                    ->where('status', EscrowStatus::HELD)
+                    ->update([
+                        'delivered_at' => $deliveredAt,
+                        'release_due_at' => $releaseDueAt,
+                    ]);
             }
         });
 

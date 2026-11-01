@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\DistributorReview;
 use App\Models\OrderItem;
+use App\Services\Escrow\EscrowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,7 @@ class OrderController extends Controller
         $orderItems = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->select('order_items.*')
-            ->with('order.distributor', 'order.items.product', 'product', 'order.shipments.courier.user', 'order.shipments.latestLocation', 'review')
+            ->with('order.distributor', 'order.items.product', 'product', 'order.shipments.courier.user', 'order.shipments.latestLocation', 'review', 'escrow')
             ->where('order_items.umkm_id', $umkm->id)
             ->when($tab === 'aktif', fn ($query) => $query->whereNull('order_items.received_confirmed_at'))
             ->when($tab === 'riwayat', fn ($query) => $query->whereNotNull('order_items.received_confirmed_at'))
@@ -61,6 +62,10 @@ class OrderController extends Controller
 
             if ($order->items()->whereNull('received_confirmed_at')->count() === 0) {
                 $order->update(['status' => OrderStatus::COMPLETED->value]);
+            }
+
+            if ($orderItem->escrow) {
+                app(EscrowService::class)->release($orderItem->escrow);
             }
         });
 

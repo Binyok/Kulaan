@@ -101,7 +101,12 @@
                                     @endphp
                                     <div class="flex items-center justify-between text-xs">
                                         <span><strong class="text-ink">{{ $item->umkm->business_name }}</strong> <span class="text-muted">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</span></span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $paymentBadge }}">{{ $item->payment_status->label() }}</span>
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $paymentBadge }}">{{ $item->payment_status->label() }}</span>
+                                            @if ($item->escrow)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $item->escrow->status->badgeClass() }}">Dana: {{ $item->escrow->status->shortLabel() }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
@@ -301,7 +306,12 @@
                                             @endphp
                                             <div class="flex items-center justify-between bg-cream/60 rounded-2xl px-4 py-3 text-sm">
                                                 <span><strong class="text-ink">{{ $item->umkm->business_name }}</strong> <span class="text-muted">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</span></span>
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $paymentBadge }}">{{ $item->payment_status->label() }}</span>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $paymentBadge }}">{{ $item->payment_status->label() }}</span>
+                                                    @if ($item->escrow)
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $item->escrow->status->badgeClass() }}">Dana: {{ $item->escrow->status->shortLabel() }}</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         @endforeach
                                     </div>
