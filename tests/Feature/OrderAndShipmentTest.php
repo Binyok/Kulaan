@@ -387,4 +387,65 @@ class OrderAndShipmentTest extends TestCase
             'event_type' => 'VOID_OR_REFUND_SIMULATED',
         ]);
     }
+
+    public function test_cancelling_multi_product_order_restores_stock_for_every_product(): void
+    {
+        $distUser = User::factory()->create();
+        $distUser->assignRole('distributor');
+        $distributor = Distributor::create(['user_id' => $distUser->id, 'company_name' => 'PT Multi', 'address' => 'Jl. M']);
+
+        $umkmUser = User::factory()->create();
+        $umkmUser->assignRole('umkm');
+        $umkm = Umkm::create(['user_id' => $umkmUser->id, 'business_name' => 'Kedai Multi', 'address' => 'Jl. A', 'district' => 'Waru', 'city' => 'Sidoarjo']);
+
+        $category = ProductCategory::create(['name' => 'Sembako']);
+        $productA = Product::create(['category_id' => $category->id, 'name' => 'Beras', 'unit' => 'kg', 'benchmark_retail_price' => 10000]);
+        $productB = Product::create(['category_id' => $category->id, 'name' => 'Gula', 'unit' => 'kg', 'benchmark_retail_price' => 15000]);
+
+        // Stock below reflects quantities already deducted when the order was paid
+        $offerA = SupplierProduct::create(['distributor_id' => $distributor->id, 'product_id' => $productA->id, 'stock_available' => 10, 'moq' => 1, 'base_retail_price' => 9000, 'is_available' => true]);
+        $offerB = SupplierProduct::create(['distributor_id' => $distributor->id, 'product_id' => $productB->id, 'stock_available' => 20, 'moq' => 1, 'base_retail_price' => 14000, 'is_available' => true]);
+
+        $order = Order::create([
+            'distributor_id' => $distributor->id,
+            'total_amount' => 97000,
+            'total_quantity' => 8,
+            'status' => OrderStatus::PAID->value,
+        ]);
+
+        foreach ([[$productA, 3, 9000], [$productB, 5, 14000]] as [$product, $qty, $price]) {
+            $item = OrderItem::create([
+                'order_id' => $order->id,
+                'umkm_id' => $umkm->id,
+                'product_id' => $product->id,
+                'quantity' => $qty,
+                'unit_price' => $price,
+                'subtotal' => $qty * $price,
+                'benchmark_retail_price' => $price,
+                'savings_amount' => 0,
+                'payment_status' => PaymentStatus::PAID->value,
+                'delivery_district' => 'Waru',
+                'delivery_address' => 'Jl. A',
+            ]);
+
+            Payment::create([
+                'order_id' => $order->id,
+                'order_item_id' => $item->id,
+                'umkm_id' => $umkm->id,
+                'amount' => $qty * $price,
+                'payment_status' => PaymentStatus::PAID->value,
+                'paid_at' => now(),
+            ]);
+        }
+
+        $this->actingAs($distUser)->post(route('distributor.orders.update-status', $order), [
+            'status' => 'CANCELLED',
+            'cancel_reason' => 'Gudang tutup',
+        ])->assertRedirect();
+
+        $this->assertEquals(OrderStatus::CANCELLED, $order->fresh()->status);
+        // Both products get their own quantity back, not just the first one
+        $this->assertEquals(13.0, (float) $offerA->fresh()->stock_available);
+        $this->assertEquals(25.0, (float) $offerB->fresh()->stock_available);
+    }
 }

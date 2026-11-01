@@ -335,8 +335,6 @@ class MidtransService
         DB::transaction(function () use ($order, $reason) {
             $order->load(['items.payment', 'items.purchaseRequest', 'matchingGroup']);
 
-            $productId = $order->matchingGroup?->product_id ?? $order->items->first()?->product_id;
-
             foreach ($order->items as $item) {
                 if ($item->payment) {
                     if ($item->payment_status === PaymentStatus::PAID) {
@@ -356,16 +354,15 @@ class MidtransService
                         'status' => PurchaseRequestStatus::CANCELLED->value,
                     ]);
                 }
-            }
 
-            // Restore supplier product stock if deducted
-            if ($productId) {
+                // Restore this item's quantity to its own supplier product:
+                // a cart order can span several different products.
                 $supplierProduct = SupplierProduct::where('distributor_id', $order->distributor_id)
-                    ->where('product_id', $productId)
+                    ->where('product_id', $item->product_id)
                     ->first();
 
-                if ($supplierProduct && $supplierProduct->stock_available !== null && $order->total_quantity > 0) {
-                    $supplierProduct->increment('stock_available', (float) $order->total_quantity);
+                if ($supplierProduct && $supplierProduct->stock_available !== null && (float) $item->quantity > 0) {
+                    $supplierProduct->increment('stock_available', (float) $item->quantity);
                 }
             }
 
