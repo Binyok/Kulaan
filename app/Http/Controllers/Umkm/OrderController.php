@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Umkm;
 
+use App\Enums\EscrowStatus;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\DistributorReview;
+use App\Models\Escrow;
+use App\Models\Order;
 use App\Models\OrderDispute;
 use App\Models\OrderItem;
 use App\Services\Escrow\EscrowService;
+use App\Services\Payment\MidtransService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +81,49 @@ class OrderController extends Controller
         return redirect()
             ->route('umkm.orders.index', ['tab' => 'riwayat', 'rate' => $orderItem->id])
             ->with('success', 'Terima kasih! Pesanan ditandai selesai. Jangan lupa beri ulasan untuk distributor mitramu.');
+    }
+
+    public function cancelPaid(Request $request, Order $order, MidtransService $midtransService): RedirectResponse
+    {
+        $umkm = $request->user()->umkm;
+        if (! $umkm) {
+            abort(403);
+        }
+
+        $ownItems = $order->items->where('umkm_id', $umkm->id);
+        if ($ownItems->isEmpty()) {
+            abort(403);
+        }
+
+        // The shared cancellation path cancels the whole order, so an order
+        // that also contains other UMKM's items cannot be cancelled one-sidedly.
+        if ($ownItems->count() !== $order->items->count()) {
+            return back()->with('error', 'Pesanan ini adalah pesanan kolektif bersama UMKM lain dan tidak dapat dibatalkan sepihak. Hubungi admin bila ada kendala.');
+        }
+
+        if ($order->status !== OrderStatus::PAID) {
+            return back()->with('error', 'Pesanan hanya dapat dibatalkan sebelum distributor mulai memprosesnya.');
+        }
+
+        $validated = $request->validate([
+            'cancel_reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        DB::transaction(function () use ($order, $midtransService, $validated) {
+            $midtransService->cancelPaidOrder($order, 'Dibatalkan oleh UMKM: '.$validated['cancel_reason']);
+
+            Escrow::where('order_id', $order->id)
+                ->where('status', EscrowStatus::HELD->value)
+                ->update([
+                    'status' => EscrowStatus::REFUNDED->value,
+                    'released_at' => now(),
+                    'payout_status' => 'REFUNDED_TO_UMKM',
+                ]);
+        });
+
+        return redirect()
+            ->route('umkm.orders.index')
+            ->with('success', 'Pesanan berhasil dibatalkan. Pembayaranmu diproses untuk refund penuh.');
     }
 
     public function storeReview(Request $request, OrderItem $orderItem): RedirectResponse

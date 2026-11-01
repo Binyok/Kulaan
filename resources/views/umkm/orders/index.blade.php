@@ -100,6 +100,8 @@
         autoRate: {{ (int) request('rate') }},
         disputeOpen: false,
         disputeItem: null,
+        cancelOpen: false,
+        cancelOrder: null,
         init() {
             const target = this.reviewables[this.autoRate];
             if (target) {
@@ -210,6 +212,7 @@
                                         $hasProof = $shipment && $shipment->status === 'DELIVERED' && $shipment->proof_image_path;
                                         $isReceived = $item->received_confirmed_at !== null;
                                         $needsConfirm = ! $isReceived && in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true);
+                                        $canCancelOrder = $item->order->status->value === 'PAID' && $item->order->items->every(fn ($line) => $line->umkm_id === $umkm->id);
                                     @endphp
                                     <article class="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
                                         <div class="flex items-center justify-between px-4 py-3 border-b border-line/60">
@@ -285,6 +288,10 @@
 
                                             @if (! $shipment)
                                                 <p class="text-[11px] text-muted">Pelacakan kurir muncul setelah distributor menugaskan kurir.</p>
+                                            @endif
+
+                                            @if ($canCancelOrder)
+                                                <button type="button" @click="cancelOrder = {{ $item->order->id }}; cancelOpen = true" class="text-xs font-bold text-danger border border-danger/30 rounded-lg px-3 py-1.5 hover:bg-danger/10 cursor-pointer">Batalkan Pesanan</button>
                                             @endif
 
                                             <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-1.5 ml-auto">Invoice</a>
@@ -501,6 +508,7 @@
                                                 $hasProof = $shipment && $shipment->status === 'DELIVERED' && $shipment->proof_image_path;
                                                 $isReceived = $item->received_confirmed_at !== null;
                                                 $needsConfirm = ! $isReceived && in_array($item->order->status->value, ['DELIVERED', 'COMPLETED'], true);
+                                        $canCancelOrder = $item->order->status->value === 'PAID' && $item->order->items->every(fn ($line) => $line->umkm_id === $umkm->id);
                                             @endphp
                                             <article class="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
                                                 <div class="flex items-center justify-between px-5 py-3 border-b border-line/60">
@@ -574,6 +582,10 @@
 
                                                     @if (! $shipment)
                                                         <p class="text-xs text-muted">Pelacakan kurir muncul setelah distributor menugaskan kurir.</p>
+                                                    @endif
+
+                                                    @if ($canCancelOrder)
+                                                        <button type="button" @click="cancelOrder = {{ $item->order->id }}; cancelOpen = true" class="text-xs font-bold text-danger border border-danger/30 rounded-lg px-3 py-2 hover:bg-danger/10 cursor-pointer">Batalkan Pesanan</button>
                                                     @endif
 
                                                     <a href="{{ route('payment.show', $item) }}" class="text-xs font-semibold text-muted border border-line rounded-lg px-3 py-2 ml-auto">Invoice</a>
@@ -901,6 +913,26 @@
                 <div class="pt-4 border-t border-line flex justify-end gap-2">
                     <button type="button" @click="disputeOpen = false" class="btn-ghost text-xs px-4 py-2">Batal</button>
                     <button type="submit" class="bg-danger text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer">Kirim Komplain</button>
+                </div>
+            </form>
+        </x-modal>
+
+        <!-- Modal Batalkan Pesanan -->
+        <x-modal open="cancelOpen" size="lg" title="Batalkan Pesanan" eyebrow="Refund Penuh">
+            <form :action="'{{ url('umkm/orders') }}/' + cancelOrder + '/cancel-paid'" method="POST" class="pt-4 space-y-4">
+                @csrf
+                <div class="bg-brass-soft border border-brass/30 rounded-xl p-3 text-[11px] text-ink leading-relaxed">
+                    Pembatalan hanya tersedia <strong>sebelum distributor mulai memproses</strong> pesanan. Seluruh pembayaranmu akan <strong>direfund penuh</strong> dan dana yang sedang ditahan escrow akan dilepas kembali kepadamu.
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-ink mb-1.5">Alasan Pembatalan</label>
+                    <textarea name="cancel_reason" rows="3" required maxlength="255" placeholder="Contoh: salah memasukkan jumlah pesanan..." class="w-full bg-cream/50 border border-line rounded-xl p-3 text-xs outline-none focus:border-forest"></textarea>
+                </div>
+
+                <div class="pt-4 border-t border-line flex justify-end gap-2">
+                    <button type="button" @click="cancelOpen = false" class="btn-ghost text-xs px-4 py-2">Kembali</button>
+                    <button type="submit" class="bg-danger text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer">Ya, Batalkan Pesanan</button>
                 </div>
             </form>
         </x-modal>

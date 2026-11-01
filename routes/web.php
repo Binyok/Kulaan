@@ -95,6 +95,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::post('requests/{purchaseRequest}/retry-matching', [PurchaseRequestController::class, 'retryMatching'])->name('requests.retry-matching');
 
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('orders/{order}/cancel-paid', [OrderController::class, 'cancelPaid'])->name('orders.cancel-paid');
         Route::post('orders/{orderItem}/confirm', [OrderController::class, 'confirmReceive'])->name('orders.confirm');
         Route::post('orders/{orderItem}/review', [OrderController::class, 'storeReview'])->name('orders.review');
         Route::post('orders/{orderItem}/dispute', [DisputeController::class, 'store'])->name('orders.dispute');
