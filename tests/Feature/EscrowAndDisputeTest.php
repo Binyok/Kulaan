@@ -10,6 +10,8 @@ use App\Models\Escrow;
 use App\Models\Order;
 use App\Models\OrderDispute;
 use App\Models\OrderItem;
+use App\Models\Payment;
+use App\Models\PaymentEvent;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\SupplierProduct;
@@ -246,6 +248,97 @@ class EscrowAndDisputeTest extends TestCase
         $escrow->refresh();
         $this->assertEquals('RESOLVED_RELEASE', $dispute->status);
         $this->assertEquals(EscrowStatus::RELEASED, $escrow->status);
+    }
+
+    public function test_partial_arbitration_refunds_only_the_refund_amount_to_midtrans(): void
+    {
+        $umkmUser = User::factory()->create();
+        $umkmUser->assignRole('umkm');
+        $umkm = Umkm::create(['user_id' => $umkmUser->id, 'business_name' => 'Kedai Kulaan', 'address' => 'Jl. A', 'district' => 'Waru', 'city' => 'Sidoarjo']);
+
+        $category = ProductCategory::create(['name' => 'Sembako']);
+        $product = Product::create(['category_id' => $category->id, 'name' => 'Beras Ramos', 'unit' => 'kg', 'benchmark_retail_price' => 9000]);
+
+        $distUser = User::factory()->create();
+        $distUser->assignRole('distributor');
+        $distributor = Distributor::create([
+            'user_id' => $distUser->id,
+            'company_name' => 'PT Pangan Makmur',
+            'address' => 'Jl. Pangan',
+            'city' => 'Sidoarjo',
+            'bank_name' => 'BCA',
+            'bank_account_number' => '1234567890',
+            'bank_account_name' => 'PT Pangan Makmur',
+        ]);
+
+        $order = Order::create(['distributor_id' => $distributor->id, 'total_amount' => 20000, 'total_quantity' => 2, 'status' => OrderStatus::DELIVERED->value]);
+        $orderItem = OrderItem::create([
+            'order_id' => $order->id,
+            'umkm_id' => $umkm->id,
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'unit_price' => 10000,
+            'subtotal' => 20000,
+            'benchmark_retail_price' => 12000,
+            'savings_amount' => 4000,
+            'payment_status' => PaymentStatus::PAID->value,
+            'delivery_district' => 'Waru',
+            'delivery_address' => 'Jl. A',
+        ]);
+
+        $payment = Payment::create([
+            'order_id' => $order->id,
+            'order_item_id' => $orderItem->id,
+            'umkm_id' => $umkm->id,
+            'amount' => 20000,
+            'payment_status' => PaymentStatus::PAID->value,
+            'paid_at' => now(),
+        ]);
+
+        $escrow = Escrow::create([
+            'order_item_id' => $orderItem->id,
+            'order_id' => $order->id,
+            'distributor_id' => $distributor->id,
+            'umkm_id' => $umkm->id,
+            'amount' => 20000,
+            'status' => EscrowStatus::HELD->value,
+            'held_at' => now(),
+            'delivered_at' => now(),
+            'release_due_at' => now()->addHours(48),
+        ]);
+
+        $this->actingAs($umkmUser)
+            ->post(route('umkm.orders.dispute', $orderItem), [
+                'reason' => 'Barang Rusak / Cacat',
+                'description' => 'Sebagian kemasan sobek.',
+            ])
+            ->assertRedirect();
+
+        $dispute = OrderDispute::where('order_item_id', $orderItem->id)->firstOrFail();
+
+        $adminUser = User::factory()->create();
+        $adminUser->assignRole('admin');
+
+        // Escrow 20000 split: 12000 released to distributor, 8000 refunded to UMKM
+        $this->actingAs($adminUser)
+            ->post(route('admin.disputes.resolve', $dispute), [
+                'action' => 'PARTIAL',
+                'resolution_note' => 'Sebagian barang terbukti rusak.',
+                'release_amount' => 12000,
+                'refund_amount' => 8000,
+            ])
+            ->assertRedirect();
+
+        $dispute->refresh();
+        $escrow->refresh();
+        $this->assertEquals('RESOLVED_PARTIAL', $dispute->status);
+        $this->assertEquals(EscrowStatus::RELEASED, $escrow->status);
+        $this->assertEquals(12000.00, (float) $escrow->amount);
+
+        // The gateway call must carry refund_amount=8000, not a full refund
+        $event = PaymentEvent::where('payment_id', $payment->id)->latest('id')->first();
+        $this->assertNotNull($event);
+        $this->assertEquals(8000, $event->payload['refund_amount'] ?? null);
     }
 
     public function test_catalog_filter_by_scope_local_and_outside_city(): void

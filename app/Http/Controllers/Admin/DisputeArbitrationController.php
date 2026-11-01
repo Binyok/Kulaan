@@ -97,15 +97,11 @@ class DisputeArbitrationController extends Controller
 
                 $payment = $dispute->orderItem->payment;
                 if ($payment && $refundAmt > 0) {
-                    $midtransService->cancelOrRefundTransaction($payment, 'Refund sebagian arbitrase komplain: '.$validated['resolution_note']);
+                    $midtransService->cancelOrRefundTransaction($payment, 'Refund sebagian arbitrase komplain: '.$validated['resolution_note'], $refundAmt);
                 }
 
-                $escrow->update([
-                    'amount' => $releaseAmt,
-                    'status' => EscrowStatus::HELD,
-                ]);
-                $escrowService->release($escrow);
-
+                // Mark the dispute resolved BEFORE releasing: EscrowService
+                // re-freezes the escrow while a dispute is still OPEN.
                 $dispute->update([
                     'status' => 'RESOLVED_PARTIAL',
                     'resolution_note' => $validated['resolution_note'],
@@ -114,6 +110,12 @@ class DisputeArbitrationController extends Controller
                     'resolved_by' => $user->id,
                     'resolved_at' => now(),
                 ]);
+
+                $escrow->update([
+                    'amount' => $releaseAmt,
+                    'status' => EscrowStatus::HELD,
+                ]);
+                $escrowService->release($escrow);
             }
         });
 

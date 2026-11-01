@@ -229,8 +229,12 @@ class MidtransService
 
     /**
      * Call Midtrans Void / Cancel API or Refund API depending on transaction state.
+     *
+     * When $amount is given, this is a partial refund: the Refund API is called
+     * directly with refund_amount so Midtrans returns only that amount instead
+     * of the full transaction value.
      */
-    public function cancelOrRefundTransaction(Payment $payment, string $reason = 'Pembatalan pesanan'): array
+    public function cancelOrRefundTransaction(Payment $payment, string $reason = 'Pembatalan pesanan', ?float $amount = null): array
     {
         $ref = $payment->payment_reference;
         $baseUrl = $this->isProduction
@@ -239,39 +243,62 @@ class MidtransService
 
         if ($this->isProduction) {
             try {
-                // Try Cancel / Void API first
-                $cancelUrl = $baseUrl.$ref.'/cancel';
-                $response = Http::withBasicAuth($this->serverKey, '')
-                    ->timeout(15)
-                    ->post($cancelUrl);
+                // Partial refund: skip void/cancel (always full-amount) and refund
+                // exactly the requested amount.
+                if ($amount !== null) {
+                    $refundResponse = Http::withBasicAuth($this->serverKey, '')
+                        ->timeout(15)
+                        ->post($baseUrl.$ref.'/refund', [
+                            'reason' => $reason,
+                            'refund_amount' => (int) round($amount),
+                        ]);
 
-                if ($response->successful() && in_array($response->json('status_code'), ['200', '201', '412'], true)) {
-                    PaymentEvent::create([
-                        'payment_id' => $payment->id,
-                        'event_type' => 'VOID_SUCCESS',
-                        'payload' => $response->json(),
-                    ]);
+                    if ($refundResponse->successful()) {
+                        PaymentEvent::create([
+                            'payment_id' => $payment->id,
+                            'event_type' => 'REFUND_SUCCESS',
+                            'payload' => $refundResponse->json(),
+                        ]);
 
-                    return ['status' => 'success', 'action' => 'void', 'response' => $response->json()];
+                        return ['status' => 'success', 'action' => 'refund', 'response' => $refundResponse->json()];
+                    }
+
+                    Log::warning('Midtrans partial refund failed for payment '.$ref.': '.$refundResponse->body());
+                } else {
+                    // Try Cancel / Void API first
+                    $cancelUrl = $baseUrl.$ref.'/cancel';
+                    $response = Http::withBasicAuth($this->serverKey, '')
+                        ->timeout(15)
+                        ->post($cancelUrl);
+
+                    if ($response->successful() && in_array($response->json('status_code'), ['200', '201', '412'], true)) {
+                        PaymentEvent::create([
+                            'payment_id' => $payment->id,
+                            'event_type' => 'VOID_SUCCESS',
+                            'payload' => $response->json(),
+                        ]);
+
+                        return ['status' => 'success', 'action' => 'void', 'response' => $response->json()];
+                    }
+
+                    // If void is not possible (e.g. settled transaction), attempt Refund
+                    $refundUrl = $baseUrl.$ref.'/refund';
+                    $refundResponse = Http::withBasicAuth($this->serverKey, '')
+                        ->timeout(15)
+                        ->post($refundUrl, ['reason' => $reason]);
+
+                    if ($refundResponse->successful()) {
+                        PaymentEvent::create([
+                            'payment_id' => $payment->id,
+                            'event_type' => 'REFUND_SUCCESS',
+                            'payload' => $refundResponse->json(),
+                        ]);
+
+                        return ['status' => 'success', 'action' => 'refund', 'response' => $refundResponse->json()];
+                    }
+
+                    Log::warning('Midtrans cancel/refund failed for payment '.$ref.': '.$refundResponse->body());
                 }
-
-                // If void is not possible (e.g. settled transaction), attempt Refund
-                $refundUrl = $baseUrl.$ref.'/refund';
-                $refundResponse = Http::withBasicAuth($this->serverKey, '')
-                    ->timeout(15)
-                    ->post($refundUrl, ['reason' => $reason]);
-
-                if ($refundResponse->successful()) {
-                    PaymentEvent::create([
-                        'payment_id' => $payment->id,
-                        'event_type' => 'REFUND_SUCCESS',
-                        'payload' => $refundResponse->json(),
-                    ]);
-
-                    return ['status' => 'success', 'action' => 'refund', 'response' => $refundResponse->json()];
-                }
-
-                Log::warning('Midtrans cancel/refund failed for payment '.$ref.': '.$refundResponse->body());
             } catch (\Throwable $e) {
                 Log::error('Midtrans cancelOrRefundTransaction exception: '.$e->getMessage());
             }
@@ -285,6 +312,10 @@ class MidtransService
             'order_id' => $ref,
             'reason' => $reason,
         ];
+
+        if ($amount !== null) {
+            $mockPayload['refund_amount'] = (int) round($amount);
+        }
 
         PaymentEvent::create([
             'payment_id' => $payment->id,
