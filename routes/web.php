@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DisputeArbitrationController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductProposalController;
 use App\Http\Controllers\Admin\SpkCriteriaController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\Public\PublicCatalogController;
 use App\Http\Controllers\Public\PublicDistributorController;
 use App\Http\Controllers\Umkm\CartController;
 use App\Http\Controllers\Umkm\CatalogController;
+use App\Http\Controllers\Umkm\DisputeController;
 use App\Http\Controllers\Umkm\OrderController;
 use App\Http\Controllers\Umkm\PurchaseRequestController;
 use App\Http\Controllers\Umkm\TrackingController;
@@ -94,6 +96,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
         Route::post('orders/{orderItem}/confirm', [OrderController::class, 'confirmReceive'])->name('orders.confirm');
         Route::post('orders/{orderItem}/review', [OrderController::class, 'storeReview'])->name('orders.review');
+        Route::post('orders/{orderItem}/dispute', [DisputeController::class, 'store'])->name('orders.dispute');
 
         Route::get('shipments', [TrackingController::class, 'index'])->name('tracking.index');
         Route::get('shipments/live', [TrackingController::class, 'liveMap'])->name('tracking.live');
@@ -113,6 +116,8 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::post('spk/calculate', [SpkCriteriaController::class, 'calculate'])->name('spk.calculate');
         Route::get('spk/sensitivity', [SpkCriteriaController::class, 'sensitivity'])->name('spk.sensitivity');
         Route::get('spk/history/{history}/export', [SpkCriteriaController::class, 'exportReport'])->name('spk.export');
+        Route::get('disputes', [DisputeArbitrationController::class, 'index'])->name('disputes.index');
+        Route::post('disputes/{dispute}/resolve', [DisputeArbitrationController::class, 'resolve'])->name('disputes.resolve');
     });
 
     // Distributor Catalog & Orders Routes

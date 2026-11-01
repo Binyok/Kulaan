@@ -109,8 +109,12 @@
             </div>
 
             <div class="px-4 mt-3">
-                <div class="relative h-60 rounded-3xl bg-forest/10 border border-line overflow-hidden flex items-center justify-center">
-                    <span class="text-[7rem] font-extrabold text-forest/20 select-none">{{ $initial }}</span>
+                <div class="relative h-60 rounded-3xl bg-white border border-line overflow-hidden flex items-center justify-center p-5">
+                    @if ($product->image)
+                        <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-contain">
+                    @else
+                        <span class="text-[7rem] font-extrabold text-forest/20 select-none">{{ $initial }}</span>
+                    @endif
                     @if ($bestDiscount > 0)
                         <span class="absolute top-3 left-3 bg-danger text-white text-[11px] font-bold px-2.5 py-1 rounded-full">-{{ $bestDiscount }}%</span>
                     @endif
@@ -170,8 +174,15 @@
             </div>
 
             <div class="px-4 mt-6">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between flex-wrap gap-2">
                     <h2 class="text-base font-extrabold">Penawaran Distributor <span class="text-muted font-semibold">({{ count($offers) }})</span></h2>
+                    @if (! blank($umkm->city))
+                        <div class="inline-flex bg-white border border-line rounded-xl p-1 text-[11px] font-bold">
+                            <a href="{{ route('umkm.catalog.show', [$product, 'quantity' => $quantity, 'scope' => 'all']) }}" class="px-2.5 py-1 rounded-lg {{ $scope === 'all' ? 'bg-forest text-white' : 'text-muted' }}">Semua</a>
+                            <a href="{{ route('umkm.catalog.show', [$product, 'quantity' => $quantity, 'scope' => 'local']) }}" class="px-2.5 py-1 rounded-lg {{ $scope === 'local' ? 'bg-forest text-white' : 'text-muted' }}">Dalam Kota</a>
+                            <a href="{{ route('umkm.catalog.show', [$product, 'quantity' => $quantity, 'scope' => 'outside']) }}" class="px-2.5 py-1 rounded-lg {{ $scope === 'outside' ? 'bg-forest text-white' : 'text-muted' }}">Luar Kota</a>
+                        </div>
+                    @endif
                 </div>
                 <p class="text-[11px] text-muted mt-1">Diurutkan oleh sistem SPK (AHP &middot; TOPSIS &middot; SAW)</p>
 
@@ -193,9 +204,14 @@
                                 <span class="bg-cream border border-line text-muted text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">#{{ $offer['rank'] }}</span>
                             @endif
                         </div>
-                        <div class="flex items-center gap-1.5 mt-1.5 text-xs">
+                        <div class="flex items-center gap-1.5 mt-1.5 text-xs flex-wrap">
                             <svg class="w-3.5 h-3.5 text-brass" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                             <span class="font-bold">{{ number_format((float) $d->rating, 1) }}</span><span class="text-muted">&middot; estimasi tiba {{ $d->delivery_lead_time_days ?? 2 }} hari</span>
+                            @if (! blank($d->city))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $offer['is_local'] ? 'bg-forest/10 text-forest' : 'bg-cream border border-line text-muted' }}">
+                                    {{ $offer['is_local'] ? 'Dalam Kota ('.$d->city.')' : 'Luar Kota ('.$d->city.')' }}
+                                </span>
+                            @endif
                         </div>
                         <div class="grid grid-cols-3 gap-2 mt-3 text-center">
                             <div class="bg-cream rounded-2xl py-2"><p class="text-[10px] text-muted font-semibold">MOQ</p><p class="text-xs font-extrabold tnum">{{ number_format((float) $sp->moq, 0, ',', '.') }} {{ $product->unit }}</p></div>
@@ -371,8 +387,12 @@
 
                     <div class="grid lg:grid-cols-2 gap-8 mt-6">
                         <div>
-                            <div class="relative h-[420px] rounded-[2rem] bg-forest/10 border border-line overflow-hidden flex items-center justify-center">
-                                <span class="text-[12rem] font-extrabold text-forest/20 select-none">{{ $initial }}</span>
+                            <div class="relative h-[420px] rounded-[2rem] bg-white border border-line overflow-hidden flex items-center justify-center p-8">
+                                @if ($product->image)
+                                    <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-contain">
+                                @else
+                                    <span class="text-[12rem] font-extrabold text-forest/20 select-none">{{ $initial }}</span>
+                                @endif
                                 @if ($bestDiscount > 0)
                                     <span class="absolute top-5 left-5 bg-danger text-white text-xs font-bold px-3 py-1.5 rounded-full">-{{ $bestDiscount }}%</span>
                                 @endif
@@ -429,9 +449,18 @@
                     </div>
 
                     <section class="mt-12">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-xl font-extrabold">Penawaran Distributor <span class="text-muted font-semibold">({{ count($offers) }})</span></h2>
-                            <p class="text-xs text-muted">Diurutkan oleh sistem SPK (AHP &middot; TOPSIS &middot; SAW)</p>
+                        <div class="flex items-center justify-between flex-wrap gap-4">
+                            <div>
+                                <h2 class="text-xl font-extrabold">Penawaran Distributor <span class="text-muted font-semibold">({{ count($offers) }})</span></h2>
+                                <p class="text-xs text-muted mt-0.5">Diurutkan oleh sistem SPK (AHP &middot; TOPSIS &middot; SAW)</p>
+                            </div>
+                            @if (! blank($umkm->city))
+                                <div class="inline-flex bg-white border border-line rounded-2xl p-1 text-xs font-bold gap-1 shadow-xs">
+                                    <a href="{{ route('umkm.catalog.show', [$product, 'quantity' => $quantity, 'scope' => 'all']) }}" class="px-3.5 py-1.5 rounded-xl transition {{ $scope === 'all' ? 'bg-forest text-white' : 'text-muted hover:text-ink' }}">Semua</a>
+                                    <a href="{{ route('umkm.catalog.show', [$product, 'quantity' => $quantity, 'scope' => 'local']) }}" class="px-3.5 py-1.5 rounded-xl transition {{ $scope === 'local' ? 'bg-forest text-white' : 'text-muted hover:text-ink' }}">Dalam Kota ({{ $umkm->city }})</a>
+                                    <a href="{{ route('umkm.catalog.show', [$product, 'quantity' => $quantity, 'scope' => 'outside']) }}" class="px-3.5 py-1.5 rounded-xl transition {{ $scope === 'outside' ? 'bg-forest text-white' : 'text-muted hover:text-ink' }}">Luar Kota</a>
+                                </div>
+                            @endif
                         </div>
 
                         @if (! empty($offers))
@@ -454,9 +483,14 @@
                                                 <span class="bg-cream border border-line text-muted text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">#{{ $offer['rank'] }}</span>
                                             @endif
                                         </div>
-                                        <div class="flex items-center gap-1.5 mt-2 text-xs">
+                                        <div class="flex items-center gap-1.5 mt-2 text-xs flex-wrap">
                                             <svg class="w-3.5 h-3.5 text-brass" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                                             <span class="font-bold">{{ number_format((float) $d->rating, 1) }}</span><span class="text-muted">&middot; estimasi tiba {{ $d->delivery_lead_time_days ?? 2 }} hari</span>
+                                            @if (! blank($d->city))
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $offer['is_local'] ? 'bg-forest/10 text-forest' : 'bg-cream border border-line text-muted' }}">
+                                                    {{ $offer['is_local'] ? 'Dalam Kota ('.$d->city.')' : 'Luar Kota ('.$d->city.')' }}
+                                                </span>
+                                            @endif
                                         </div>
                                         <div class="grid grid-cols-3 gap-2 mt-4 text-center">
                                             <div class="bg-cream rounded-2xl py-2.5"><p class="text-[10px] text-muted font-semibold">MOQ</p><p class="text-sm font-extrabold tnum">{{ number_format((float) $sp->moq, 0, ',', '.') }} {{ $product->unit }}</p></div>

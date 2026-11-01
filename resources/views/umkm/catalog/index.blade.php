@@ -73,7 +73,22 @@
             </div>
         @endif
 
-        <div class="px-4 mt-5 flex items-center justify-between">
+        <div class="px-4 mt-5">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-base font-extrabold text-ink">Filter Lokasi Distributor</h3>
+            </div>
+            @if (blank($umkm->city))
+                <p class="text-[11px] text-muted bg-cream p-2.5 rounded-xl border border-line">Lengkapi kota di profil untuk memakai filter ini.</p>
+            @else
+                <div class="inline-flex bg-cream p-1 rounded-xl border border-line text-xs font-bold gap-1 w-full sm:w-auto">
+                    <a href="{{ route('umkm.catalog.index', ['q' => $search, 'scope' => 'all']) }}" class="flex-1 sm:flex-none text-center px-3 py-1.5 rounded-lg {{ $scope === 'all' ? 'bg-forest text-white' : 'text-muted' }}">Semua</a>
+                    <a href="{{ route('umkm.catalog.index', ['q' => $search, 'scope' => 'local']) }}" class="flex-1 sm:flex-none text-center px-3 py-1.5 rounded-lg {{ $scope === 'local' ? 'bg-forest text-white' : 'text-muted' }}">Dalam Kota ({{ $umkm->city }})</a>
+                    <a href="{{ route('umkm.catalog.index', ['q' => $search, 'scope' => 'outside']) }}" class="flex-1 sm:flex-none text-center px-3 py-1.5 rounded-lg {{ $scope === 'outside' ? 'bg-forest text-white' : 'text-muted' }}">Luar Kota</a>
+                </div>
+            @endif
+        </div>
+
+        <div class="px-4 mt-4 flex items-center justify-between">
             <h3 class="text-base font-extrabold text-ink">Produk Populer</h3>
             <a href="{{ route('umkm.catalog.index') }}" class="text-xs font-bold text-brass">Lihat semua</a>
         </div>
@@ -91,8 +106,12 @@
                         $tone = ['bg-forest/10 text-forest/30', 'bg-brass-soft text-brass/30', 'bg-white border-b border-line text-muted/25'][$loop->index % 3];
                     @endphp
                     <a href="{{ route('umkm.catalog.show', $prod) }}" class="bg-white rounded-3xl border border-line overflow-hidden shadow-sm flex flex-col">
-                        <div class="relative aspect-square flex items-center justify-center {{ $tone }}">
-                            <span class="text-5xl font-extrabold">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
+                        <div class="relative aspect-square flex items-center justify-center bg-white p-3 border-b border-line">
+                            @if ($prod->image)
+                                <img src="{{ asset($prod->image) }}" alt="{{ $prod->name }}" loading="lazy" decoding="async" class="h-full w-full object-contain">
+                            @else
+                                <span class="text-5xl font-extrabold {{ $tone }}">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
+                            @endif
                             @if ($discountPct !== null && $discountPct > 0)
                                 <span class="absolute top-2 left-2 bg-danger text-white text-[10px] font-bold px-2 py-0.5 rounded-full">-{{ $discountPct }}%</span>
                             @endif
@@ -214,13 +233,21 @@
                 @endif
 
                 <section class="mt-10">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xl font-extrabold">Jelajahi Produk</h2>
-                        <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('umkm.catalog.index') }}" class="text-xs font-bold px-4 py-2 rounded-full bg-forest text-white">Semua</a>
-                            @foreach ($categories->take(3) as $category)
-                                <a href="{{ route('umkm.catalog.index', ['q' => $category->name]) }}" class="text-xs font-bold px-4 py-2 rounded-full bg-white border border-line text-muted hover:text-ink transition">{{ $category->name }}</a>
-                            @endforeach
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                            <h2 class="text-xl font-extrabold">Jelajahi Produk</h2>
+                            <p class="text-xs text-muted mt-0.5">Filter jangkauan distributor mitra</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @if (blank($umkm->city))
+                                <span class="text-xs text-muted bg-cream px-3 py-1.5 rounded-xl border border-line">Lengkapi kota di profil untuk memakai filter ini.</span>
+                            @else
+                                <div class="inline-flex bg-white p-1 rounded-2xl border border-line text-xs font-bold gap-1 shadow-xs">
+                                    <a href="{{ route('umkm.catalog.index', ['q' => $search, 'scope' => 'all']) }}" class="px-3.5 py-1.5 rounded-xl transition {{ $scope === 'all' ? 'bg-forest text-white' : 'text-muted hover:text-ink' }}">Semua</a>
+                                    <a href="{{ route('umkm.catalog.index', ['q' => $search, 'scope' => 'local']) }}" class="px-3.5 py-1.5 rounded-xl transition {{ $scope === 'local' ? 'bg-forest text-white' : 'text-muted hover:text-ink' }}">Dalam Kota ({{ $umkm->city }})</a>
+                                    <a href="{{ route('umkm.catalog.index', ['q' => $search, 'scope' => 'outside']) }}" class="px-3.5 py-1.5 rounded-xl transition {{ $scope === 'outside' ? 'bg-forest text-white' : 'text-muted hover:text-ink' }}">Luar Kota</a>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -239,8 +266,12 @@
                                     $tone = ['bg-forest/10 text-forest/25', 'bg-brass-soft text-brass/25', 'bg-white border-b border-line text-muted/20'][$loop->index % 3];
                                 @endphp
                                 <a href="{{ route('umkm.catalog.show', $prod) }}" class="bg-white rounded-3xl border border-line overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
-                                    <div class="relative aspect-[4/3] flex items-center justify-center {{ $tone }}">
-                                        <span class="text-6xl font-extrabold">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
+                                    <div class="relative aspect-[4/3] flex items-center justify-center bg-white p-3 border-b border-line">
+                                        @if ($prod->image)
+                                            <img src="{{ asset($prod->image) }}" alt="{{ $prod->name }}" loading="lazy" decoding="async" class="h-full w-full object-contain">
+                                        @else
+                                            <span class="text-6xl font-extrabold {{ $tone }}">{{ strtoupper(substr($prod->name, 0, 1)) }}</span>
+                                        @endif
                                         @if ($discountPct !== null && $discountPct > 0)
                                             <span class="absolute top-3 left-3 bg-danger text-white text-[11px] font-bold px-2.5 py-1 rounded-full">-{{ $discountPct }}%</span>
                                         @endif
@@ -261,7 +292,12 @@
                                             @endif
                                         </div>
                                         <p class="font-bold mt-1 leading-snug">{{ $prod->name }}</p>
-                                        <p class="text-xs text-muted">{{ $prod->unit }} &middot; {{ $distributorCount }} distributor</p>
+                                        <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                            <p class="text-xs text-muted">{{ $prod->unit }} &middot; {{ $distributorCount }} distributor</p>
+                                            @if (($localDistributorCounts[$prod->id] ?? 0) > 0)
+                                                <span class="inline-flex items-center text-[10px] font-bold text-forest bg-forest/10 px-2 py-0.5 rounded-md">{{ $localDistributorCounts[$prod->id] }} dalam kota</span>
+                                            @endif
+                                        </div>
                                         <div class="flex items-end justify-between gap-2 mt-auto pt-3">
                                             <div class="min-w-0">
                                                 <p class="text-[11px] text-muted">mulai dari</p>

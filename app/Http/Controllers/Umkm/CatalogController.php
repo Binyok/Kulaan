@@ -24,11 +24,30 @@ class CatalogController extends Controller
         }
 
         $search = trim((string) $request->query('q', ''));
+        $rawScope = (string) $request->query('scope', 'all');
+        $scope = in_array($rawScope, ['local', 'outside'], true) ? $rawScope : 'all';
 
-        $products = Product::with(['category', 'supplierProducts.distributor', 'supplierProducts.priceTiers'])
+        $umkmCity = trim((string) $umkm->city);
+
+        $productsQuery = Product::with(['category', 'supplierProducts.distributor', 'supplierProducts.priceTiers'])
             ->where('is_active', true)
-            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
-            ->orderBy('name')
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%'.$search.'%'));
+
+        if ($scope !== 'all' && $umkmCity !== '') {
+            $normalizedUmkmCity = strtolower($umkmCity);
+            $productsQuery->whereHas('supplierProducts', function ($spQ) use ($scope, $normalizedUmkmCity) {
+                $spQ->where('is_available', true)
+                    ->whereHas('distributor', function ($distQ) use ($scope, $normalizedUmkmCity) {
+                        if ($scope === 'local') {
+                            $distQ->whereRaw('LOWER(TRIM(city)) = ?', [$normalizedUmkmCity]);
+                        } else {
+                            $distQ->whereRaw('LOWER(TRIM(city)) != ?', [$normalizedUmkmCity]);
+                        }
+                    });
+            });
+        }
+
+        $products = $productsQuery->orderBy('name')
             ->paginate(12)
             ->withQueryString();
 
@@ -59,6 +78,17 @@ class CatalogController extends Controller
             }
         }
 
+        $localDistributorCounts = [];
+        $normalizedCity = strtolower($umkmCity);
+        foreach ($products as $prod) {
+            $localCount = $prod->supplierProducts
+                ->filter(fn ($sp) => $sp->is_available && $sp->distributor && strtolower(trim((string) $sp->distributor->city)) === $normalizedCity)
+                ->pluck('distributor_id')
+                ->unique()
+                ->count();
+            $localDistributorCounts[$prod->id] = $localCount;
+        }
+
         $stats = [
             'total_umkm' => Umkm::count(),
             'total_distributor' => Distributor::count(),
@@ -66,7 +96,7 @@ class CatalogController extends Controller
             'total_volume' => (float) OrderItem::sum('quantity'),
         ];
 
-        return view('umkm.catalog.index', compact('products', 'umkm', 'search', 'topRatingByProduct', 'stats'));
+        return view('umkm.catalog.index', compact('products', 'umkm', 'search', 'scope', 'topRatingByProduct', 'localDistributorCounts', 'stats'));
     }
 
     public function show(Request $request, Product $product, DistributorRecommendationService $recommendationService): View
@@ -79,6 +109,10 @@ class CatalogController extends Controller
         }
 
         $quantity = max(1.0, (float) $request->query('quantity', 1));
+        $rawScope = (string) $request->query('scope', 'all');
+        $scope = in_array($rawScope, ['local', 'outside'], true) ? $rawScope : 'all';
+        $umkmCity = trim((string) $umkm->city);
+        $normalizedCity = strtolower($umkmCity);
 
         $ranking = $recommendationService->rankDistributorsForCatalog(
             $product->id,
@@ -125,12 +159,22 @@ class CatalogController extends Controller
 
             $rankEntry = $rankMap[$distributor->id] ?? null;
 
+            $isLocal = strtolower(trim((string) $distributor->city)) === $normalizedCity;
+
+            if ($scope === 'local' && ! $isLocal) {
+                continue;
+            }
+            if ($scope === 'outside' && $isLocal) {
+                continue;
+            }
+
             $offers[] = [
                 'supplier_product' => $sp,
                 'distributor' => $distributor,
                 'unit_price' => $unitPrice,
                 'distance_km' => $distanceKm,
                 'pooled_quantity' => $pooled,
+                'is_local' => $isLocal,
                 'rank' => $rankEntry['rank'] ?? null,
                 'score' => $rankEntry['score'] ?? null,
             ];
@@ -140,6 +184,6 @@ class CatalogController extends Controller
 
         $product->loadMissing('category');
 
-        return view('umkm.catalog.show', compact('product', 'umkm', 'quantity', 'offers', 'ranking'));
+        return view('umkm.catalog.show', compact('product', 'umkm', 'quantity', 'offers', 'ranking', 'scope'));
     }
 }
