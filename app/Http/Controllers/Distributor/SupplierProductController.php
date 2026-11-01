@@ -60,6 +60,13 @@ class SupplierProductController extends Controller
             'tiers.*.unit_price' => ['required_with:tiers', 'numeric', 'min:0'],
         ]);
 
+        $alreadyOffered = SupplierProduct::where('distributor_id', $distributor->id)
+            ->where('product_id', $validated['product_id'])
+            ->exists();
+        if ($alreadyOffered) {
+            return back()->with('error', 'Produk ini sudah ada di katalogmu. Ubah penawaran yang sudah ada saja ya, jangan buat duplikat.')->withInput();
+        }
+
         $isAvailable = $distributor->hasCompleteBankDetails();
 
         DB::transaction(function () use ($distributor, $validated, $isAvailable) {
