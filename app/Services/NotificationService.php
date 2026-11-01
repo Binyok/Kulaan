@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductProposal;
 use App\Models\Shipment;
+use App\Models\SupplierProduct;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
@@ -108,6 +109,13 @@ class NotificationService
             ->where('status', OrderStatus::DELIVERED->value)
             ->count();
         $items->push($this->item($awaitingUmkm, 'pesanan sampai, menunggu konfirmasi UMKM', route('distributor.orders.index'), 'forest'));
+
+        $lowStock = SupplierProduct::where('distributor_id', $distributor->id)
+            ->where('is_available', true)
+            ->whereNotNull('stock_available')
+            ->whereColumn('stock_available', '<=', 'moq')
+            ->count();
+        $items->push($this->item($lowStock, 'penawaran stok menipis (di bawah MOQ)', route('distributor.products.index'), 'brass'));
 
         return $items->filter(fn (array $item) => $item['count'] > 0)->values();
     }

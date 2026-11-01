@@ -30,6 +30,17 @@ class SupplierProduct extends Model
         ];
     }
 
+    /**
+     * Low stock: the remaining stock can no longer cover a single minimum
+     * order (MOQ) for this offer.
+     */
+    public function isLowStock(): bool
+    {
+        return $this->is_available
+            && $this->stock_available !== null
+            && (float) $this->stock_available <= (float) $this->moq;
+    }
+
     public function distributor(): BelongsTo
     {
         return $this->belongsTo(Distributor::class);

@@ -67,6 +67,9 @@
                                     </div>
                                     <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] text-muted">
                                         <span>Stok <strong class="{{ $sp->is_available ? 'text-ink' : 'text-danger' }}">{{ number_format($sp->stock_available, 0) }} {{ $sp->product->unit }}</strong></span>
+                                            @if ($sp->isLowStock())
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-danger/10 text-danger">Menipis</span>
+                                            @endif
                                         <span>MOQ <strong class="text-ink">{{ number_format($sp->moq, 0) }} {{ $sp->product->unit }}</strong></span>
                                         <span>Eceran <strong class="text-ink">Rp {{ number_format($sp->base_retail_price, 0, ',', '.') }}</strong></span>
                                     </div>
@@ -270,6 +273,9 @@
                                         </div>
                                         <div class="flex flex-wrap gap-x-6 gap-y-1 mt-3 text-xs text-muted">
                                             <span>Stok <strong class="{{ $sp->is_available ? 'text-ink' : 'text-danger' }}">{{ number_format($sp->stock_available, 0) }} {{ $sp->product->unit }}</strong></span>
+                                            @if ($sp->isLowStock())
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-danger/10 text-danger">Menipis</span>
+                                            @endif
                                             <span>MOQ <strong class="text-ink">{{ number_format($sp->moq, 0) }} {{ $sp->product->unit }}</strong></span>
                                             <span>Eceran <strong class="text-ink">Rp {{ number_format($sp->base_retail_price, 0, ',', '.') }}</strong></span>
                                         </div>
