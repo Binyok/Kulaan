@@ -98,6 +98,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::get('orders/{orderItem}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::post('orders/{order}/cancel-paid', [OrderController::class, 'cancelPaid'])->name('orders.cancel-paid');
         Route::post('orders/{orderItem}/confirm', [OrderController::class, 'confirmReceive'])->name('orders.confirm');
+        Route::post('orders/{orderItem}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
         Route::post('orders/{orderItem}/review', [OrderController::class, 'storeReview'])->name('orders.review');
         Route::post('orders/{orderItem}/dispute', [DisputeController::class, 'store'])->name('orders.dispute');
 

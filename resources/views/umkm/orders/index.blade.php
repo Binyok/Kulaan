@@ -353,6 +353,11 @@
                                                 </button>
                                             @endif
 
+                                            <form method="POST" action="{{ route('umkm.orders.reorder', $item) }}">
+                                                @csrf
+                                                <button type="submit" class="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-forest rounded-lg px-3 py-1.5 cursor-pointer">Pesan Lagi</button>
+                                            </form>
+
                                             @if ($shipment)
                                                 <button type="button" @click="openDelivery({{ $item->id }})" class="inline-flex items-center gap-1 text-[11px] font-semibold text-forest bg-forest/10 rounded-lg border border-forest/20 px-3 py-1.5 cursor-pointer">Detail Pengiriman</button>
                                             @endif
@@ -649,6 +654,11 @@
                                                             Beri Ulasan
                                                         </button>
                                                     @endif
+
+                                                    <form method="POST" action="{{ route('umkm.orders.reorder', $item) }}">
+                                                        @csrf
+                                                        <button type="submit" class="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-forest rounded-lg px-3 py-2 cursor-pointer">Pesan Lagi</button>
+                                                    </form>
 
                                                     @if ($shipment)
                                                         <button type="button" @click="openDelivery({{ $item->id }})" class="inline-flex items-center gap-1 text-[11px] font-semibold text-forest bg-forest/10 rounded-lg border border-forest/20 px-3 py-2 cursor-pointer">Detail Pengiriman</button>

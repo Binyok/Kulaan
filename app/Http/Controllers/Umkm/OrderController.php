@@ -10,6 +10,8 @@ use App\Models\Escrow;
 use App\Models\Order;
 use App\Models\OrderDispute;
 use App\Models\OrderItem;
+use App\Models\SupplierProduct;
+use App\Services\CartService;
 use App\Services\Escrow\EscrowService;
 use App\Services\Payment\MidtransService;
 use Illuminate\Http\RedirectResponse;
@@ -81,6 +83,33 @@ class OrderController extends Controller
         return redirect()
             ->route('umkm.orders.index', ['tab' => 'riwayat', 'rate' => $orderItem->id])
             ->with('success', 'Terima kasih! Pesanan ditandai selesai. Jangan lupa beri ulasan untuk distributor mitramu.');
+    }
+
+    public function reorder(Request $request, OrderItem $orderItem): RedirectResponse
+    {
+        $umkm = $request->user()->umkm;
+        if (! $umkm || $orderItem->umkm_id !== $umkm->id) {
+            abort(403);
+        }
+
+        $offer = SupplierProduct::where('distributor_id', $orderItem->order->distributor_id)
+            ->where('product_id', $orderItem->product_id)
+            ->where('is_available', true)
+            ->first();
+
+        if (! $offer) {
+            return back()->with('error', 'Produk ini sedang tidak ditawarkan lagi oleh distributor tersebut.');
+        }
+
+        app(CartService::class)->add(
+            (int) $orderItem->product_id,
+            (int) $orderItem->order->distributor_id,
+            (float) $orderItem->quantity
+        );
+
+        return redirect()
+            ->route('umkm.cart.index')
+            ->with('success', 'Pesanan ditambahkan ke keranjang dengan harga penawaran terbaru. Periksa kembali sebelum checkout.');
     }
 
     public function invoice(Request $request, OrderItem $orderItem): View
