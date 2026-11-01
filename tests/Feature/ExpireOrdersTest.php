@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EscrowStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Distributor;
+use App\Models\Escrow;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Umkm;
@@ -37,6 +40,46 @@ class ExpireOrdersTest extends TestCase
         $this->assertEquals(OrderStatus::EXPIRED, $order->fresh()->status);
         $this->assertEquals(PaymentStatus::EXPIRED, $unpaidItem->fresh()->payment_status);
         $this->assertEquals(PaymentStatus::PAID, $paidItem->fresh()->payment_status);
+    }
+
+    public function test_expiring_partially_paid_order_refunds_the_paid_items_escrow(): void
+    {
+        [$order, $unpaidItem, $paidItem] = $this->createOrderWithItems(now()->subHour());
+
+        $payment = Payment::create([
+            'order_id' => $order->id,
+            'order_item_id' => $paidItem->id,
+            'umkm_id' => $paidItem->umkm_id,
+            'amount' => 26000,
+            'payment_status' => PaymentStatus::PAID->value,
+            'paid_at' => now(),
+        ]);
+
+        $escrow = Escrow::create([
+            'order_item_id' => $paidItem->id,
+            'order_id' => $order->id,
+            'distributor_id' => $order->distributor_id,
+            'umkm_id' => $paidItem->umkm_id,
+            'amount' => 26000,
+            'status' => EscrowStatus::HELD->value,
+            'held_at' => now(),
+        ]);
+
+        $this->artisan('kulaan:expire-orders')->assertSuccessful();
+
+        $this->assertEquals(OrderStatus::EXPIRED, $order->fresh()->status);
+        $this->assertEquals(PaymentStatus::EXPIRED, $unpaidItem->fresh()->payment_status);
+
+        // The paid item's money goes back instead of staying HELD forever
+        $escrow->refresh();
+        $this->assertEquals(EscrowStatus::REFUNDED, $escrow->status);
+        $this->assertEquals('REFUNDED_TO_UMKM', $escrow->payout_status);
+        $this->assertNotNull($escrow->released_at);
+
+        $this->assertDatabaseHas('payment_events', [
+            'payment_id' => $payment->id,
+            'event_type' => 'VOID_OR_REFUND_SIMULATED',
+        ]);
     }
 
     public function test_orders_still_within_payment_deadline_are_left_alone(): void
