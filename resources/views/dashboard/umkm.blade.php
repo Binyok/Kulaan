@@ -44,12 +44,12 @@
 
         <div class="px-4 mt-4">
             <div class="bg-white rounded-3xl border-2 border-brass/40 p-5 relative overflow-hidden">
-                <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-brass-soft"></div>
-                <div class="flex items-center justify-between relative">
-                    <p class="text-xs font-bold uppercase tracking-wider text-muted">Total Penghematan</p>
-                    <span class="w-9 h-9 rounded-xl bg-brass-soft text-brass flex items-center justify-center text-xs font-extrabold">Rp</span>
+                <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-brass-soft/60"></div>
+                <div class="flex items-center gap-2 relative">
+                    <span class="w-9 h-9 rounded-xl bg-brass text-white flex items-center justify-center text-xs font-extrabold shrink-0">Rp</span>
+                    <p class="text-xs font-bold uppercase tracking-wider text-muted whitespace-nowrap">Total Penghematan</p>
                 </div>
-                <p class="text-[2rem] font-extrabold text-brass tabular-nums mt-2 relative">Rp {{ number_format($totalSavings, 0, ',', '.') }}</p>
+                <p class="text-[1.7rem] font-extrabold text-brass tabular-nums mt-2 relative whitespace-nowrap">Rp {{ number_format($totalSavings, 0, ',', '.') }}</p>
                 <p class="text-[11px] text-muted mt-1 relative">vs harga eceran &middot; 3 bulan terakhir</p>
             </div>
         </div>
@@ -58,7 +58,11 @@
             <div class="bg-white rounded-3xl border border-line p-3.5">
                 <p class="text-2xl font-extrabold">{{ $activeRequestsCount }}</p>
                 <p class="text-[10px] text-muted font-semibold mt-1 leading-tight">Permintaan aktif</p>
-                <span class="inline-block mt-2 bg-success/10 text-success text-[10px] font-bold px-2 py-0.5 rounded-full">+{{ $requestsThisWeek }} minggu ini</span>
+                @if ($requestsThisWeek > 0)
+                    <span class="inline-block mt-2 bg-success/10 text-success text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $requestsThisWeek }} permintaan minggu ini</span>
+                @else
+                    <span class="inline-block mt-2 bg-cream text-muted text-[10px] font-bold px-2 py-0.5 rounded-full">Belum ada permintaan</span>
+                @endif
             </div>
             <div class="bg-white rounded-3xl border border-line p-3.5">
                 <p class="text-2xl font-extrabold">{{ $unpaidInvoices->count() }}</p>
@@ -178,18 +182,22 @@
 
                 <section class="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
                     <div class="bg-white rounded-3xl border-2 border-brass/40 p-6 relative overflow-hidden">
-                        <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-brass-soft"></div>
-                        <div class="flex items-center justify-between relative">
-                            <p class="text-xs font-bold uppercase tracking-wider text-muted">Total Penghematan</p>
-                            <span class="w-9 h-9 rounded-xl bg-brass-soft text-brass flex items-center justify-center text-xs font-extrabold">Rp</span>
+                        <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-brass-soft/60"></div>
+                        <div class="flex items-center gap-2 relative">
+                            <span class="w-9 h-9 rounded-xl bg-brass text-white flex items-center justify-center text-xs font-extrabold shrink-0">Rp</span>
+                            <p class="text-xs font-bold uppercase tracking-wider text-muted whitespace-nowrap">Total Penghematan</p>
                         </div>
-                        <p class="text-[2rem] font-extrabold text-brass tabular-nums mt-3 relative">Rp {{ number_format($totalSavings, 0, ',', '.') }}</p>
+                        <p class="text-[1.65rem] xl:text-[2rem] font-extrabold text-brass tabular-nums mt-3 relative whitespace-nowrap">Rp {{ number_format($totalSavings, 0, ',', '.') }}</p>
                         <p class="text-[11px] text-muted mt-1 relative">vs harga eceran &middot; 3 bulan terakhir</p>
                     </div>
                     <div class="bg-white rounded-3xl border border-line p-6">
                         <p class="text-xs font-bold uppercase tracking-wider text-muted">Permintaan Aktif</p>
                         <p class="text-4xl font-extrabold mt-3">{{ $activeRequestsCount }}</p>
-                        <span class="inline-block mt-3 bg-success/10 text-success text-[11px] font-bold px-2.5 py-1 rounded-full">+{{ $requestsThisWeek }} minggu ini</span>
+                        @if ($requestsThisWeek > 0)
+                            <span class="inline-block mt-3 bg-success/10 text-success text-[11px] font-bold px-2.5 py-1 rounded-full">{{ $requestsThisWeek }} permintaan minggu ini</span>
+                        @else
+                            <span class="inline-block mt-3 bg-cream text-muted text-[11px] font-bold px-2.5 py-1 rounded-full">Belum ada permintaan</span>
+                        @endif
                     </div>
                     <div class="bg-white rounded-3xl border border-line p-6">
                         <p class="text-xs font-bold uppercase tracking-wider text-muted">Menunggu Bayar</p>
