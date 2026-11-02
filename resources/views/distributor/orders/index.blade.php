@@ -102,12 +102,13 @@
                                             default => 'bg-danger/10 text-danger',
                                         };
                                     @endphp
-                                    <div class="flex items-center justify-between text-xs">
-                                        <span><strong class="text-ink">{{ $item->umkm->business_name }}</strong> <span class="text-muted">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</span></span>
-                                        <div class="flex items-center gap-1.5 flex-wrap">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $paymentBadge }}">{{ $item->payment_status->label() }}</span>
+                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
+                                        <strong class="text-ink">{{ $item->umkm->business_name }}</strong>
+                                        <span class="text-muted whitespace-nowrap">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</span>
+                                        <div class="flex items-center gap-1.5 flex-wrap ms-auto">
+                                            <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold {{ $paymentBadge }}">{{ $item->payment_status->label() }}</span>
                                             @if ($item->escrow)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $item->escrow->status->badgeClass() }}">Dana: {{ $item->escrow->status->shortLabel() }}</span>
+                                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold {{ $item->escrow->status->badgeClass() }}">Dana: {{ $item->escrow->status->shortLabel() }}</span>
                                             @endif
                                             <a href="{{ route('distributor.orders.invoice', $item) }}" target="_blank" class="text-[10px] font-bold text-forest hover:underline">Invoice</a>
                                         </div>
@@ -119,7 +120,7 @@
                                 <div class="mt-3 rounded-2xl border border-line p-3 space-y-2">
                                     <div class="flex items-center justify-between text-xs">
                                         <span class="font-bold text-ink">Kurir: {{ $shipment->courier?->user?->name ?? 'Belum ditugaskan' }}</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brass-soft text-brass">{{ $shipment->status }}</span>
+                                        <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold bg-brass-soft text-brass">{{ match ($shipment->status) { 'IN_TRANSIT' => 'Dalam Pengiriman', 'DELIVERED' => 'Terkirim', 'PENDING' => 'Menunggu', default => $shipment->status } }}</span>
                                     </div>
                                     @if ($shipment->courier)
                                         <p class="text-[11px] text-muted">{{ $shipment->courier->vehicle_type }} &bull; {{ $shipment->courier->vehicle_number }} &bull; {{ $shipment->courier->user?->phone ?? '-' }}</p>
@@ -152,8 +153,6 @@
                                     <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCourierModal = true" class="w-full bg-brass text-white text-sm font-bold py-3 rounded-2xl cursor-pointer">Tugaskan Kurir</button>
                                 @elseif ($order->status->value === 'READY_TO_SHIP')
                                     <span class="block text-center text-xs text-muted py-2">Kurir sudah ditugaskan</span>
-                                @else
-                                    <span class="block text-center text-xs text-muted py-2">Tidak ada aksi</span>
                                 @endif
                                  @if (in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING', 'READY_TO_SHIP'], true))
                                      <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCancelModal = true" class="mt-2 w-full text-center text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 rounded-2xl py-2.5 transition cursor-pointer">Batalkan Pesanan</button>
@@ -302,7 +301,7 @@
                                     @if ($order->ship_deadline_at && in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING', 'READY_TO_SHIP'], true))
                                         <p class="text-xs font-bold {{ $order->ship_deadline_at->isPast() ? 'text-danger' : 'text-brass' }} mt-1">Kirim sebelum: {{ $order->ship_deadline_at->format('d M Y, H:i') }}</p>
                                     @endif
-                                    <div class="mt-4 grid sm:grid-cols-2 gap-2">
+                                    <div class="mt-4 space-y-2">
                                         @foreach ($order->items as $item)
                                             @php
                                                 $paymentBadge = match ($item->payment_status->value) {
@@ -311,12 +310,13 @@
                                                     default => 'bg-danger/10 text-danger',
                                                 };
                                             @endphp
-                                            <div class="flex items-center justify-between bg-cream/60 rounded-2xl px-4 py-3 text-sm">
-                                                <span><strong class="text-ink">{{ $item->umkm->business_name }}</strong> <span class="text-muted">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</span></span>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $paymentBadge }}">{{ $item->payment_status->label() }}</span>
+                                            <div class="flex flex-wrap items-center gap-x-3 gap-y-2 bg-cream/60 rounded-2xl px-4 py-3 text-sm">
+                                                <strong class="text-ink">{{ $item->umkm->business_name }}</strong>
+                                                <span class="text-muted whitespace-nowrap">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</span>
+                                                <div class="flex items-center gap-2 flex-wrap ms-auto">
+                                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold {{ $paymentBadge }}">{{ $item->payment_status->label() }}</span>
                                                     @if ($item->escrow)
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $item->escrow->status->badgeClass() }}">Dana: {{ $item->escrow->status->shortLabel() }}</span>
+                                                        <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold {{ $item->escrow->status->badgeClass() }}">Dana: {{ $item->escrow->status->shortLabel() }}</span>
                                                     @endif
                                                     <a href="{{ route('distributor.orders.invoice', $item) }}" target="_blank" class="text-[10px] font-bold text-forest hover:underline">Invoice</a>
                                                 </div>
@@ -329,7 +329,7 @@
                                     <div class="mt-4 rounded-2xl border border-line p-4 space-y-2 self-start min-w-[16rem]">
                                         <div class="flex items-center justify-between gap-3 text-xs">
                                             <span class="font-bold text-ink">Kurir: {{ $shipment->courier?->user?->name ?? 'Belum ditugaskan' }}</span>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-brass-soft text-brass">{{ $shipment->status }}</span>
+                                            <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold bg-brass-soft text-brass">{{ match ($shipment->status) { 'IN_TRANSIT' => 'Dalam Pengiriman', 'DELIVERED' => 'Terkirim', 'PENDING' => 'Menunggu', default => $shipment->status } }}</span>
                                         </div>
                                         @if ($shipment->courier)
                                             <p class="text-xs text-muted">{{ $shipment->courier->vehicle_type }} &bull; {{ $shipment->courier->vehicle_number }} &bull; {{ $shipment->courier->user?->phone ?? '-' }}</p>
@@ -362,8 +362,6 @@
                                         <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCourierModal = true" class="bg-brass text-white text-sm font-bold py-3 px-8 rounded-2xl cursor-pointer">Tugaskan Kurir</button>
                                     @elseif ($order->status->value === 'READY_TO_SHIP')
                                         <span class="text-xs text-muted">Kurir sudah ditugaskan</span>
-                                    @else
-                                        <span class="text-xs text-muted">Tidak ada aksi</span>
                                     @endif
                                      @if (in_array($order->status->value, ['PAID', 'CONFIRMED', 'PREPARING', 'READY_TO_SHIP'], true))
                                          <button type="button" @click="selectedOrder = {{ json_encode($order) }}; openCancelModal = true" class="mt-2 text-center text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 rounded-2xl px-6 py-2.5 transition cursor-pointer">Batalkan Pesanan</button>
