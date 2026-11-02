@@ -2,11 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Enums\EscrowStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Models\Courier;
 use App\Models\Distributor;
+use App\Models\Escrow;
 use App\Models\MatchingGroup;
 use App\Models\MatchingMember;
 use App\Models\Order;
@@ -185,6 +187,23 @@ class ComprehensiveSimulationSeeder extends Seeder
             'payment_status' => PaymentStatus::PAID->value,
             'paid_at' => now()->subHours(2),
         ]);
+
+        // Item yang sudah LUNAS wajib punya dana tertahan (escrow HELD), sama seperti
+        // alur pembayaran asli di MidtransService — agar badge "Dana: Ditahan"
+        // tampil konsisten di semua pesanan berbayar pada data demo.
+        foreach ([[$item1, $umkm1], [$item2, $umkm2], [$item3, $umkm3]] as [$paidItem, $paidUmkm]) {
+            Escrow::firstOrCreate(
+                ['order_item_id' => $paidItem->id],
+                [
+                    'order_id' => $order1->id,
+                    'distributor_id' => $distributor1->id,
+                    'umkm_id' => $paidUmkm->id,
+                    'amount' => $paidItem->subtotal,
+                    'status' => EscrowStatus::HELD->value,
+                    'held_at' => now()->subHours(2),
+                ]
+            );
+        }
 
         $shipment1 = Shipment::create([
             'shipment_number' => 'SHP-'.date('Ymd').'-001',
