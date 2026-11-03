@@ -2,9 +2,10 @@
     <x-slot name="title">Pantau Live GPS Kurir</x-slot>
 
     <!-- Leaflet Map Assets -->
-    <link rel="preconnect" href="https://unpkg.com">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://tile.openstreetmap.org">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     @php
         $displayName = $umkm?->business_name ?? 'UMKM';
@@ -42,9 +43,11 @@
         mapReady: false,
 
         initMap() {
+            if (!window.L) { this.leafletTries = (this.leafletTries || 0) + 1; if (this.leafletTries < 40) { setTimeout(() => this.initMap(), 250); } return; }
             this.map = L.map('liveGpsMap', {
                 zoomControl: true,
-                attributionControl: false
+                attributionControl: false,
+                preferCanvas: true
             }).setView([this.courierLat, this.courierLng], 14);
 
             const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
