@@ -90,7 +90,7 @@
                                         <span class="font-mono text-xs font-bold text-ink">{{ $shipment->shipment_number }}</span>
                                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $statusClass }}">{{ $statusLabel }}</span>
                                     </div>
-                                    <p class="font-bold text-ink text-sm">{{ $shipment->order->items->pluck('product.name')->join(', ') }}</p>
+                                    <p class="font-bold text-ink text-sm">{{ $shipment->order->items->where('umkm_id', $umkm->id)->pluck('product.name')->unique()->join(', ') }}</p>
                                     <p class="text-xs text-muted mt-0.5">
                                         Mitra {{ $shipment->order->distributor->company_name }}
                                         @if ($shipment->courier)
@@ -101,7 +101,7 @@
                             </div>
                             <a href="{{ route('umkm.tracking.show', $shipment) }}"
                                class="block text-center w-full mt-3 text-xs font-bold py-2.5 rounded-xl {{ $inTransit ? 'bg-forest text-white' : 'text-forest border border-forest/20' }}">
-                                {{ $inTransit ? 'Buka Live GPS &rarr;' : 'Lihat Rute Peta' }}
+                                {{ $inTransit ? 'Buka Live GPS →' : 'Lihat Rute Peta' }}
                             </a>
                         </article>
                     @endforeach
@@ -226,7 +226,7 @@
                                             <span class="font-mono text-xs font-bold text-ink">{{ $shipment->shipment_number }}</span>
                                             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $statusClass }}">{{ $statusLabel }}</span>
                                         </div>
-                                        <p class="font-bold text-ink text-sm">{{ $shipment->order->items->pluck('product.name')->join(', ') }}</p>
+                                        <p class="font-bold text-ink text-sm">{{ $shipment->order->items->where('umkm_id', $umkm->id)->pluck('product.name')->unique()->join(', ') }}</p>
                                         <p class="text-xs text-muted mt-0.5">
                                             Mitra {{ $shipment->order->distributor->company_name }}
                                             @if ($shipment->courier)
@@ -237,7 +237,7 @@
                                 </div>
                                 <a href="{{ route('umkm.tracking.show', $shipment) }}"
                                    class="text-xs font-bold py-3 px-5 rounded-xl {{ $inTransit ? 'bg-forest text-white' : 'text-forest border border-forest/20' }}">
-                                    {{ $inTransit ? 'Buka Live GPS &rarr;' : 'Lihat Rute Peta' }}
+                                    {{ $inTransit ? 'Buka Live GPS →' : 'Lihat Rute Peta' }}
                                 </a>
                             </article>
                         @endforeach
