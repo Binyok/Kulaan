@@ -14,10 +14,11 @@ class EscrowService
         protected ?PayoutGateway $payoutGateway = null,
     ) {
         if (! $this->payoutGateway) {
-            $driver = config('escrow.payout_driver', 'manual');
+            $driver = config('escrow.payout_driver', 'auto');
             $this->payoutGateway = match ($driver) {
                 'iris_sandbox', 'iris' => new IrisPayoutGateway,
-                default => new ManualPayoutGateway,
+                'manual' => new ManualPayoutGateway,
+                default => new AutoPayoutGateway,
             };
         }
     }
@@ -56,8 +57,12 @@ class EscrowService
                 $payoutRef = $payoutResult['reference'] ?? $payoutRef;
                 $payoutStatus = $payoutResult['status'] ?? 'QUEUED';
             } catch (PayoutNotConfiguredException $e) {
-                Log::warning('Payout gateway not configured, queuing for manual disbursement: '.$e->getMessage());
-                $payoutStatus = 'QUEUED';
+                Log::warning('Payout gateway not configured: '.$e->getMessage());
+                // Automatic payout cannot run without a destination account;
+                // flag it so admin only handles this exception case.
+                $payoutStatus = ($locked->distributor && ! $locked->distributor->hasCompleteBankDetails())
+                    ? 'PENDING_BANK'
+                    : 'QUEUED';
             } catch (\Throwable $e) {
                 Log::error('Payout gateway failure: '.$e->getMessage());
                 $payoutStatus = 'FAILED_RETRY';
@@ -68,6 +73,7 @@ class EscrowService
                 'released_at' => now(),
                 'payout_reference' => $payoutRef,
                 'payout_status' => $payoutStatus,
+                'payout_completed_at' => $payoutStatus === 'PAID' ? now() : null,
             ]);
 
             return $locked;

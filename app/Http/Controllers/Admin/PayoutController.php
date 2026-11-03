@@ -11,12 +11,19 @@ use Illuminate\View\View;
 
 class PayoutController extends Controller
 {
+    /**
+     * Payout statuses that still need admin attention. Normal payouts are
+     * disbursed automatically by the payout gateway when escrow is released;
+     * only these exception states land on the admin page.
+     */
+    private const ATTENTION_STATUSES = ['PENDING_BANK', 'FAILED_RETRY', 'QUEUED'];
+
     public function index(): View
     {
         $summary = [
             'held' => (float) Escrow::where('status', EscrowStatus::HELD->value)->sum('amount'),
             'queued' => (float) Escrow::where('status', EscrowStatus::RELEASED->value)
-                ->whereIn('payout_status', ['QUEUED', 'FAILED_RETRY'])
+                ->whereIn('payout_status', self::ATTENTION_STATUSES)
                 ->sum('amount'),
             'paid' => (float) Escrow::where('payout_status', 'PAID')->sum('amount'),
             'refunded' => (float) Escrow::where('status', EscrowStatus::REFUNDED->value)->sum('amount'),
@@ -24,7 +31,7 @@ class PayoutController extends Controller
 
         $queue = Escrow::with(['distributor', 'order', 'orderItem.product'])
             ->where('status', EscrowStatus::RELEASED->value)
-            ->whereIn('payout_status', ['QUEUED', 'FAILED_RETRY'])
+            ->whereIn('payout_status', self::ATTENTION_STATUSES)
             ->oldest('released_at')
             ->paginate(15);
 
@@ -39,7 +46,7 @@ class PayoutController extends Controller
 
     public function markPaid(Request $request, Escrow $escrow): RedirectResponse
     {
-        if ($escrow->status !== EscrowStatus::RELEASED || ! in_array($escrow->payout_status, ['QUEUED', 'FAILED_RETRY'], true)) {
+        if ($escrow->status !== EscrowStatus::RELEASED || ! in_array($escrow->payout_status, self::ATTENTION_STATUSES, true)) {
             return back()->with('error', 'Pencairan ini tidak sedang menunggu transfer.');
         }
 

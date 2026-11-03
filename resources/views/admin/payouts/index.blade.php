@@ -2,7 +2,7 @@
     <div class="p-6 max-w-7xl mx-auto">
         <div class="mb-6">
             <h1 class="text-2xl font-extrabold text-ink">Keuangan &amp; Pencairan Escrow</h1>
-            <p class="text-sm text-muted mt-1">Ringkasan dana escrow platform dan antrean pencairan ke rekening distributor. Setelah transfer manual dilakukan, tandai pencairan dan catat nomor referensinya.</p>
+            <p class="text-sm text-muted mt-1">Pencairan ke rekening distributor berjalan <strong>otomatis</strong> saat dana escrow dilepas. Halaman ini untuk memantau ringkasan dana dan menangani pencairan yang tertahan, misalnya karena rekening distributor belum lengkap.</p>
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
@@ -12,14 +12,14 @@
                 <p class="text-[11px] text-muted mt-1">Menunggu barang diterima UMKM.</p>
             </div>
             <div class="bg-white rounded-3xl border-2 border-brass/40 p-4">
-                <p class="text-[11px] font-bold text-brass uppercase tracking-wider">Antre Pencairan</p>
+                <p class="text-[11px] font-bold text-brass uppercase tracking-wider">Perlu Perhatian</p>
                 <p class="text-xl font-extrabold text-ink mt-1.5 tabular-nums">Rp {{ number_format($summary['queued'], 0, ',', '.') }}</p>
-                <p class="text-[11px] text-muted mt-1">Sudah dilepas, menunggu ditransfer admin.</p>
+                <p class="text-[11px] text-muted mt-1">Pencairan otomatis tertahan dan perlu ditangani admin.</p>
             </div>
             <div class="bg-white rounded-3xl border border-line p-4">
                 <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Sudah Dicairkan</p>
                 <p class="text-xl font-extrabold text-forest mt-1.5 tabular-nums">Rp {{ number_format($summary['paid'], 0, ',', '.') }}</p>
-                <p class="text-[11px] text-muted mt-1">Transfer ke distributor terkonfirmasi.</p>
+                <p class="text-[11px] text-muted mt-1">Tercairkan otomatis ke rekening distributor.</p>
             </div>
             <div class="bg-white rounded-3xl border border-line p-4">
                 <p class="text-[11px] font-bold text-muted uppercase tracking-wider">Sudah Direfund</p>
@@ -28,12 +28,12 @@
             </div>
         </div>
 
-        <h2 class="text-base font-extrabold text-ink mb-3">Antrean Pencairan ({{ $queue->total() }})</h2>
+        <h2 class="text-base font-extrabold text-ink mb-3">Pencairan Perlu Perhatian ({{ $queue->total() }})</h2>
 
         @if ($queue->isEmpty())
             <div class="bg-white rounded-3xl border border-line p-8 text-center mb-8">
-                <p class="text-sm font-bold text-ink">Tidak ada pencairan yang menunggu</p>
-                <p class="text-xs text-muted mt-1">Semua dana yang sudah dilepas telah ditransfer ke distributor.</p>
+                <p class="text-sm font-bold text-ink">Tidak ada pencairan yang tertahan</p>
+                <p class="text-xs text-muted mt-1">Semua dana yang sudah dilepas telah dicairkan otomatis ke distributor.</p>
             </div>
         @else
             <div class="space-y-3 mb-4">
@@ -55,6 +55,8 @@
                                 </p>
                                 @if ($escrow->payout_status === 'FAILED_RETRY')
                                     <span class="inline-flex mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-danger/10 text-danger">Gateway gagal, cairkan manual</span>
+                                @elseif ($escrow->payout_status === 'PENDING_BANK')
+                                    <span class="inline-flex mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-brass/10 text-brass">Rekening distributor belum lengkap</span>
                                 @endif
                             </div>
                             <p class="text-lg font-extrabold text-forest tabular-nums">Rp {{ number_format((float) $escrow->amount, 0, ',', '.') }}</p>
@@ -74,7 +76,7 @@
         <h2 class="text-base font-extrabold text-ink mb-3">Riwayat Pencairan Terakhir</h2>
         @if ($history->isEmpty())
             <div class="bg-white rounded-3xl border border-line p-6 text-center">
-                <p class="text-xs text-muted">Belum ada pencairan yang selesai ditransfer.</p>
+                <p class="text-xs text-muted">Belum ada pencairan yang selesai dicairkan.</p>
             </div>
         @else
             <div class="bg-white rounded-3xl border border-line divide-y divide-line/70 overflow-hidden">
