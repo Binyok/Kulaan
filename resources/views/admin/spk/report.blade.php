@@ -45,7 +45,7 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-cream rounded-xl p-4 mb-2 text-xs">
                     <div><strong>Nomor Laporan:</strong> SPK-RPT-{{ str_pad($history->id, 5, '0', STR_PAD_LEFT) }}</div>
-                    <div><strong>Waktu Kalkulasi:</strong> {{ $history->created_at->translatedFormat('d F Y, H:i') }} WITA</div>
+                    <div><strong>Waktu Kalkulasi:</strong> {{ $history->created_at->translatedFormat('d F Y, H:i') }} WIB</div>
                     <div><strong>Kode Grup Pengadaan:</strong> <span class="font-mono font-bold">{{ $history->matchingGroup?->group_code ?? '-' }}</span></div>
                     <div><strong>Komoditas Produk:</strong> {{ $history->matchingGroup?->product?->name ?? 'Multi Komoditas' }}</div>
                 </div>
@@ -265,7 +265,7 @@
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-cream rounded-xl p-4 mb-2 text-xs">
                         <div><strong>Nomor Laporan:</strong> SPK-RPT-{{ str_pad($history->id, 5, '0', STR_PAD_LEFT) }}</div>
-                        <div><strong>Waktu Kalkulasi:</strong> {{ $history->created_at->translatedFormat('d F Y, H:i') }} WITA</div>
+                        <div><strong>Waktu Kalkulasi:</strong> {{ $history->created_at->translatedFormat('d F Y, H:i') }} WIB</div>
                         <div><strong>Kode Grup Pengadaan:</strong> <span class="font-mono font-bold">{{ $history->matchingGroup?->group_code ?? '-' }}</span></div>
                         <div><strong>Komoditas Produk:</strong> {{ $history->matchingGroup?->product?->name ?? 'Multi Komoditas' }}</div>
                     </div>
