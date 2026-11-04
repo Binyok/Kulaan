@@ -154,7 +154,7 @@
                                     <tr>
                                         <td>
                                             <div class="font-mono text-xs font-bold text-forest">#SPK-{{ $hist->id }}</div>
-                                            <div class="text-[11px] text-muted">{{ $hist->created_at->format('d M Y, H:i') }} WITA</div>
+                                            <div class="text-[11px] text-muted">{{ $hist->created_at->format('d M Y, H:i') }} WIB</div>
                                         </td>
                                         <td>
                                             <span class="font-mono font-bold text-ink text-xs">{{ $hist->matchingGroup?->group_code ?? 'Manual/Direct' }}</span>
@@ -186,7 +186,7 @@
                                 <div class="flex justify-between items-start gap-3">
                                     <div>
                                         <p class="font-mono text-xs font-bold text-forest">#SPK-{{ $hist->id }}</p>
-                                        <p class="text-[11px] text-muted mt-0.5">{{ $hist->created_at->format('d M Y, H:i') }} WITA</p>
+                                        <p class="text-[11px] text-muted mt-0.5">{{ $hist->created_at->format('d M Y, H:i') }} WIB</p>
                                     </div>
                                     <span class="badge bg-[#DFF0E4] text-success font-mono shrink-0">{{ isset($topTopsis['score']) ? number_format($topTopsis['score'], 4) : '-' }}</span>
                                 </div>
@@ -418,7 +418,7 @@
                                         <tr>
                                             <td>
                                                 <div class="font-mono text-xs font-bold text-forest">#SPK-{{ $hist->id }}</div>
-                                                <div class="text-[11px] text-muted">{{ $hist->created_at->format('d M Y, H:i') }} WITA</div>
+                                                <div class="text-[11px] text-muted">{{ $hist->created_at->format('d M Y, H:i') }} WIB</div>
                                             </td>
                                             <td>
                                                 <span class="font-mono font-bold text-ink text-xs">{{ $hist->matchingGroup?->group_code ?? 'Manual/Direct' }}</span>
@@ -450,7 +450,7 @@
                                     <div class="flex justify-between items-start gap-3">
                                         <div>
                                             <p class="font-mono text-xs font-bold text-forest">#SPK-{{ $hist->id }}</p>
-                                            <p class="text-[11px] text-muted mt-0.5">{{ $hist->created_at->format('d M Y, H:i') }} WITA</p>
+                                            <p class="text-[11px] text-muted mt-0.5">{{ $hist->created_at->format('d M Y, H:i') }} WIB</p>
                                         </div>
                                         <span class="badge bg-[#DFF0E4] text-success font-mono shrink-0">{{ isset($topTopsis['score']) ? number_format($topTopsis['score'], 4) : '-' }}</span>
                                     </div>

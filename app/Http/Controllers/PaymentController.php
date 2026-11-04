@@ -75,7 +75,7 @@ class PaymentController extends Controller
             'is_paid' => $orderItem->payment_status === PaymentStatus::PAID,
             'payment_status' => $orderItem->payment_status->value,
             'status_label' => $orderItem->payment_status->label(),
-            'paid_at' => $payment?->paid_at?->format('d M Y, H:i:s').' WITA',
+            'paid_at' => $payment?->paid_at?->format('d M Y, H:i:s').' WIB',
         ]);
     }
 
