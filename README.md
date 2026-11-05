@@ -3,11 +3,15 @@ Platform **Smart Collective Procurement** yang menghubungkan UMKM dengan distrib
 
 ## 🌐 Website Live
 
-🔗 _Menyusul — deployment sedang disiapkan._
+🔗 **[https://kulaan.whf.bz](https://kulaan.whf.bz)**
+
+Situs demo berjalan penuh di alamat di atas dan dapat diuji langsung menggunakan akun penguji pada bagian Instalasi. Proyek ini dikembangkan untuk **GTNIC 2026**.
 
 ## 📸 Tangkapan Layar
 
-_Menyusul — diambil setelah redesign UI selesai._
+![Ilustrasi alur Cara Kerja Kulaan](https://kulaan.whf.bz/images/cara-kerja/alur-cara-kerja.webp)
+
+*Alur Cara Kerja di halaman utama: pilih di katalog → auto-matching mencapai MOQ grosir → rekomendasi SPK → bayar & lacak GPS. Tampilan selengkapnya dapat dilihat langsung di [situs live](https://kulaan.whf.bz).*
 
 ---
 
@@ -39,16 +43,22 @@ _Menyusul — diambil setelah redesign UI selesai._
    - Mendukung pembayaran via QRIS dan Virtual Account.
    - Validasi status transaksi via Webhook dengan enkripsi HMAC SHA512 signature.
 
-5. **Realtime GPS Tracking & Maps:**
+5. **Escrow & Pencairan Otomatis:**
+   - Dana pembayaran ditahan sistem (status HELD) dan baru dilepas ke distributor setelah UMKM mengonfirmasi penerimaan barang, atau otomatis setelah 48 jam tanpa komplain.
+   - Pencairan tercatat otomatis dengan referensi pembayaran per pesanan; distributor wajib melengkapi data rekening tujuan pencairan.
+   - Komplain dari UMKM membekukan dana; admin melakukan arbitrase, termasuk putusan parsial (sebagian dikembalikan ke UMKM, sebagian dicairkan ke distributor).
+   - Bukti pengiriman kurir berupa foto dan titik GPS dengan ambang jarak dari alamat tujuan.
+
+6. **Realtime GPS Tracking & Maps:**
    - Peta interaktif Leaflet.js (OpenStreetMap).
    - Pengiriman lokasi GPS realtime oleh kurir armada saat pengiriman berjalan.
    - Riwayat pengiriman dengan filter status (berjalan/selesai) dan pencarian nomor, distributor, tanggal.
 
-6. **Usulan Produk Custom:**
+7. **Usulan Produk Custom:**
    - Distributor dapat mengusulkan produk di luar katalog master.
    - Admin mereview (setujui/tolak beralasan); produk yang disetujui otomatis masuk katalog master beserta listing pengusul.
 
-7. **Wilayah Dinamis (Sidoarjo & Nasional):**
+8. **Wilayah Dinamis (Sidoarjo & Nasional):**
    - Pilih provinsi → kota/kabupaten → kecamatan → desa bertingkat via API wilayah Indonesia, default Jawa Timur – Sidoarjo.
    - Tersimpan di profil UMKM/distributor dan dipakai sebagai area pengiriman pengajuan.
 
@@ -131,7 +141,7 @@ Setiap alur yang menulis ke ≥2 tabel dibungkus `DB::transaction()` sehingga ga
 ## 🚀 Panduan Instalasi & Pengoperasian
 
 ### 1. Prasyarat
-- PHP 8.2 atau PHP 8.3
+- PHP 8.3
 - Composer 2.x
 - MySQL Server (Laragon / XAMPP / Native)
 - Node.js & NPM
@@ -171,12 +181,12 @@ Total 10 akun dari `RoleAndUserSeeder`. Semua akun menggunakan kata sandi: `pass
 | Role | Email | Nama / Usaha |
 | :--- | :--- | :--- |
 | **Administrator** | `admin@kulaan.id` | Administrator Kula'an |
-| **UMKM 1** | `umkm.maju@gmail.com` | Budi Santoso — Kedai Maju Jaya (Banjarmasin Utara) |
-| **UMKM 2** | `umkm.nusantara@gmail.com` | Siti Rahma — Dapur Nusantara (Banjarmasin Barat) |
-| **UMKM 3** | `umkm.berkah@gmail.com` | Andi Pratama — Warung Berkah (Banjarmasin Timur) |
-| **Distributor 1** | `distributor.borneo@gmail.com` | PT Borneo Bahan Sembako (rating 4.85) |
-| **Distributor 2** | `distributor.banua@gmail.com` | CV Banua Makmur Jaya (rating 4.70) |
-| **Distributor 3** | `distributor.kalimantan@gmail.com` | UD Kalimantan Agro Pangan (rating 4.60) |
+| **UMKM 1** | `umkm.maju@gmail.com` | Budi Santoso — Kedai Maju Jaya |
+| **UMKM 2** | `umkm.nusantara@gmail.com` | Siti Rahma — Dapur Nusantara |
+| **UMKM 3** | `umkm.berkah@gmail.com` | Andi Pratama — Warung Berkah |
+| **Distributor 1** | `distributor.borneo@gmail.com` | PT Borneo Bahan Sembako |
+| **Distributor 2** | `distributor.banua@gmail.com` | CV Banua Makmur Jaya |
+| **Distributor 3** | `distributor.kalimantan@gmail.com` | UD Kalimantan Agro Pangan |
 | **Kurir 1** | `kurir.rizky@gmail.com` | Rizky Kurir Express (Mobil Box) |
 | **Kurir 2** | `kurir.arif@gmail.com` | Arif Delivery Services (Pickup) |
 | **Kurir 3** | `kurir.fajar@gmail.com` | Fajar Motor Cargo (Motor) |
@@ -218,7 +228,7 @@ Untuk performa optimal saat presentasi, pengujian menyeluruh, atau deployment se
 ## 🧪 Menjalankan Pengujian (Testing)
 
 ```bash
-# Menjalankan seluruh unit & feature test suite (85 test:
+# Menjalankan seluruh unit & feature test suite (163 test:
 # fungsional, SPK, keamanan webhook, otorisasi, dan regresi UI)
 php artisan test
 ```
