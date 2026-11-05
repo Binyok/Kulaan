@@ -38,7 +38,7 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'email' => ['nullable', 'string', 'lowercase', 'email', 'regex:/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/', 'max:255', Rule::unique(User::class)->ignore($user->id)],
             'phone' => ['required', 'string', 'max:20'],
             'address' => ['required', 'string'],
             'district' => ['required', 'string', 'max:100'],
@@ -55,6 +55,7 @@ class ProfileController extends Controller
             'bank_account_name' => ['required_with:bank_name,bank_account_number', 'nullable', 'string', 'max:255'],
             'password' => ['nullable', 'string', 'confirmed', 'min:8'],
         ], [
+            'email.regex' => 'Alamat email harus memakai domain yang valid, contoh: nama@gmail.com.',
             'bank_account_number.digits_between' => 'Nomor rekening harus berupa 6 hingga 20 digit angka.',
         ], [
             'business_name' => 'nama usaha/perusahaan',

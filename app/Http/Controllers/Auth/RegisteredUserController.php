@@ -27,9 +27,11 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'regex:/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'string', 'in:umkm,distributor,kurir'],
+        ], [
+            'email.regex' => 'Alamat email harus memakai domain yang valid, contoh: nama@gmail.com.',
         ]);
 
         DB::transaction(function () use ($request, &$user) {
