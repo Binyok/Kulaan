@@ -6,6 +6,7 @@
     <link rel="preconnect" href="https://tile.openstreetmap.org">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script defer src="{{ asset('js/kulaan-route.js') }}"></script>
 
     @php
         $displayName = $umkm?->business_name ?? 'UMKM';
@@ -39,6 +40,9 @@
         courierMarker: null,
         destMarker: null,
         routeLine: null,
+        routeState: {},
+        routeFrom: null,
+        routeText: '',
         pollTimer: null,
         mapReady: false,
 
@@ -93,8 +97,23 @@
                 this.map.fitBounds(group.getBounds().pad(0.2));
             }
 
+            this.updateRoute();
+
             // Start polling location every 4 seconds
             this.pollTimer = setInterval(() => this.fetchLocation(), 4000);
+        },
+
+        updateRoute() {
+            if (!window.KulaanRoute || !this.map) { return; }
+            const from = [this.courierLat, this.courierLng];
+            // Data GPS basi/rusak bisa terpaut ratusan km — jangan gambar
+            // garis yang tidak masuk akal (selaras clamp fitBounds di atas).
+            if (window.KulaanRoute.haversineMeters(from, [this.destLat, this.destLng]) > 100000) { return; }
+            if (this.routeFrom && window.KulaanRoute.haversineMeters(this.routeFrom, from) < 150) { return; }
+            this.routeFrom = from;
+            window.KulaanRoute.drawRoute(this.map, this.routeState, [from, [this.destLat, this.destLng]], (info) => {
+                this.routeText = info ? window.KulaanRoute.formatInfo(info) : '';
+            });
         },
 
         fetchLocation() {
@@ -109,6 +128,7 @@
 
                     this.courierMarker.setLatLng([this.courierLat, this.courierLng]);
                     this.courierMarker.setPopupContent(`<strong>Posisi Kurir:</strong><br>${this.courierName}<br>Kecepatan: ${this.speed} km/jam<br><small>Update: ${this.lastUpdated}</small>`);
+                    this.updateRoute();
                 }
             }).catch(err => console.warn('Polling GPS:', err));
         },
@@ -275,6 +295,10 @@
                                     </div>
                                 </div>
                                 <p class="text-[11px] text-muted mt-2 lg:mt-3">Update terakhir: <span class="font-semibold text-ink" x-text="lastUpdated"></span></p>
+                                <div class="bg-cream/60 rounded-xl p-2.5 lg:p-3 border border-line/60 mt-2" x-show="routeText" x-cloak>
+                                    <p class="text-[10px] text-muted">Sisa Perjalanan (garis biru di peta)</p>
+                                    <p class="font-bold text-ink mt-0.5" x-text="routeText"></p>
+                                </div>
                                 @if ($courierPhone)
                                     <a href="tel:{{ $courierPhone }}" class="mt-3 lg:mt-4 w-full inline-flex items-center justify-center gap-2 bg-forest text-white text-sm font-bold py-3 lg:py-3.5 rounded-xl">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.25 6.75c0 8.28 6.72 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.37c0-.5-.28-.96-.73-1.19l-2.5-1.25a1.13 1.13 0 0 0-1.28.21l-.82.82a16.5 16.5 0 0 1-7.07-7.07l.82-.82a1.13 1.13 0 0 0 .21-1.28L9.13 4.06a1.13 1.13 0 0 0-1.19-.73H6.75A2.25 2.25 0 0 0 4.5 5.58v1.17Z"/></svg>

@@ -6,6 +6,7 @@
     <link rel="preconnect" href="https://tile.openstreetmap.org">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script defer src="{{ asset('js/kulaan-route.js') }}"></script>
 
     @php
         $displayName = $umkm?->business_name ?? 'UMKM Anda';
@@ -70,6 +71,7 @@
             const loc = item.current_location;
             const packages = item.deliveries.map(d => d.shipment_number).join(', ');
             return `<strong>${entry.name}</strong><br>Membawa ${item.deliveries.length} paket (${packages})<br>` +
+                (entry.routeInfo && window.KulaanRoute ? `Sisa rute: ${window.KulaanRoute.formatInfo(entry.routeInfo)}<br>` : ``) +
                 (loc ? `Kecepatan: ${loc.speed} km/jam<br><small>Update: ${loc.updated_at}</small>` : `<small>Menunggu titik GPS pertama…</small>`);
         },
 
@@ -96,7 +98,10 @@
 
                         this.markers[key] = {
                             color: color,
-                            marker: L.marker(startAt, { icon: this.courierIcon(color) }).addTo(this.map)
+                            marker: L.marker(startAt, { icon: this.courierIcon(color) }).addTo(this.map),
+                            routeState: {},
+                            routeFrom: null,
+                            routeInfo: null
                         };
                     }
 
@@ -104,6 +109,11 @@
                     entry.name = item.courier.name;
                     if (item.current_location) {
                         entry.marker.setLatLng([item.current_location.lat, item.current_location.lng]);
+                        const from = [item.current_location.lat, item.current_location.lng];
+                        if (window.KulaanRoute && window.KulaanRoute.haversineMeters(from, [this.destLat, this.destLng]) <= 100000 && (!entry.routeFrom || window.KulaanRoute.haversineMeters(entry.routeFrom, from) > 150)) {
+                            entry.routeFrom = from;
+                            window.KulaanRoute.drawRoute(this.map, entry.routeState, [from, [this.destLat, this.destLng]], (info) => { entry.routeInfo = info; });
+                        }
                     }
                     entry.marker.setPopupContent(this.popupHtml(entry, item));
 
@@ -128,6 +138,9 @@
                 Object.keys(this.markers).forEach((id) => {
                     if (!seenIds.has(id)) {
                         this.map.removeLayer(this.markers[id].marker);
+                        if (this.markers[id].routeState && this.markers[id].routeState.layer) {
+                            this.map.removeLayer(this.markers[id].routeState.layer);
+                        }
                         delete this.markers[id];
                     }
                 });
