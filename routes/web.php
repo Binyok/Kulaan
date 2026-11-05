@@ -37,6 +37,7 @@ Route::get('jelajahi', [PublicCatalogController::class, 'index'])->name('public.
 Route::get('jelajahi/{product}', [PublicCatalogController::class, 'show'])->name('public.catalog.show');
 Route::get('peta-distributor', [PublicDistributorController::class, 'map'])->name('public.distributors.map');
 Route::get('distributor/{distributor}', [PublicDistributorController::class, 'show'])->whereNumber('distributor')->name('public.distributors.show');
+Route::get('privacy-policy', fn () => view('public.privacy-policy'))->name('privacy.policy');
 
 // Auth routes (guest only)
 Route::middleware('guest')->group(function () {
