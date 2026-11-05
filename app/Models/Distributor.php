@@ -51,6 +51,36 @@ class Distributor extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Full postal address as one line: street, village, district, city,
+     * province — empty parts skipped.
+     */
+    public function fullAddress(): string
+    {
+        $parts = array_filter([
+            $this->address,
+            $this->village,
+            $this->district ? 'Kec. '.$this->district : null,
+            $this->city,
+            $this->province,
+        ], fn ($part) => filled($part));
+
+        return implode(', ', array_unique($parts));
+    }
+
+    /**
+     * Google Maps directions link to this warehouse: exact coordinates
+     * when set, otherwise a search by the full address text.
+     */
+    public function directionsUrl(): string
+    {
+        if ($this->latitude !== null && $this->longitude !== null) {
+            return 'https://www.google.com/maps/dir/?api=1&destination='.$this->latitude.','.$this->longitude;
+        }
+
+        return 'https://www.google.com/maps/dir/?api=1&destination='.urlencode($this->fullAddress());
+    }
+
     public function supplierProducts(): HasMany
     {
         return $this->hasMany(SupplierProduct::class);

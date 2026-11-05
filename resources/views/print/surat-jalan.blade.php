@@ -24,7 +24,7 @@
                 <div>
                     <p class="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Pengirim / Distributor</p>
                     <p class="font-bold text-ink">{{ $shipment->order->distributor->company_name }}</p>
-                    <p class="text-xs text-muted mt-0.5">{{ $shipment->order->distributor->address }}@if ($shipment->order->distributor->city), {{ $shipment->order->distributor->city }}@endif</p>
+                    <p class="text-xs text-muted mt-0.5">{{ $shipment->order->distributor->fullAddress() }}</p>
                 </div>
                 <div>
                     <p class="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Kurir Pengantar</p>
@@ -45,8 +45,8 @@
                 <tbody>
                     @foreach ($shipment->order->items as $item)
                         <tr class="border-b border-line/60 align-top">
-                            <td class="py-3 pr-3 font-semibold text-ink">{{ $item->umkm->business_name }}</td>
-                            <td class="py-3 px-3 text-xs text-muted">{{ $item->delivery_address }} ({{ $item->delivery_district }})</td>
+                            <td class="py-3 pr-3 font-semibold text-ink">{{ $item->umkm->business_name }}@if ($item->umkm->user)<br><span class="text-xs font-normal text-muted">{{ $item->umkm->user->name }}@if ($item->umkm->user->phone) &bull; {{ $item->umkm->user->phone }}@endif</span>@endif</td>
+                            <td class="py-3 px-3 text-xs text-muted">{{ $item->umkm->fullAddress($item->delivery_address) }}</td>
                             <td class="py-3 px-3">{{ $item->product->name }}</td>
                             <td class="py-3 pl-3 text-right tabular-nums">{{ number_format($item->quantity, 0) }} {{ $item->product->unit }}</td>
                         </tr>

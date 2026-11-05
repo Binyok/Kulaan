@@ -1,6 +1,13 @@
 <x-layouts.app>
     <x-slot name="title">Tugas Pengiriman Kurir</x-slot>
 
+    {{-- Leaflet + helper garis rute (untuk mini-peta rute di kartu tugas) --}}
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://tile.openstreetmap.org">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script defer src="{{ asset('js/kulaan-route.js') }}"></script>
+
     @php
         $user = auth()->user();
         $initials = strtoupper(substr($user->name, 0, 2));
@@ -113,10 +120,14 @@
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-brass-soft text-brass shrink-0">{{ $isPending ? 'Menunggu' : $shipment->status }}</span>
                                     @endif
                                 </div>
-                                <div class="mt-2.5 space-y-1.5 text-[11px]">
+                                <div class="mt-2.5 space-y-2.5 text-[11px]">
+                                    @if ($shipment->order->distributor)
+                                        <p class="text-muted leading-relaxed"><strong class="text-ink">Ambil di:</strong> {{ $shipment->order->distributor->company_name }} — {{ $shipment->order->distributor->fullAddress() }} <a href="{{ $shipment->order->distributor->directionsUrl() }}" target="_blank" rel="noopener" class="font-bold text-forest hover:underline whitespace-nowrap">Rute ke gudang</a></p>
+                                    @endif
                                     @foreach ($shipment->order->items as $item)
-                                        <p><strong class="text-ink">{{ $item->umkm->business_name }}</strong> <span class="text-muted">&bull; {{ $item->delivery_address }} ({{ $item->delivery_district }})</span></p>
+                                        @include('kurir.shipments.partials.destination', ['item' => $item])
                                     @endforeach
+                                    @include('kurir.shipments.partials.route-map', ['shipment' => $shipment, 'uid' => 'm'])
                                     <a href="{{ route('kurir.shipments.surat-jalan', $shipment) }}" target="_blank" class="inline-block mt-1.5 text-[11px] font-bold text-forest hover:underline">Cetak Surat Jalan</a>
                                 </div>
                                 <div class="mt-3">
@@ -297,10 +308,14 @@
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brass-soft text-brass shrink-0">{{ $isPending ? 'Menunggu' : $shipment->status }}</span>
                                     @endif
                                 </div>
-                                <div class="mt-4 space-y-2 text-sm">
+                                <div class="mt-4 space-y-3 text-sm">
+                                    @if ($shipment->order->distributor)
+                                        <p class="text-muted leading-relaxed"><strong class="text-ink">Ambil di:</strong> {{ $shipment->order->distributor->company_name }} — {{ $shipment->order->distributor->fullAddress() }} <a href="{{ $shipment->order->distributor->directionsUrl() }}" target="_blank" rel="noopener" class="font-bold text-forest hover:underline whitespace-nowrap">Rute ke gudang</a></p>
+                                    @endif
                                     @foreach ($shipment->order->items as $item)
-                                        <p><strong class="text-ink">{{ $item->umkm->business_name }}</strong> <span class="text-muted">&bull; {{ $item->delivery_address }} ({{ $item->delivery_district }})</span></p>
+                                        @include('kurir.shipments.partials.destination', ['item' => $item])
                                     @endforeach
+                                    @include('kurir.shipments.partials.route-map', ['shipment' => $shipment, 'uid' => 'd'])
                                     <a href="{{ route('kurir.shipments.surat-jalan', $shipment) }}" target="_blank" class="inline-block mt-1.5 text-[11px] font-bold text-forest hover:underline">Cetak Surat Jalan</a>
                                 </div>
                                 <div class="mt-5">

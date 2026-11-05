@@ -36,7 +36,7 @@ class CourierShipmentController extends Controller
             $tab = 'active';
         }
 
-        $shipments = Shipment::with('order.items.product', 'order.items.umkm', 'latestLocation')
+        $shipments = Shipment::with('order.items.product', 'order.items.umkm.user', 'order.distributor', 'latestLocation')
             ->where('courier_id', $courier->id)
             ->when($tab === 'active', fn ($query) => $query->whereIn('status', ['PENDING', 'ASSIGNED_TO_COURIER', 'IN_TRANSIT']))
             ->when($tab === 'history', fn ($query) => $query->where('status', 'DELIVERED'))
@@ -56,7 +56,7 @@ class CourierShipmentController extends Controller
             abort(403);
         }
 
-        $shipment->load(['order.distributor', 'order.items.umkm', 'order.items.product', 'courier.user']);
+        $shipment->load(['order.distributor', 'order.items.umkm.user', 'order.items.product', 'courier.user']);
 
         return view('print.surat-jalan', compact('shipment'));
     }
