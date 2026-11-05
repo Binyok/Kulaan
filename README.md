@@ -171,6 +171,11 @@ php artisan key:generate
 # Jalankan migrasi dan seeder awal
 php artisan migrate --seed
 
+# Bangun dataset wilayah (dropdown alamat provinsi → desa pada profil).
+# Data tidak ikut ter-commit; dibangkitkan dari data wilayah Kemendagri
+# (38 provinsi, 514 kab/kota, 7.285 kecamatan, 83.762 desa/kelurahan).
+php artisan wilayah:build
+
 # Build asset CSS & JS
 npm run build
 ```
@@ -228,7 +233,7 @@ Untuk performa optimal saat presentasi, pengujian menyeluruh, atau deployment se
 ## 🧪 Menjalankan Pengujian (Testing)
 
 ```bash
-# Menjalankan seluruh unit & feature test suite (163 test:
+# Menjalankan seluruh unit & feature test suite (176 test:
 # fungsional, SPK, keamanan webhook, otorisasi, dan regresi UI)
 php artisan test
 ```
