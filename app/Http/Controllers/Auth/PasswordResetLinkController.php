@@ -21,13 +21,13 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $status = Password::sendResetLink(
+        // Selalu kirim bila emailnya terdaftar, tapi tampilkan respons
+        // yang sama persis apa pun hasilnya — halaman ini tidak boleh
+        // membocorkan apakah sebuah email terdaftar di Kulaan atau tidak.
+        Password::sendResetLink(
             $request->only('email')
         );
 
-        return $status == Password::RESET_LINK_SENT
-                    ? back()->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        return back()->with('status', 'Kalau email ini terdaftar di Kulaan, tautan atur ulang kata sandi sudah kami kirim. Periksa kotak masuk atau folder spam email kamu, ya.');
     }
 }

@@ -23,6 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Kulaan is a single-language product: all framework messages
+        // (validation, auth, password resets) are served in Bahasa
+        // Indonesia from lang/id, regardless of environment defaults.
+        app()->setLocale('id');
+
         // Login attempts are limited per email + IP pair, so rotating
         // source IPs alone cannot bypass the limit.
         RateLimiter::for('login', function (Request $request) {

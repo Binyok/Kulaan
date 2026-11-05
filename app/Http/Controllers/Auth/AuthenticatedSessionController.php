@@ -29,8 +29,11 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('dashboard');
         }
 
+        // Satu pesan generik untuk semua kegagalan masuk — tidak pernah
+        // membocorkan apakah emailnya yang tidak terdaftar atau kata
+        // sandinya yang salah (lihat lang/id/auth.php: 'failed').
         return back()->withErrors([
-            'email' => 'Kredensial yang dimasukkan tidak sesuai dengan catatan kami.',
+            'email' => __('auth.failed'),
         ])->onlyInput('email');
     }
 
