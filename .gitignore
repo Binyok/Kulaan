@@ -37,3 +37,6 @@ strix_runs/
 /boost.json
 /.mcp.json
 /opencode.json
+
+# Dataset wilayah hasil generate (php artisan wilayah:build)
+/database/data/wilayah/

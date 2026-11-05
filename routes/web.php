@@ -19,6 +19,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LiveRevisionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegionController;
 use App\Http\Controllers\Public\PublicCatalogController;
 use App\Http\Controllers\Public\PublicDistributorController;
 use App\Http\Controllers\Umkm\CartController;
@@ -38,6 +39,14 @@ Route::get('jelajahi/{product}', [PublicCatalogController::class, 'show'])->name
 Route::get('peta-distributor', [PublicDistributorController::class, 'map'])->name('public.distributors.map');
 Route::get('distributor/{distributor}', [PublicDistributorController::class, 'show'])->whereNumber('distributor')->name('public.distributors.show');
 Route::get('privacy-policy', fn () => view('public.privacy-policy'))->name('privacy.policy');
+
+// Dataset wilayah lokal untuk dropdown alamat berjenjang (data referensi publik).
+Route::prefix('regions')->name('regions.')->group(function () {
+    Route::get('provinces', [RegionController::class, 'provinces'])->name('provinces');
+    Route::get('regencies/{province}', [RegionController::class, 'regencies'])->where('province', '[0-9.]+')->name('regencies');
+    Route::get('districts/{regency}', [RegionController::class, 'districts'])->where('regency', '[0-9.]+')->name('districts');
+    Route::get('villages/{district}', [RegionController::class, 'villages'])->where('district', '[0-9.]+')->name('villages');
+});
 
 // Auth routes (guest only)
 Route::middleware('guest')->group(function () {

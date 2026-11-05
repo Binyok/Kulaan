@@ -9,7 +9,6 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/app-auth.js',
-                'resources/js/region-cascade.js',
             ],
             refresh: true,
         }),

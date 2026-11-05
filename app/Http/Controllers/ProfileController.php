@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\Wilayah;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -67,6 +69,27 @@ class ProfileController extends Controller
             'bank_account_number' => 'nomor rekening',
             'bank_account_name' => 'nama pemilik rekening',
         ]);
+
+        // Alamat wilayah harus benar-benar ada dan nyambung di dataset
+        // wilayah Indonesia — teks bebas tidak diterima.
+        $wilayah = Wilayah::validateChain(
+            $validated['province'] ?? null,
+            $validated['city'] ?? null,
+            $validated['district'] ?? null,
+            $validated['village'] ?? null,
+        );
+
+        if (! $wilayah['ok']) {
+            throw ValidationException::withMessages([
+                $wilayah['error_field'] => $wilayah['message'],
+            ]);
+        }
+
+        // Provinsi yang dikosongkan diisi otomatis dari kota/kabupaten
+        // terpilih bila hasilnya tunggal.
+        if (empty($validated['province']) && $wilayah['resolved']['province']) {
+            $validated['province'] = $wilayah['resolved']['province'];
+        }
 
         $userUpdate = [
             'name' => $validated['name'],
