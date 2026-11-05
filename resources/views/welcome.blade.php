@@ -171,22 +171,47 @@
         <div id="cara-kerja-mobile" class="px-4 pb-10">
             <span class="eyebrow">Alur Sistem</span>
             <h2 class="font-extrabold tracking-tight text-2xl leading-[1.15] mt-3">Bagaimana Kula'an bekerja</h2>
-            <ol class="mt-5 border-t border-forest/15">
-                <li class="flex gap-4 py-5 border-b border-forest/15">
-                    <span class="font-extrabold text-forest/30 text-3xl leading-none shrink-0">01</span>
-                    <div><h3 class="font-bold text-ink">Pilih di Katalog</h3><p class="text-xs text-muted mt-1 leading-relaxed">Bandingkan penawaran distributor, ajukan jumlah dan deadline.</p></div>
+            <ol class="relative mt-6 space-y-8">
+                <span class="absolute pointer-events-none" style="left:1.375rem;top:1rem;bottom:1rem;border-left:2px dashed rgba(154,123,45,0.55)" aria-hidden="true"></span>
+                <li class="relative flex gap-3.5">
+                    <span class="relative z-10 shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-forest text-white text-sm font-extrabold ring-4 ring-cream">1</span>
+                    <div class="flex-1 min-w-0">
+                        <figure class="rounded-3xl border border-line shadow-sm overflow-hidden bg-cream">
+                            <img src="{{ asset('images/cara-kerja/alur-1-warung.webp') }}" alt="Ilustrasi warung memilih bahan baku di katalog Kulaan" loading="lazy" decoding="async" class="w-full aspect-[4/3] object-cover" style="object-position:50% 55%">
+                        </figure>
+                        <h3 class="font-bold text-ink mt-3">Pilih di Katalog</h3>
+                        <p class="text-xs text-muted mt-1 leading-relaxed">Bandingkan penawaran distributor, ajukan jumlah dan deadline.</p>
+                    </div>
                 </li>
-                <li class="flex gap-4 py-5 border-b border-forest/15">
-                    <span class="font-extrabold text-forest/30 text-3xl leading-none shrink-0">02</span>
-                    <div><h3 class="font-bold text-ink">Auto-Matching Otomatis</h3><p class="text-xs text-muted mt-1 leading-relaxed">Sistem menggabungkan pesanan UMKM sekitar hingga mencapai MOQ grosir.</p></div>
+                <li class="relative flex gap-3.5">
+                    <span class="relative z-10 shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-forest text-white text-sm font-extrabold ring-4 ring-cream">2</span>
+                    <div class="flex-1 min-w-0">
+                        <figure class="rounded-3xl border border-line shadow-sm overflow-hidden bg-cream">
+                            <img src="{{ asset('images/cara-kerja/alur-2-matching.webp') }}" alt="Ilustrasi pesanan beberapa UMKM digabungkan menjadi satu pesanan grosir besar" loading="lazy" decoding="async" class="w-full aspect-[4/3] object-cover" style="object-position:50% 55%">
+                        </figure>
+                        <h3 class="font-bold text-ink mt-3">Auto-Matching Otomatis</h3>
+                        <p class="text-xs text-muted mt-1 leading-relaxed">Sistem menggabungkan pesanan UMKM sekitar hingga mencapai MOQ grosir.</p>
+                    </div>
                 </li>
-                <li class="flex gap-4 py-5 border-b border-forest/15">
-                    <span class="font-extrabold text-forest/30 text-3xl leading-none shrink-0">03</span>
-                    <div><h3 class="font-bold text-ink">Rekomendasi SPK</h3><p class="text-xs text-muted mt-1 leading-relaxed">AHP + TOPSIS menilai harga, kualitas, dan lead time — keputusan tetap di tanganmu.</p></div>
+                <li class="relative flex gap-3.5">
+                    <span class="relative z-10 shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-forest text-white text-sm font-extrabold ring-4 ring-cream">3</span>
+                    <div class="flex-1 min-w-0">
+                        <figure class="rounded-3xl border border-line shadow-sm overflow-hidden bg-cream">
+                            <img src="{{ asset('images/cara-kerja/alur-3-spk.webp') }}" alt="Ilustrasi distributor terbaik pilihan SPK dengan bintang dan lencana centang" loading="lazy" decoding="async" class="w-full aspect-[4/3] object-cover" style="object-position:50% 55%">
+                        </figure>
+                        <h3 class="font-bold text-ink mt-3">Rekomendasi SPK</h3>
+                        <p class="text-xs text-muted mt-1 leading-relaxed">AHP + TOPSIS menilai harga, kualitas, dan lead time — keputusan tetap di tanganmu.</p>
+                    </div>
                 </li>
-                <li class="flex gap-4 py-5 border-b border-forest/15">
-                    <span class="font-extrabold text-forest/30 text-3xl leading-none shrink-0">04</span>
-                    <div><h3 class="font-bold text-ink">Bayar &amp; Lacak GPS</h3><p class="text-xs text-muted mt-1 leading-relaxed">Invoice individual, bayar via QRIS/VA, lacak kurir realtime di peta.</p></div>
+                <li class="relative flex gap-3.5">
+                    <span class="relative z-10 shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-forest text-white text-sm font-extrabold ring-4 ring-cream">4</span>
+                    <div class="flex-1 min-w-0">
+                        <figure class="rounded-3xl border border-line shadow-sm overflow-hidden bg-cream">
+                            <img src="{{ asset('images/cara-kerja/alur-4-kurir.webp') }}" alt="Ilustrasi kurir mengantar pesanan mengikuti jalur sampai ke toko tujuan" loading="lazy" decoding="async" class="w-full aspect-[4/3] object-cover" style="object-position:50% 55%">
+                        </figure>
+                        <h3 class="font-bold text-ink mt-3">Bayar &amp; Lacak GPS</h3>
+                        <p class="text-xs text-muted mt-1 leading-relaxed">Invoice individual, bayar via QRIS/VA, lacak kurir realtime di peta.</p>
+                    </div>
                 </li>
             </ol>
         </div>
@@ -451,28 +476,33 @@
                     <h2 class="font-extrabold tracking-tight text-3xl sm:text-[2.75rem] leading-[1.1] mt-4">Bagaimana Kula'an bekerja</h2>
                     <p class="text-sm text-muted mt-3 leading-relaxed">Pengadaan otomatis yang menyederhanakan pembelian bahan baku, dari pengajuan sampai tiba di tempat usaha.</p>
                 </div>
-                <ol class="mt-10 border-t border-forest/15">
-                    <li class="grid grid-cols-[auto_1fr] sm:grid-cols-[7rem_1fr_1fr] gap-x-5 gap-y-2 py-7 border-b border-forest/15 items-baseline">
-                        <span class="font-extrabold text-forest/30 text-4xl sm:text-5xl leading-none">01</span>
-                        <h3 class="font-bold text-lg text-ink">Pilih di Katalog</h3>
-                        <p class="col-start-2 sm:col-start-3 text-sm text-muted leading-relaxed">Buka katalog, bandingkan penawaran distributor, dan ajukan ke pilihanmu beserta jumlah dan deadline.</p>
-                    </li>
-                    <li class="grid grid-cols-[auto_1fr] sm:grid-cols-[7rem_1fr_1fr] gap-x-5 gap-y-2 py-7 border-b border-forest/15 items-baseline">
-                        <span class="font-extrabold text-forest/30 text-4xl sm:text-5xl leading-none">02</span>
-                        <h3 class="font-bold text-lg text-ink">Auto-Matching Otomatis</h3>
-                        <p class="col-start-2 sm:col-start-3 text-sm text-muted leading-relaxed">Sistem menggabungkan pesanan UMKM lain di sekitar area pengiriman hingga mencapai MOQ grosir.</p>
-                    </li>
-                    <li class="grid grid-cols-[auto_1fr] sm:grid-cols-[7rem_1fr_1fr] gap-x-5 gap-y-2 py-7 border-b border-forest/15 items-baseline">
-                        <span class="font-extrabold text-forest/30 text-4xl sm:text-5xl leading-none">03</span>
-                        <h3 class="font-bold text-lg text-ink">Rekomendasi SPK</h3>
-                        <p class="col-start-2 sm:col-start-3 text-sm text-muted leading-relaxed">Metode AHP dan TOPSIS menilai harga, rating kualitas, dan lead time sebagai bahan rekomendasi — keputusan akhir tetap di tanganmu.</p>
-                    </li>
-                    <li class="grid grid-cols-[auto_1fr] sm:grid-cols-[7rem_1fr_1fr] gap-x-5 gap-y-2 py-7 border-b border-forest/15 items-baseline">
-                        <span class="font-extrabold text-forest/30 text-4xl sm:text-5xl leading-none">04</span>
-                        <h3 class="font-bold text-lg text-ink">Bayar &amp; Lacak GPS</h3>
-                        <p class="col-start-2 sm:col-start-3 text-sm text-muted leading-relaxed">Setiap UMKM menerima invoice individual, bayar via QRIS/VA, dan melacak posisi kurir realtime di peta.</p>
-                    </li>
-                </ol>
+                <div class="relative mt-12">
+                    <figure class="rounded-3xl border border-line shadow-sm overflow-hidden bg-cream">
+                        <img src="{{ asset('images/cara-kerja/alur-cara-kerja.webp') }}" alt="Ilustrasi alur Kulaan: warung memilih di katalog, pesanan UMKM digabungkan menjadi satu pesanan grosir, distributor terbaik dipilih lewat SPK, lalu kurir mengantar sampai ke tujuan" loading="lazy" decoding="async" class="w-full h-auto block">
+                    </figure>
+                    <ol class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-8 mt-8">
+                        <li>
+                            <span class="mx-auto flex items-center justify-center w-9 h-9 rounded-full bg-forest text-white text-sm font-extrabold">1</span>
+                            <h3 class="font-bold text-lg text-ink text-center mt-3">Pilih di Katalog</h3>
+                            <p class="text-sm text-muted mt-1.5 leading-relaxed text-center">Buka katalog, bandingkan penawaran distributor, dan ajukan ke pilihanmu beserta jumlah dan deadline.</p>
+                        </li>
+                        <li>
+                            <span class="mx-auto flex items-center justify-center w-9 h-9 rounded-full bg-forest text-white text-sm font-extrabold">2</span>
+                            <h3 class="font-bold text-lg text-ink text-center mt-3">Auto-Matching Otomatis</h3>
+                            <p class="text-sm text-muted mt-1.5 leading-relaxed text-center">Sistem menggabungkan pesanan UMKM lain di sekitar area pengiriman hingga mencapai MOQ grosir.</p>
+                        </li>
+                        <li>
+                            <span class="mx-auto flex items-center justify-center w-9 h-9 rounded-full bg-forest text-white text-sm font-extrabold">3</span>
+                            <h3 class="font-bold text-lg text-ink text-center mt-3">Rekomendasi SPK</h3>
+                            <p class="text-sm text-muted mt-1.5 leading-relaxed text-center">Metode AHP dan TOPSIS menilai harga, rating kualitas, dan lead time sebagai bahan rekomendasi — keputusan akhir tetap di tanganmu.</p>
+                        </li>
+                        <li>
+                            <span class="mx-auto flex items-center justify-center w-9 h-9 rounded-full bg-forest text-white text-sm font-extrabold">4</span>
+                            <h3 class="font-bold text-lg text-ink text-center mt-3">Bayar &amp; Lacak GPS</h3>
+                            <p class="text-sm text-muted mt-1.5 leading-relaxed text-center">Setiap UMKM menerima invoice individual, bayar via QRIS/VA, dan melacak posisi kurir realtime di peta.</p>
+                        </li>
+                    </ol>
+                </div>
             </div>
         </section>
 
