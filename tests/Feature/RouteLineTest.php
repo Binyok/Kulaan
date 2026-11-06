@@ -81,6 +81,9 @@ class RouteLineTest extends TestCase
         $response->assertSee('js/kulaan-route.js', false);
         $response->assertSee('KulaanRoute.drawRoute', false);
         $response->assertSee('Sisa Perjalanan (garis biru di peta)', false);
+        // Header sticky harus di atas lapisan peta (peta z-10) — kalau
+        // z-index-nya seri, peta Leaflet menimpa topbar saat halaman discroll.
+        $response->assertSee('sticky top-0 z-30', false);
     }
 
     public function test_combined_live_map_draws_route_line_per_courier(): void
@@ -101,5 +104,6 @@ class RouteLineTest extends TestCase
         $response->assertOk();
         $response->assertSee('js/kulaan-route.js', false);
         $response->assertSee('KulaanRoute.drawRoute', false);
+        $response->assertSee('sticky top-0 z-30', false);
     }
 }

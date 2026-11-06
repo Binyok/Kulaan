@@ -225,7 +225,7 @@
         </aside>
 
         <div class="flex-1 min-w-0">
-            <header class="bg-white/70 backdrop-blur border-b border-line sticky top-0 z-10">
+            <header class="bg-white/70 backdrop-blur border-b border-line sticky top-0 z-30">
                 <div class="px-8 h-[72px] flex items-center gap-4">
                     <div>
                         <h1 class="text-lg font-extrabold leading-tight">Halo, {{ $user->name }}</h1>

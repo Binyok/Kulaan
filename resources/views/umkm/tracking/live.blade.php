@@ -227,7 +227,7 @@
             </div>
 
             {{-- DESKTOP TOPBAR --}}
-            <header class="hidden lg:flex items-center gap-4 px-8 h-[72px] bg-white/70 backdrop-blur border-b border-line sticky top-0 z-10">
+            <header class="hidden lg:flex items-center gap-4 px-8 h-[72px] bg-white/70 backdrop-blur border-b border-line sticky top-0 z-30">
                 <div>
                     <h1 class="text-lg font-extrabold leading-tight">{{ $greeting }}, {{ $displayName }}</h1>
                     <p class="text-xs text-muted">{{ now()->translatedFormat('l, d F Y') }}</p>
