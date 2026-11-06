@@ -24,8 +24,9 @@
         loading: true,
         fittedOnce: false,
         leafletTries: 0,
-        destLat: {{ $umkm->latitude ?? -3.298210 }},
-        destLng: {{ $umkm->longitude ?? 114.588230 }},
+        myLocMarker: null,
+        destLat: {{ $umkm->latitude ?? -7.357200 }},
+        destLng: {{ $umkm->longitude ?? 112.731600 }},
 
         init() {
             if (!window.L) { if (this.leafletTries++ < 40) { setTimeout(() => this.init(), 250); } return; }
@@ -171,6 +172,21 @@
 
         goHome() {
             this.map.setView([this.destLat, this.destLng], 14);
+        },
+
+        locateMe() {
+            if (!this.map) { return; }
+            if (!navigator.geolocation) { this.goHome(); return; }
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const latlng = [pos.coords.latitude, pos.coords.longitude];
+                if (this.myLocMarker) {
+                    this.myLocMarker.setLatLng(latlng);
+                } else {
+                    this.myLocMarker = L.circleMarker(latlng, { radius: 8, color: '#ffffff', weight: 2.5, fillColor: '#1a73e8', fillOpacity: 1 }).addTo(this.map)
+                        .bindPopup('<strong>Lokasi Saya</strong>');
+                }
+                this.map.setView(latlng, 15);
+            }, () => { this.goHome(); }, { timeout: 8000 });
         }
     }">
 
@@ -272,6 +288,7 @@
                             <span class="absolute top-3 lg:top-4 right-3 lg:right-4 z-20 inline-flex items-center gap-1.5 text-[10px] lg:text-xs font-bold bg-white/95 border border-line rounded-full px-2.5 lg:px-3 py-1 lg:py-1.5 text-ink shadow-sm pointer-events-none">
                                 <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span> Live GPS<span class="hidden lg:inline"> &bull; update tiap 4 detik</span>
                             </span>
+                            <button type="button" @click="locateMe()" class="absolute top-3 lg:top-4 left-3 lg:left-4 z-20 text-[10px] lg:text-xs font-bold bg-white/95 text-ink border border-line shadow-sm rounded-full px-3 py-1.5 lg:py-2 cursor-pointer">◎ Lokasi Saya</button>
                             <div x-show="loading" x-cloak class="absolute inset-0 z-30 rounded-2xl overflow-hidden p-4" style="background-color: var(--color-cream);" aria-hidden="true">
                                 <div class="skeleton absolute inset-0" style="border-radius: 0;"></div>
                                 <div class="absolute top-4 left-4 right-4 flex justify-between gap-3">
