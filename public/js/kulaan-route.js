@@ -190,7 +190,7 @@
             return;
         }
 
-        var map = window.L.map(el, { attributionControl: false }).setView(firstPoint, 13);
+        var map = window.L.map(el, { attributionControl: false, zoomAnimation: false }).setView(firstPoint, 13);
         el._kulaanMap = map;
         window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 

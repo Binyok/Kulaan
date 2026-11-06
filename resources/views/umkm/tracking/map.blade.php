@@ -41,7 +41,6 @@
         destMarker: null,
         routeLine: null,
         routeState: {},
-        myLocMarker: null,
         routeFrom: null,
         routeText: '',
         pollTimer: null,
@@ -52,7 +51,10 @@
             this.map = L.map('liveGpsMap', {
                 zoomControl: true,
                 attributionControl: false,
-                preferCanvas: true
+                preferCanvas: true,
+                // Tanpa animasi zoom: garis rute (canvas) tetap menempel di
+                // jalan saat zoom, tidak melayang/melar mengikuti animasi.
+                zoomAnimation: false
             }).setView([this.courierLat, this.courierLng], 14);
 
             const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -136,21 +138,6 @@
 
         goHome() {
             this.map.setView([this.destLat, this.destLng], 14);
-        },
-
-        locateMe() {
-            if (!this.map) { return; }
-            if (!navigator.geolocation) { this.goHome(); return; }
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const latlng = [pos.coords.latitude, pos.coords.longitude];
-                if (this.myLocMarker) {
-                    this.myLocMarker.setLatLng(latlng);
-                } else {
-                    this.myLocMarker = L.circleMarker(latlng, { radius: 8, color: '#ffffff', weight: 2.5, fillColor: '#1a73e8', fillOpacity: 1 }).addTo(this.map)
-                        .bindPopup('<strong>Lokasi Saya</strong>');
-                }
-                this.map.setView(latlng, 15);
-            }, () => { this.goHome(); }, { timeout: 8000 });
         }
     }"     x-init="initMap()">
 
@@ -285,7 +272,6 @@
                                     <span class="hidden lg:inline">Live GPS &bull; update tiap 4 detik</span>
                                 </span>
                                 <span class="pointer-events-none absolute bottom-3 right-3 lg:bottom-4 lg:right-4 text-[10px] lg:text-xs font-bold bg-ink/70 text-white rounded-full px-2.5 lg:px-3 py-1 lg:py-1.5 z-20"><span x-text="speed"></span> km/jam</span>
-                                <button type="button" @click="locateMe()" class="absolute bottom-3 left-3 lg:bottom-4 lg:left-4 z-20 text-[10px] lg:text-xs font-bold bg-white text-ink border border-line shadow rounded-full px-3 py-1.5 lg:py-2 cursor-pointer">◎ Lokasi Saya</button>
                             </div>
                         </div>
 
