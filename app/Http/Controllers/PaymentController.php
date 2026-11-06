@@ -32,12 +32,15 @@ class PaymentController extends Controller
         $bniVaNumber = '8808'.str_pad((string) $orderItem->id, 8, '0', STR_PAD_LEFT);
         $mandiriVaNumber = '70012'.str_pad((string) $orderItem->id, 8, '0', STR_PAD_LEFT);
 
+        $gatewayConfigured = $this->midtransService->isGatewayConfigured();
+
         return view('umkm.payments.checkout', compact(
             'orderItem',
             'payment',
             'bcaVaNumber',
             'bniVaNumber',
-            'mandiriVaNumber'
+            'mandiriVaNumber',
+            'gatewayConfigured'
         ));
     }
 

@@ -42,8 +42,8 @@ return [
     ],
 
     'midtrans' => [
-        'server_key' => env('MIDTRANS_SERVER_KEY', 'SB-Mid-server-kulaan-test-key'),
-        'client_key' => env('MIDTRANS_CLIENT_KEY', 'SB-Mid-client-kulaan-test-key'),
+        'server_key' => env('MIDTRANS_SERVER_KEY', ''),
+        'client_key' => env('MIDTRANS_CLIENT_KEY', ''),
         'is_production' => (bool) env('MIDTRANS_PRODUCTION', false),
     ],
 

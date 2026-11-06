@@ -37,6 +37,20 @@ class MidtransService
     }
 
     /**
+     * Whether real Midtrans credentials are configured. When they are, the
+     * gateway API is called for real in BOTH sandbox and production mode.
+     * Without credentials (local development, automated tests) the service
+     * stays in local simulation mode and never calls Midtrans.
+     */
+    public function isGatewayConfigured(): bool
+    {
+        return $this->serverKey !== ''
+            && $this->clientKey !== ''
+            && $this->serverKey !== 'SB-Mid-server-kulaan-test-key'
+            && $this->clientKey !== 'SB-Mid-client-kulaan-test-key';
+    }
+
+    /**
      * Create or retrieve existing payment transaction with Snap token for an UMKM OrderItem.
      */
     public function createSnapPayment(OrderItem $orderItem): Payment
@@ -47,7 +61,14 @@ class MidtransService
                 ->first();
 
             if ($existingPayment && $existingPayment->snap_token) {
-                return $existingPayment;
+                // A locally generated dummy token must not survive once real
+                // credentials are configured: fall through and replace it
+                // with a real Snap token for the same payment reference.
+                $isDummyToken = str_starts_with($existingPayment->snap_token, 'SNAP-TOKEN-');
+
+                if (! $isDummyToken || ! $this->isGatewayConfigured()) {
+                    return $existingPayment;
+                }
             }
 
             $payment = $existingPayment ?? Payment::create([
@@ -79,12 +100,13 @@ class MidtransService
                 ],
             ];
 
-            // In production/sandbox with valid credentials, calls Midtrans API.
-            // For mock/testing without external connection, generates valid dummy token.
+            // With real credentials configured (sandbox or production), calls
+            // the Midtrans API. Without credentials, generates a dummy token
+            // for local simulation.
             $snapToken = 'SNAP-TOKEN-'.strtoupper(substr(md5($payment->payment_reference), 0, 16));
             $redirectUrl = 'https://app.sandbox.midtrans.com/snap/v2/vtweb/'.$snapToken;
 
-            if ($this->isProduction) {
+            if ($this->isGatewayConfigured()) {
                 try {
                     $response = Http::withBasicAuth($this->serverKey, '')
                         ->timeout(15)
@@ -244,7 +266,7 @@ class MidtransService
             ? 'https://api.midtrans.com/v2/'
             : 'https://api.sandbox.midtrans.com/v2/';
 
-        if ($this->isProduction) {
+        if ($this->isGatewayConfigured()) {
             try {
                 // Partial refund: skip void/cancel (always full-amount) and refund
                 // exactly the requested amount.

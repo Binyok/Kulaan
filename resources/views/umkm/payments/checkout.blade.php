@@ -104,6 +104,16 @@
 
                 <div class="px-4 mt-5">
                     <h2 class="text-sm font-extrabold">Pilih Metode Pembayaran</h2>
+                    @if ($gatewayConfigured)
+                        <div class="mt-3 bg-white border-2 border-forest rounded-3xl p-5 shadow-sm">
+                            <p class="font-extrabold text-sm">Bayar via Midtrans</p>
+                            <p class="text-xs text-muted mt-1.5 leading-relaxed">Kamu akan diarahkan ke halaman pembayaran aman Midtrans untuk memilih QRIS, virtual account, atau e-wallet. Status invoice berubah otomatis begitu pembayaran terkonfirmasi.</p>
+                            <a href="{{ $payment->snap_redirect_url }}" class="mt-4 w-full bg-forest text-white text-sm font-bold py-4 rounded-2xl inline-flex items-center justify-center">Lanjut ke Pembayaran Midtrans</a>
+                            @unless (config('services.midtrans.is_production'))
+                                <p class="text-[11px] text-muted mt-3">Mode sandbox: selesaikan pembayaran uji melalui simulator Midtrans.</p>
+                            @endunless
+                        </div>
+                    @else
 
                     <div class="mt-3 bg-white border-2 rounded-3xl overflow-hidden shadow-sm transition-colors" :class="selectedMethod === 'qris' ? 'border-forest' : 'border-line'">
                         <button type="button" @click="selectedMethod = 'qris'" class="w-full flex items-center gap-3 p-4 cursor-pointer">
@@ -199,6 +209,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
                 </div>
 
                 <div class="px-4 mt-5 pb-6">
@@ -206,11 +217,13 @@
                         <span x-show="!isCheckingStatus">Cek Status Pembayaran</span>
                         <span x-show="isCheckingStatus" x-cloak>Memeriksa server...</span>
                     </button>
+                    @if (! $gatewayConfigured)
                     <form method="POST" action="{{ route('payment.simulate', $orderItem) }}" data-loading class="mt-2.5">
                         @csrf
                         <input type="hidden" name="payment_method" :value="selectedMethod">
                         <button type="submit" class="w-full bg-white border-2 border-forest text-forest text-sm font-bold py-4 rounded-2xl cursor-pointer">Konfirmasi Transfer</button>
                     </form>
+                    @endif
                     <p class="flex items-center justify-center gap-1.5 text-[11px] text-muted mt-4">
                         <svg class="w-4 h-4 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12.75 11.25 15 15 9.75m-3-7.04A11.96 11.96 0 0 1 3.6 6 12 12 0 0 0 3 9.75c0 5.59 3.82 10.29 9 11.62 5.18-1.33 9-6.03 9-11.62 0-1.31-.21-2.57-.6-3.75h-.15c-3.2 0-6.1-1.25-8.25-3.29Z"/></svg>
                         Pembayaran aman didukung oleh Midtrans
@@ -300,6 +313,16 @@
                         <div class="grid lg:grid-cols-3 gap-6 mt-6">
                             <div class="lg:col-span-2">
                                 <h2 class="text-base font-extrabold">Pilih Metode Pembayaran</h2>
+                                @if ($gatewayConfigured)
+                                    <div class="mt-4 bg-white border-2 border-forest rounded-3xl p-6 shadow-sm">
+                                        <p class="font-extrabold">Bayar via Midtrans</p>
+                                        <p class="text-sm text-muted mt-2 leading-relaxed">Kamu akan diarahkan ke halaman pembayaran aman Midtrans untuk memilih QRIS, virtual account, atau e-wallet. Status invoice berubah otomatis begitu pembayaran terkonfirmasi.</p>
+                                        <a href="{{ $payment->snap_redirect_url }}" class="mt-5 bg-forest text-white text-sm font-bold px-6 py-3.5 rounded-2xl inline-flex items-center justify-center">Lanjut ke Pembayaran Midtrans</a>
+                                        @unless (config('services.midtrans.is_production'))
+                                            <p class="text-xs text-muted mt-3">Mode sandbox: selesaikan pembayaran uji melalui simulator Midtrans.</p>
+                                        @endunless
+                                    </div>
+                                @else
 
                                 <div class="flex gap-2 mt-4">
                                     <button type="button" @click="selectedMethod = 'qris'" :class="selectedMethod === 'qris' ? 'bg-forest text-white shadow-sm' : 'bg-white border border-line text-muted'" class="flex-1 text-sm font-bold py-3.5 rounded-2xl cursor-pointer">QRIS</button>
@@ -386,6 +409,7 @@
                                     </div>
                                 </div>
                                 <p class="text-[11px] text-muted mt-4">Nomor virtual account BNI: {{ $bniVaNumber }} &bull; Mandiri: {{ $mandiriVaNumber }} (ditampilkan penuh setelah tab dipilih).</p>
+                                @endif
                             </div>
 
                             <div>
@@ -413,11 +437,13 @@
                                         <span x-show="!isCheckingStatus">Cek Status Pembayaran</span>
                                         <span x-show="isCheckingStatus" x-cloak>Memeriksa server...</span>
                                     </button>
+                                    @if (! $gatewayConfigured)
                                     <form method="POST" action="{{ route('payment.simulate', $orderItem) }}" data-loading class="mt-2.5">
                                         @csrf
                                         <input type="hidden" name="payment_method" :value="selectedMethod">
                                         <button type="submit" class="w-full bg-white border-2 border-forest text-forest text-sm font-bold py-4 rounded-2xl cursor-pointer">Konfirmasi Transfer</button>
                                     </form>
+                                    @endif
                                     <p class="flex items-center justify-center gap-1.5 text-[11px] text-muted mt-4">
                                         <svg class="w-4 h-4 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12.75 11.25 15 15 9.75m-3-7.04A11.96 11.96 0 0 1 3.6 6 12 12 0 0 0 3 9.75c0 5.59 3.82 10.29 9 11.62 5.18-1.33 9-6.03 9-11.62 0-1.31-.21-2.57-.6-3.75h-.15c-3.2 0-6.1-1.25-8.25-3.29Z"/></svg>
                                         Pembayaran aman didukung oleh Midtrans
