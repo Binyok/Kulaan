@@ -129,17 +129,20 @@ class RoleAndUserSeeder extends Seeder
                 'delivery_lead_time_days' => 1,
             ],
             [
+                // Distributor luar kota terdekat (Pasuruan) — semua data demo
+                // Kulaan berada di Sidoarjo & sekitarnya, tidak ada yang di
+                // luar Jawa Timur. Email login dipertahankan dari akun demo lama.
                 'email' => 'distributor.kalimantan@gmail.com',
-                'name' => 'UD Kalimantan Agro Pangan',
+                'name' => 'UD Pasuruan Agro Pangan',
                 'phone' => '08119998883',
-                'address' => 'Jl. MT Haryono No. 45, Balikpapan Selatan',
-                'company_name' => 'UD Kalimantan Agro Pangan',
-                'district' => 'Balikpapan Selatan',
-                'city' => 'Kota Balikpapan',
-                'latitude' => -1.237900,
-                'longitude' => 116.852900,
+                'address' => 'Jl. Raya Bangil No. 45, Bangil',
+                'company_name' => 'UD Pasuruan Agro Pangan',
+                'district' => 'Bangil',
+                'city' => 'Kabupaten Pasuruan',
+                'latitude' => -7.598000,
+                'longitude' => 112.819000,
                 'rating' => 4.60,
-                'delivery_lead_time_days' => 3,
+                'delivery_lead_time_days' => 2,
             ],
         ];
 
@@ -214,11 +217,11 @@ class RoleAndUserSeeder extends Seeder
                 'email' => 'kurir.fajar@gmail.com',
                 'name' => 'Fajar Motor Cargo',
                 'phone' => '085712347890',
-                'address' => 'Jl. Raya Sedati No. 22, Sidoarjo',
+                'address' => 'Jl. Raya Bangil No. 22, Pasuruan',
                 'vehicle_type' => 'Motor',
-                'vehicle_number' => 'W 1122 EF',
-                'lat' => -7.379800,
-                'lng' => 112.758000,
+                'vehicle_number' => 'N 1122 EF',
+                'lat' => -7.595000,
+                'lng' => 112.815000,
                 'distributor_idx' => 2,
             ],
         ];

@@ -182,7 +182,7 @@ class MasterDataSeeder extends Seeder
                     ],
                 ],
             ],
-            // D3: UD Kalimantan — Beras, Tepung, Telur
+            // D3: UD Pasuruan — Beras, Tepung, Telur
             [
                 'distributor' => $d3,
                 'items' => [

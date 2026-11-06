@@ -214,12 +214,15 @@ class ComprehensiveSimulationSeeder extends Seeder
             'notes' => 'Pengantaran beras kolektif wilayah Sidoarjo.',
         ]);
 
+        // Jalur GPS menyusuri koridor Waru → Gedangan → Candi →
+        // Tanggulangin (semua di Sidoarjo), berangkat dari gudang
+        // distributor menuju Dapur Nusantara di Candi/Prambon.
         $gpsTrail = [
-            [-3.332000, 114.562000, 30.0, now()->subMinutes(25)],
-            [-3.325000, 114.570000, 35.0, now()->subMinutes(20)],
-            [-3.315000, 114.580000, 38.0, now()->subMinutes(15)],
-            [-3.308000, 114.585000, 32.0, now()->subMinutes(10)],
-            [-3.301500, 114.587200, 28.0, now()->subMinutes(2)],
+            [-7.352000, 112.726600, 30.0, now()->subMinutes(25)],
+            [-7.366000, 112.718000, 35.0, now()->subMinutes(20)],
+            [-7.385000, 112.708000, 38.0, now()->subMinutes(15)],
+            [-7.408000, 112.700000, 32.0, now()->subMinutes(10)],
+            [-7.430000, 112.694000, 28.0, now()->subMinutes(2)],
         ];
 
         foreach ($gpsTrail as [$lat, $lng, $spd, $time]) {
@@ -234,8 +237,8 @@ class ComprehensiveSimulationSeeder extends Seeder
         }
 
         $courier1->update([
-            'current_latitude' => -3.301500,
-            'current_longitude' => 114.587200,
+            'current_latitude' => -7.430000,
+            'current_longitude' => 112.694000,
             'last_location_updated_at' => now()->subMinutes(2),
         ]);
 
