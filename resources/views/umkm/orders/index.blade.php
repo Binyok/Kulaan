@@ -72,6 +72,8 @@
                     'courierInitial' => strtoupper(substr($courier?->user?->name ?? 'K', 0, 1)),
                     'courierVehicle' => ($courier?->vehicle_type ?? '-').' ('.($courier?->vehicle_number ?? '-').')',
                     'courierPhone' => $courier?->user?->phone ?? '-',
+                    'courierWa' => \App\Support\ContactLinks::whatsApp($courier?->user?->phone),
+                    'courierTel' => \App\Support\ContactLinks::tel($courier?->user?->phone),
                     'speed' => (float) ($loc?->speed ?? 0),
                     'lastUpdated' => $loc?->updated_at?->diffForHumans() ?? 'Belum ada sinyal GPS',
                     'distributor' => $order->distributor?->company_name ?? '-',
@@ -799,10 +801,16 @@
                             </div>
                         </div>
                         <p class="text-[11px] text-muted mt-2.5">Update terakhir: <span class="font-semibold text-ink" x-text="delivery.lastUpdated"></span></p>
-                        <a x-show="delivery.courierPhone && delivery.courierPhone !== '-'" :href="'tel:' + (delivery.courierPhone || '')" class="mt-3 w-full inline-flex items-center justify-center gap-2 bg-forest text-white text-sm font-bold py-3 rounded-xl">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.25 6.75c0 8.28 6.72 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.37c0-.5-.28-.96-.73-1.19l-2.5-1.25a1.13 1.13 0 0 0-1.28.21l-.82.82a16.5 16.5 0 0 1-7.07-7.07l.82-.82a1.13 1.13 0 0 0 .21-1.28L9.13 4.06a1.13 1.13 0 0 0-1.19-.73H6.75A2.25 2.25 0 0 0 4.5 5.58v1.17Z"/></svg>
-                            Hubungi Kurir
-                        </a>
+                        <div x-show="delivery.courierWa || delivery.courierTel" class="mt-3 flex gap-2">
+                            <a x-show="delivery.courierWa" :href="delivery.courierWa" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-2 bg-forest text-white text-sm font-bold py-3 rounded-xl">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
+                                WhatsApp
+                            </a>
+                            <a x-show="delivery.courierTel" :href="delivery.courierTel" class="flex-1 inline-flex items-center justify-center gap-2 bg-white text-ink border border-line text-sm font-bold py-3 rounded-xl">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.25 6.75c0 8.28 6.72 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.37c0-.5-.28-.96-.73-1.19l-2.5-1.25a1.13 1.13 0 0 0-1.28.21l-.82.82a16.5 16.5 0 0 1-7.07-7.07l.82-.82a1.13 1.13 0 0 0 .21-1.28L9.13 4.06a1.13 1.13 0 0 0-1.19-.73H6.75A2.25 2.25 0 0 0 4.5 5.58v1.17Z"/></svg>
+                                Telepon
+                            </a>
+                        </div>
                     </div>
 
                     <div class="bg-white rounded-2xl border border-line p-4">

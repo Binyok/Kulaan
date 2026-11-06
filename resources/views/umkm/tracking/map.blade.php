@@ -302,11 +302,23 @@
                                     <p class="text-[10px] text-muted">Sisa Perjalanan (garis biru di peta)</p>
                                     <p class="font-bold text-ink mt-0.5" x-text="routeText"></p>
                                 </div>
-                                @if ($courierPhone)
-                                    <a href="tel:{{ $courierPhone }}" class="mt-3 lg:mt-4 w-full inline-flex items-center justify-center gap-2 bg-forest text-white text-sm font-bold py-3 lg:py-3.5 rounded-xl">
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.25 6.75c0 8.28 6.72 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.37c0-.5-.28-.96-.73-1.19l-2.5-1.25a1.13 1.13 0 0 0-1.28.21l-.82.82a16.5 16.5 0 0 1-7.07-7.07l.82-.82a1.13 1.13 0 0 0 .21-1.28L9.13 4.06a1.13 1.13 0 0 0-1.19-.73H6.75A2.25 2.25 0 0 0 4.5 5.58v1.17Z"/></svg>
-                                        Hubungi Kurir
-                                    </a>
+                                @php($waUrl = \App\Support\ContactLinks::whatsApp($courierPhone))
+                                @php($telUrl = \App\Support\ContactLinks::tel($courierPhone))
+                                @if ($waUrl || $telUrl)
+                                    <div class="mt-3 lg:mt-4 flex gap-2">
+                                        @if ($waUrl)
+                                            <a href="{{ $waUrl }}" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-2 bg-forest text-white text-sm font-bold py-3 lg:py-3.5 rounded-xl">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
+                                                WhatsApp
+                                            </a>
+                                        @endif
+                                        @if ($telUrl)
+                                            <a href="{{ $telUrl }}" class="flex-1 inline-flex items-center justify-center gap-2 bg-white text-ink border border-line text-sm font-bold py-3 lg:py-3.5 rounded-xl">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.25 6.75c0 8.28 6.72 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.37c0-.5-.28-.96-.73-1.19l-2.5-1.25a1.13 1.13 0 0 0-1.28.21l-.82.82a16.5 16.5 0 0 1-7.07-7.07l.82-.82a1.13 1.13 0 0 0 .21-1.28L9.13 4.06a1.13 1.13 0 0 0-1.19-.73H6.75A2.25 2.25 0 0 0 4.5 5.58v1.17Z"/></svg>
+                                                Telepon
+                                            </a>
+                                        @endif
+                                    </div>
                                 @endif
                             </div>
 
