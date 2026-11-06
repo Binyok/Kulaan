@@ -2,6 +2,13 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://tile.openstreetmap.org">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        .user-pin { background: transparent; border: none; }
+        .user-pin-wrap { position: relative; width: 44px; height: 44px; }
+        .user-pin-pulse { position: absolute; inset: 0; border-radius: 9999px; background: rgba(154, 123, 45, .35); animation: user-pin-pulse 2s ease-out infinite; }
+        .user-pin-dot { position: absolute; top: 50%; left: 50%; width: 18px; height: 18px; transform: translate(-50%, -50%); border-radius: 9999px; background: #9A7B2D; border: 3px solid #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, .35); }
+        @keyframes user-pin-pulse { 0% { transform: scale(.35); opacity: .9; } 70% { transform: scale(1); opacity: 0; } 100% { transform: scale(1); opacity: 0; } }
+    </style>
     <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -173,9 +180,12 @@
                             userMarker = L.marker([userPos.lat, userPos.lng], {
                                 icon: L.divIcon({
                                     className: 'user-pin',
-                                    html: '<div class="bg-brass text-white text-[10px] font-extrabold px-2 py-1 rounded-full shadow border-2 border-white">LOKASI SAYA</div>'
+                                    html: '<div class="user-pin-wrap"><span class="user-pin-pulse"></span><span class="user-pin-dot"></span></div>',
+                                    iconSize: [44, 44],
+                                    iconAnchor: [22, 22]
                                 })
                             }).addTo(map);
+                            userMarker.bindPopup('<div class="p-1"><p class="text-xs font-bold text-gray-900">Lokasi Anda</p><p class="text-[11px] text-gray-500 mt-0.5">Jarak distributor dihitung dari titik ini.</p></div>');
 
                             map.setView([userPos.lat, userPos.lng], 13);
                             updateDistances();
