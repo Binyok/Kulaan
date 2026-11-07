@@ -150,6 +150,71 @@ class CourierTaskReturnTest extends TestCase
             ->assertSee(route('kurir.shipments.return', $shipment));
     }
 
+    // ── B. Pengerasan GPS ───────────────────────────────────────────────
+
+    public function test_gps_fix_with_impossible_jump_is_rejected(): void
+    {
+        [$courierUser, $courier, $shipment] = $this->makeAssignedShipment();
+        $this->actingAs($courierUser)->post(route('kurir.shipments.start', $shipment))->assertRedirect();
+
+        // Fix lama di Sidoarjo, 10 menit yang lalu
+        TrackingLocation::create([
+            'shipment_id' => $shipment->id,
+            'courier_id' => $courier->id,
+            'latitude' => -7.350000,
+            'longitude' => 112.730000,
+            'speed' => 20,
+            'recorded_at' => now()->subMinutes(10),
+        ]);
+
+        // Lompatan ±100 km dalam 10 menit = mustahil → ditolak
+        $this->actingAs($courierUser)->postJson(route('kurir.shipments.gps', $shipment), [
+            'latitude' => -6.200000,
+            'longitude' => 106.816666,
+            'speed' => 20,
+        ])->assertStatus(422);
+
+        $this->assertEquals(1, TrackingLocation::where('shipment_id', $shipment->id)->count());
+    }
+
+    public function test_gps_fix_within_five_seconds_of_previous_is_ignored(): void
+    {
+        [$courierUser, , $shipment] = $this->makeAssignedShipment();
+        $this->actingAs($courierUser)->post(route('kurir.shipments.start', $shipment))->assertRedirect();
+
+        $this->actingAs($courierUser)->postJson(route('kurir.shipments.gps', $shipment), [
+            'latitude' => -7.350000,
+            'longitude' => 112.730000,
+            'speed' => 15,
+        ])->assertOk()->assertJson(['success' => true]);
+
+        $second = $this->actingAs($courierUser)->postJson(route('kurir.shipments.gps', $shipment), [
+            'latitude' => -7.350100,
+            'longitude' => 112.730100,
+            'speed' => 15,
+        ]);
+        $second->assertOk()->assertJson(['ignored' => true]);
+
+        $this->assertEquals(1, TrackingLocation::where('shipment_id', $shipment->id)->count());
+    }
+
+    public function test_gps_endpoint_is_throttled(): void
+    {
+        [$courierUser, , $shipment] = $this->makeAssignedShipment();
+        $this->actingAs($courierUser)->post(route('kurir.shipments.start', $shipment))->assertRedirect();
+
+        $lastStatus = null;
+        for ($i = 0; $i < 61; $i++) {
+            $lastStatus = $this->actingAs($courierUser)->postJson(route('kurir.shipments.gps', $shipment), [
+                'latitude' => -7.350000,
+                'longitude' => 112.730000,
+                'speed' => 0,
+            ])->getStatusCode();
+        }
+
+        $this->assertEquals(429, $lastStatus);
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────
 
     /** @return array{0: User, 1: Distributor} */

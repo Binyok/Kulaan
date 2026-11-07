@@ -140,8 +140,40 @@ class CourierShipmentController extends Controller
         $request->validate([
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
-            'speed' => ['nullable', 'numeric', 'min:0'],
+            'speed' => ['nullable', 'numeric', 'min:0', 'max:60'],
         ]);
+
+        // Kewajaran gerak: bandingkan fix baru dengan fix terakhir shipment.
+        // Fix yang terlalu rapat (< 5 detik) diabaikan agar tabel tracking
+        // tidak banjir, dan lompatan posisi yang mustahil ditempuh (> 120
+        // km/jam dari titik terakhir) ditolak sebagai indikasi spoof/error.
+        $lastLocation = $shipment->latestLocation;
+
+        if ($lastLocation) {
+            $elapsedSeconds = max(0, $lastLocation->recorded_at->diffInSeconds(now()));
+
+            if ($elapsedSeconds < 5) {
+                return response()->json([
+                    'success' => true,
+                    'ignored' => true,
+                    'message' => 'Posisi terakhir masih baru; fix ini diabaikan.',
+                ]);
+            }
+
+            $jumpMeters = $this->haversineMeters(
+                (float) $lastLocation->latitude,
+                (float) $lastLocation->longitude,
+                (float) $request->latitude,
+                (float) $request->longitude
+            );
+            $impliedSpeedKmh = $jumpMeters / $elapsedSeconds * 3.6;
+
+            if ($impliedSpeedKmh > 120) {
+                return response()->json([
+                    'error' => 'Fix GPS ditolak: lompatan posisi tidak wajar dari titik terakhir.',
+                ], 422);
+            }
+        }
 
         $location = DB::transaction(function () use ($courier, $request, $shipment) {
             $location = TrackingLocation::create([

@@ -157,7 +157,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
         Route::get('shipments/{shipment}/surat-jalan', [CourierShipmentController::class, 'suratJalan'])->name('shipments.surat-jalan');
         Route::post('shipments/{shipment}/start', [CourierShipmentController::class, 'startDelivery'])->name('shipments.start');
         Route::post('shipments/{shipment}/return', [CourierShipmentController::class, 'returnShipment'])->name('shipments.return');
-        Route::post('shipments/{shipment}/gps', [CourierShipmentController::class, 'postGpsLocation'])->name('shipments.gps');
+        Route::post('shipments/{shipment}/gps', [CourierShipmentController::class, 'postGpsLocation'])->name('shipments.gps')->middleware('throttle:60,1');
         Route::post('shipments/{shipment}/complete', [CourierShipmentController::class, 'completeDelivery'])->name('shipments.complete');
     });
 });
