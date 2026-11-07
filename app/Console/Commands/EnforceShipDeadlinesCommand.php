@@ -48,6 +48,13 @@ class EnforceShipDeadlinesCommand extends Command
                     return;
                 }
 
+                // Bebaskan kurir yang terikat pada order ini (bila ada
+                // shipment yang belum berjalan) agar tetap bisa ditugaskan.
+                $lockedOrder->shipments()
+                    ->where('status', '!=', 'DELIVERED')
+                    ->get()
+                    ->each->cancelAndReleaseCourier();
+
                 // Void/refund each payment
                 foreach ($lockedOrder->payments as $payment) {
                     $midtransService->cancelOrRefundTransaction($payment, 'Auto-refund: Distributor melewati batas waktu pengiriman.');

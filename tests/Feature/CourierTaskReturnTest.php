@@ -232,6 +232,46 @@ class CourierTaskReturnTest extends TestCase
         $this->assertEquals('IN_TRANSIT', $shipment->fresh()->status);
     }
 
+    // ── D. is_available bebas saat order batal ───────────────────────────
+
+    public function test_cancelling_an_order_with_active_shipment_releases_its_courier(): void
+    {
+        [, $courier, $shipment, $order] = $this->makeAssignedShipment();
+        $this->assertFalse($courier->fresh()->is_available);
+
+        app(MidtransService::class)->cancelPaidOrder($order->fresh(), 'Uji pembebasan kurir');
+
+        $this->assertEquals(OrderStatus::CANCELLED, $order->fresh()->status);
+        $this->assertEquals('CANCELLED', $shipment->fresh()->status);
+        $this->assertTrue($courier->fresh()->is_available);
+    }
+
+    public function test_ship_deadline_cancellation_releases_assigned_courier(): void
+    {
+        [$distUser, $distributor] = $this->makeDistributor();
+        [, $courier] = $this->makeCourier();
+
+        $order = Order::create([
+            'distributor_id' => $distributor->id,
+            'total_amount' => 65000,
+            'total_quantity' => 10,
+            'status' => OrderStatus::PAID->value,
+            'ship_deadline_at' => now()->subHour(),
+        ]);
+        $courier->update(['is_available' => false]);
+        $shipment = Shipment::create([
+            'order_id' => $order->id,
+            'courier_id' => $courier->id,
+            'status' => 'PENDING',
+        ]);
+
+        $this->artisan('kulaan:enforce-ship-deadlines')->assertSuccessful();
+
+        $this->assertEquals(OrderStatus::CANCELLED, $order->fresh()->status);
+        $this->assertEquals('CANCELLED', $shipment->fresh()->status);
+        $this->assertTrue($courier->fresh()->is_available);
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────
 
     /** @return array{0: User, 1: Distributor} */

@@ -360,6 +360,13 @@ class MidtransService
         DB::transaction(function () use ($order, $reason) {
             $order->load(['items.payment', 'items.purchaseRequest', 'matchingGroup']);
 
+            // Bebaskan kurir yang sedang memegang order ini agar status
+            // is_available-nya tidak nyangkut false setelah pembatalan.
+            $order->shipments()
+                ->where('status', '!=', 'DELIVERED')
+                ->get()
+                ->each->cancelAndReleaseCourier();
+
             foreach ($order->items as $item) {
                 if ($item->payment) {
                     if ($item->payment_status === PaymentStatus::PAID) {

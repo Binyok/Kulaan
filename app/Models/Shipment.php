@@ -44,6 +44,26 @@ class Shipment extends Model
         });
     }
 
+    /**
+     * Batalkan shipment ini dan bebaskan kurirnya (kembali tersedia untuk
+     * ditugaskan). Dipakai semua jalur pembatalan/kedaluwarsa order agar
+     * status is_available kurir tidak pernah nyangkut false.
+     */
+    public function cancelAndReleaseCourier(): void
+    {
+        if ($this->status === 'DELIVERED') {
+            return;
+        }
+
+        $courier = $this->courier;
+
+        $this->update(['status' => 'CANCELLED']);
+
+        if ($courier) {
+            $courier->update(['is_available' => true]);
+        }
+    }
+
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
