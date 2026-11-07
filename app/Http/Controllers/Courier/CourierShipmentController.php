@@ -80,6 +80,52 @@ class CourierShipmentController extends Controller
         return back()->with('success', 'Pengiriman dimulai. GPS Tracking diaktifkan.');
     }
 
+    /**
+     * Return an assigned-but-not-yet-started task back to the distributor so
+     * it can be reassigned to another courier. Only the owning courier may
+     * return a task, and only before the delivery has started.
+     */
+    public function returnShipment(Request $request, Shipment $shipment): RedirectResponse
+    {
+        $courier = $request->user()->courier;
+        if ($shipment->courier_id !== $courier?->id) {
+            abort(403);
+        }
+
+        if (! in_array($shipment->status, ['PENDING', 'ASSIGNED_TO_COURIER'], true)) {
+            return back()->with('error', 'Tugas yang sudah berjalan atau selesai tidak bisa dikembalikan.');
+        }
+
+        $validated = $request->validate([
+            'return_reason' => ['required', 'string', 'max:255'],
+            'return_reason_detail' => ['nullable', 'string', 'max:255'],
+        ], [
+            'return_reason.required' => 'Alasan pengembalian tugas wajib dipilih.',
+        ]);
+
+        $reason = $validated['return_reason'];
+        if (! empty($validated['return_reason_detail'])) {
+            $reason .= ' — '.$validated['return_reason_detail'];
+        }
+
+        DB::transaction(function () use ($shipment, $courier, $reason) {
+            $shipment->update([
+                'courier_id' => null,
+                'status' => 'PENDING',
+                'return_reason' => $reason,
+                'returned_at' => now(),
+            ]);
+
+            if ($courier) {
+                $courier->update(['is_available' => true]);
+            }
+
+            $shipment->order->update(['status' => OrderStatus::READY_TO_SHIP->value]);
+        });
+
+        return back()->with('success', 'Tugas berhasil dikembalikan. Distributor akan menugaskan kurir lain untuk pengiriman ini.');
+    }
+
     public function postGpsLocation(Request $request, Shipment $shipment): JsonResponse
     {
         $courier = $request->user()->courier;

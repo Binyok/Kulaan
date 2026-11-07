@@ -100,6 +100,12 @@ class NotificationService
             ->count();
         $items->push($this->item($readyToShip, 'pesanan siap kirim, tugaskan kurir', route('distributor.orders.index'), 'brass'));
 
+        $returnedTasks = Order::where('distributor_id', $distributor->id)
+            ->where('status', OrderStatus::READY_TO_SHIP->value)
+            ->whereHas('shipments', fn ($query) => $query->whereNull('courier_id')->whereNotNull('returned_at'))
+            ->count();
+        $items->push($this->item($returnedTasks, 'tugas dikembalikan kurir, tugaskan kurir lain', route('distributor.orders.index'), 'brass'));
+
         $inTransit = Shipment::where('status', 'IN_TRANSIT')
             ->whereHas('order', fn ($query) => $query->where('distributor_id', $distributor->id))
             ->count();

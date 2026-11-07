@@ -21,6 +21,8 @@ class Shipment extends Model
         'delivered_at',
         'proof_image_path',
         'notes',
+        'return_reason',
+        'returned_at',
     ];
 
     protected function casts(): array
@@ -28,6 +30,7 @@ class Shipment extends Model
         return [
             'estimated_arrival_at' => 'datetime',
             'delivered_at' => 'datetime',
+            'returned_at' => 'datetime',
         ];
     }
 

@@ -120,7 +120,7 @@ class OrderManagementController extends Controller
             abort(403);
         }
 
-        if ($order->shipments()->exists()) {
+        if ($order->shipments()->whereNotNull('courier_id')->exists()) {
             return back()->with('error', 'Order ini sudah memiliki kurir yang ditugaskan.');
         }
 
@@ -142,13 +142,27 @@ class OrderManagementController extends Controller
         }
 
         DB::transaction(function () use ($order, $courier, $request) {
-            Shipment::create([
-                'order_id' => $order->id,
-                'courier_id' => $courier->id,
-                'status' => 'PENDING',
-                'estimated_arrival_at' => now()->addHours(2),
-                'notes' => $request->notes,
-            ]);
+            // Shipment yang pernah dikembalikan kurir (courier_id kosong)
+            // dipakai ulang agar riwayat pengembaliannya tetap terlacak;
+            // selain itu buat shipment baru seperti biasa.
+            $returnedShipment = $order->shipments()->whereNull('courier_id')->first();
+
+            if ($returnedShipment) {
+                $returnedShipment->update([
+                    'courier_id' => $courier->id,
+                    'status' => 'PENDING',
+                    'estimated_arrival_at' => now()->addHours(2),
+                    'notes' => $request->notes,
+                ]);
+            } else {
+                Shipment::create([
+                    'order_id' => $order->id,
+                    'courier_id' => $courier->id,
+                    'status' => 'PENDING',
+                    'estimated_arrival_at' => now()->addHours(2),
+                    'notes' => $request->notes,
+                ]);
+            }
 
             $courier->update(['is_available' => false]);
 

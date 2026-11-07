@@ -138,6 +138,7 @@
                                                 Mulai Pengiriman
                                             </button>
                                         </form>
+                                        @include('kurir.shipments.partials.return-task', ['shipment' => $shipment, 'uid' => 'm'])
                                     @elseif ($isTransit)
                                         <form method="POST" action="{{ route('kurir.shipments.complete', $shipment) }}" id="complete-shipment-m-{{ $shipment->id }}" enctype="multipart/form-data">
                                             @csrf
@@ -326,6 +327,7 @@
                                                 Mulai Pengiriman
                                             </button>
                                         </form>
+                                        @include('kurir.shipments.partials.return-task', ['shipment' => $shipment, 'uid' => 'd'])
                                     @elseif ($isTransit)
                                         <form method="POST" action="{{ route('kurir.shipments.complete', $shipment) }}" id="complete-shipment-d-{{ $shipment->id }}" enctype="multipart/form-data">
                                             @csrf
