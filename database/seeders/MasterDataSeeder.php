@@ -115,7 +115,7 @@ class MasterDataSeeder extends Seeder
         [$d1, $d2, $d3] = [$distributors[0], $distributors[1], $distributors[2]];
 
         $catalogData = [
-            // D1: PT Borneo — Beras, Minyak, Gula, Tepung, Telur
+            // D1: PT Delta Pangan Sidoarjo — Beras, Minyak, Gula, Tepung, Telur
             [
                 'distributor' => $d1,
                 'items' => [

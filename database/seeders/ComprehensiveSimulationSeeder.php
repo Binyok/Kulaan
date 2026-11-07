@@ -42,7 +42,7 @@ class ComprehensiveSimulationSeeder extends Seeder
         $umkm2 = $umkms[1]; // Dapur Nusantara
         $umkm3 = $umkms[2]; // Warung Berkah
 
-        $distributor1 = $distributors[0]; // PT Borneo
+        $distributor1 = $distributors[0]; // PT Delta Pangan Sidoarjo
         $courier1 = $couriers[0]; // Rizky Kurir
 
         // ═══════════════════════════════════════════════════════════════════

@@ -104,10 +104,10 @@ class RoleAndUserSeeder extends Seeder
         $distributorData = [
             [
                 'email' => 'distributor.borneo@gmail.com',
-                'name' => 'PT Borneo Bahan Sembako',
+                'name' => 'PT Delta Pangan Sidoarjo',
                 'phone' => '08119998881',
                 'address' => 'Kawasan Industri Berbek No. 8, Waru',
-                'company_name' => 'PT Borneo Bahan Sembako',
+                'company_name' => 'PT Delta Pangan Sidoarjo',
                 'district' => 'Waru',
                 'city' => 'Kabupaten Sidoarjo',
                 'latitude' => -7.352000,
