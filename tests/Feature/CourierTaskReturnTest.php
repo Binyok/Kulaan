@@ -215,6 +215,23 @@ class CourierTaskReturnTest extends TestCase
         $this->assertEquals(429, $lastStatus);
     }
 
+    // ── C. Complete wajib punya fix GPS ─────────────────────────────────
+
+    public function test_courier_cannot_complete_delivery_without_any_gps_fix(): void
+    {
+        [$courierUser, , $shipment] = $this->makeAssignedShipment();
+        $this->actingAs($courierUser)->post(route('kurir.shipments.start', $shipment))->assertRedirect();
+
+        $this->actingAs($courierUser)
+            ->from(route('kurir.shipments.index'))
+            ->post(route('kurir.shipments.complete', $shipment), [
+                'proof' => UploadedFile::fake()->image('proof.jpg'),
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertEquals('IN_TRANSIT', $shipment->fresh()->status);
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────
 
     /** @return array{0: User, 1: Distributor} */

@@ -215,6 +215,14 @@ class CourierShipmentController extends Controller
             return back()->with('error', 'Pengiriman belum dimulai, belum bisa diselesaikan.');
         }
 
+        // Pengiriman wajib punya jejak GPS selama perjalanan: fix hanya bisa
+        // direkam saat status IN_TRANSIT, jadi keberadaan fix membuktikan GPS
+        // kurir aktif. Tanpa satu pun fix, cek jarak penyelesaian tidak boleh
+        // dilewati begitu saja.
+        if (! $shipment->trackingLocations()->exists()) {
+            return back()->with('error', 'Pengiriman belum bisa diselesaikan: belum ada titik GPS yang terekam selama pengantaran. Pastikan GPS aktif dan posisimu terkirim terlebih dahulu, lalu coba lagi.');
+        }
+
         $request->validate([
             'proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ], [
@@ -267,9 +275,10 @@ class CourierShipmentController extends Controller
 
     /**
      * Reject completion when the courier's latest GPS fix is unreasonably far
-     * from every destination of the shipment's order. When either side has no
-     * coordinates on record the check cannot run and delivery is allowed, so
-     * legitimate flows without GPS data are never blocked.
+     * from every destination of the shipment's order. A recorded GPS fix is
+     * already mandatory at this point (see completeDelivery); when a
+     * destination itself has no coordinates on record the distance check
+     * cannot run for it and completion is allowed for that destination.
      */
     private function validateDeliveryProximity(Shipment $shipment, ?Courier $courier): ?string
     {

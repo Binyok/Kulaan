@@ -286,6 +286,13 @@ class OrderAndShipmentTest extends TestCase
         $restart->assertRedirect(route('kurir.shipments.index'));
         $restart->assertSessionHas('error');
 
+        // GPS fix is now mandatory before completion (anti-skip proximity check)
+        $this->actingAs($courierUser)->postJson(route('kurir.shipments.gps', $shipment), [
+            'latitude' => -7.350000,
+            'longitude' => 112.730000,
+            'speed' => 10,
+        ])->assertOk();
+
         $this->actingAs($courierUser)->post(route('kurir.shipments.complete', $shipment), [
             'proof' => UploadedFile::fake()->image('proof.jpg'),
         ])->assertRedirect();
