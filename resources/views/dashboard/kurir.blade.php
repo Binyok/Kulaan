@@ -5,7 +5,7 @@
         $initials = strtoupper(substr($user->name, 0, 2));
     @endphp
 
-    {{-- MOBILE --}}
+    
     <div class="lg:hidden pb-24">
         <!-- greeting -->
         <div class="px-4 pt-6 flex items-center justify-between">
