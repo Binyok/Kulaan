@@ -14,12 +14,10 @@
     }
 @endphp
 
-{{-- Classic script on purpose: the regionCascade factory must exist before
-     Alpine evaluates x-data. A deferred Vite module races Alpine's start
-     and intermittently leaves the fields unrendered. --}}
-@once
-    <script src="{{ asset('js/region-cascade.js') }}?v=2"></script>
-@endonce
+{{-- The regionCascade factory is registered via Alpine.data in the Vite
+     bundle (resources/js/app.js). It must NOT be loaded with a page-level
+     <script src> here: on Turbo Drive visits that script races Alpine's
+     initialization and the fields intermittently never render. --}}
 
 <div
     x-data="regionCascade({

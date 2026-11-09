@@ -1,5 +1,6 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import regionCascade from './region-cascade';
 
 window.Alpine = Alpine;
 
@@ -41,6 +42,12 @@ Alpine.data('kulaanConfirmModal', () => ({
         }
     },
 }));
+
+// Registered in the bundle (not a page-level script) so the factory is
+// guaranteed to exist whenever Alpine initializes the component — including
+// on Turbo Drive visits, where a body <script src> races Alpine and the
+// region fields intermittently never render.
+Alpine.data('regionCascade', regionCascade);
 
 if (!window.__alpineStarted) {
     window.__alpineStarted = true;
