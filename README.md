@@ -1,4 +1,4 @@
-# Kula'an — UMKM Supply Hub
+# Kulaan — UMKM Supply Hub
 Platform **Smart Collective Procurement** yang menghubungkan UMKM dengan distributor bahan baku melalui pembelian kolektif otomatis berbasis **Sistem Pendukung Keputusan (AHP + TOPSIS + SAW)**.
 
 ## 🌐 Website Live
@@ -40,26 +40,33 @@ Situs demo berjalan penuh di alamat di atas dan dapat diuji langsung menggunakan
    - Menerbitkan invoice individual dengan tampilan transparan nominal penghematan dibanding patokan eceran pasar.
 
 4. **Integrasi Payment Gateway (Midtrans):**
-   - Mendukung pembayaran via QRIS dan Virtual Account.
-   - Validasi status transaksi via Webhook dengan enkripsi HMAC SHA512 signature.
+   - Mendukung pembayaran via QRIS dan Virtual Account melalui Snap Midtrans.
+   - Gateway **aktif dalam mode sandbox**: transaksi uji diproses langsung oleh Midtrans, bukan simulasi lokal.
+   - Validasi status transaksi via Webhook dengan verifikasi signature SHA-512; pemrosesan webhook bersifat idempoten sehingga notifikasi ganda tidak tercatat dua kali.
 
 5. **Escrow & Pencairan Otomatis:**
    - Dana pembayaran ditahan sistem (status HELD) dan baru dilepas ke distributor setelah UMKM mengonfirmasi penerimaan barang, atau otomatis setelah 48 jam tanpa komplain.
    - Pencairan tercatat otomatis dengan referensi pembayaran per pesanan; distributor wajib melengkapi data rekening tujuan pencairan.
    - Komplain dari UMKM membekukan dana; admin melakukan arbitrase, termasuk putusan parsial (sebagian dikembalikan ke UMKM, sebagian dicairkan ke distributor).
-   - Bukti pengiriman kurir berupa foto dan titik GPS dengan ambang jarak dari alamat tujuan.
+   - Penyelesaian pengiriman oleh kurir dijaga tiga lapis: wajib ada titik GPS yang terekam selama pengantaran, foto bukti wajib diunggah, dan titik GPS terakhir harus berada ≤ 1.000 meter dari alamat tujuan (cek jarak dilewati bila tujuan tidak memiliki koordinat).
 
 6. **Realtime GPS Tracking & Maps:**
-   - Peta interaktif Leaflet.js (OpenStreetMap).
-   - Pengiriman lokasi GPS realtime oleh kurir armada saat pengiriman berjalan.
+   - Peta interaktif Leaflet.js (OpenStreetMap) dengan garis rute jalan (OSRM) di peta tracking UMKM maupun peta kurir, lengkap dengan alamat tertulis tujuan di samping peta.
+   - Pengiriman lokasi GPS realtime oleh kurir armada saat pengiriman berjalan; fix yang terlalu rapat (< 5 detik) diabaikan dan lompatan posisi yang mustahil (> 120 km/jam dari titik terakhir) ditolak.
+   - UMKM dapat menghubungi kurir langsung dari halaman tracking via WhatsApp atau telepon.
    - Riwayat pengiriman dengan filter status (berjalan/selesai) dan pencarian nomor, distributor, tanggal.
 
-7. **Usulan Produk Custom:**
+7. **Pengembalian Tugas Kurir:**
+   - Kurir dapat mengembalikan tugas ke distributor sebelum pengiriman dimulai (status belum IN_TRANSIT) dengan alasan wajib; distributor kemudian menugaskan kurir lain.
+   - Kurir otomatis kembali berstatus tersedia bila order dibatalkan atau melewati deadline kirim.
+
+8. **Usulan Produk Custom:**
    - Distributor dapat mengusulkan produk di luar katalog master.
    - Admin mereview (setujui/tolak beralasan); produk yang disetujui otomatis masuk katalog master beserta listing pengusul.
 
-8. **Wilayah Dinamis (Sidoarjo & Nasional):**
-   - Pilih provinsi → kota/kabupaten → kecamatan → desa bertingkat via API wilayah Indonesia, default Jawa Timur – Sidoarjo.
+9. **Wilayah Dinamis (Sidoarjo & Nasional):**
+   - Dataset wilayah Kemendagri dibundel di dalam aplikasi (38 provinsi, 514 kab/kota, 7.285 kecamatan, 83.762 desa/kelurahan) dan disajikan lewat endpoint internal — bukan API eksternal.
+   - Pilihan provinsi → kota/kabupaten → kecamatan → desa bertingkat dengan kolom ketik-untuk-mencari (maksimal 10 saran ditampilkan, ketik untuk mempersempit); rantai wilayah divalidasi ulang di server. Default Jawa Timur – Sidoarjo.
    - Tersimpan di profil UMKM/distributor dan dipakai sebagai area pengiriman pengajuan.
 
 ---
@@ -85,8 +92,9 @@ UMKM yang tidak memilih distributor memakai jalur lama — langkah 1–8 di bawa
 4. **Order kolektif dibuat** (`CollectiveOrderService::createOrderFromMatchingGroup`): satu order + invoice individual per UMKM.
 5. **UMKM membayar** via QRIS/VA (Midtrans, webhook HMAC SHA512) → item Lunas; kalau semua lunas, order jadi PAID.
 6. **Distributor memproses**: PAID → CONFIRMED → PREPARING → READY_TO_SHIP (transisi dikunci, tak bisa loncat/mundur), lalu assign kurir → shipment PENDING.
-7. **Kurir mengantar**: start → IN_TRANSIT (GPS realtime tiap detik) → complete → DELIVERED + order COMPLETED.
-8. **UMKM memberi ulasan** (hanya setelah DELIVERED/COMPLETED): rating merata-rata otomatis memperbaiki reputasi distributor.
+7. **Kurir mengantar**: start → IN_TRANSIT (GPS terekam berkala; fix terlalu rapat diabaikan, lompatan mustahil ditolak) → complete → DELIVERED. Penyelesaian wajib memenuhi tiga syarat: ada titik GPS terekam, foto bukti diunggah, dan GPS terakhir ≤ 1.000 meter dari tujuan. Sebelum IN_TRANSIT, kurir dapat mengembalikan tugas ke distributor dengan alasan wajib.
+8. **UMKM mengonfirmasi penerimaan** → order COMPLETED dan dana escrow terlepas ke distributor (atau otomatis 48 jam setelah DELIVERED bila tanpa komplain).
+9. **UMKM memberi ulasan** (hanya setelah DELIVERED/COMPLETED): rating merata-rata otomatis memperbaiki reputasi distributor.
 
 Peran lain: **admin** mengelola kategori, katalog master, kriteria SPK (bobot AHP + uji sensitivitas + ekspor PDF), dan moderasi usulan produk. **Kurir** hanya melihat tugasnya sendiri.
 
@@ -120,6 +128,7 @@ Setiap alur yang menulis ke ≥2 tabel dibungkus `DB::transaction()` sehingga ga
 | Registrasi + Google OAuth | `RegisteredUserController@store`, `GoogleController` |
 | Kurir mulai antar (shipment + order) | `CourierShipmentController@startDelivery()` |
 | Kurir posting GPS (titik + posisi kurir) | `CourierShipmentController@postGpsLocation()` |
+| Kurir kembalikan tugas (shipment + order + kurir) | `CourierShipmentController@returnShipment()` |
 | Kurir selesai antar (shipment + order) | `CourierShipmentController@completeDelivery()` |
 | Assign kurir (shipment + order) | `OrderManagementController@assignCourier()` |
 | Kadaluarsa order terpusat | `ExpireOrdersCommand` |
@@ -134,7 +143,7 @@ Setiap alur yang menulis ke ≥2 tabel dibungkus `DB::transaction()` sehingga ga
 - **Database:** MySQL (`kulaan_db`)
 - **Frontend:** Blade, Tailwind CSS v4, Alpine.js, Leaflet.js
 - **Payment Gateway:** Midtrans (Sandbox & Webhook Validation)
-- **Code Quality & Testing:** PHPUnit / Pest, Laravel Pint
+- **Code Quality & Testing:** PHPUnit, Laravel Pint
 
 ---
 
@@ -185,13 +194,13 @@ Total 10 akun dari `RoleAndUserSeeder`. Semua akun menggunakan kata sandi: `pass
 
 | Role | Email | Nama / Usaha |
 | :--- | :--- | :--- |
-| **Administrator** | `admin@kulaan.id` | Administrator Kula'an |
+| **Administrator** | `admin@kulaan.id` | Administrator Kulaan |
 | **UMKM 1** | `umkm.maju@gmail.com` | Budi Santoso — Kedai Maju Jaya |
 | **UMKM 2** | `umkm.nusantara@gmail.com` | Siti Rahma — Dapur Nusantara |
 | **UMKM 3** | `umkm.berkah@gmail.com` | Andi Pratama — Warung Berkah |
-| **Distributor 1** | `distributor.borneo@gmail.com` | PT Borneo Bahan Sembako |
+| **Distributor 1** | `distributor.borneo@gmail.com` | PT Delta Pangan Sidoarjo |
 | **Distributor 2** | `distributor.banua@gmail.com` | CV Banua Makmur Jaya |
-| **Distributor 3** | `distributor.kalimantan@gmail.com` | UD Kalimantan Agro Pangan |
+| **Distributor 3** | `distributor.kalimantan@gmail.com` | UD Pasuruan Agro Pangan |
 | **Kurir 1** | `kurir.rizky@gmail.com` | Rizky Kurir Express (Mobil Box) |
 | **Kurir 2** | `kurir.arif@gmail.com` | Arif Delivery Services (Pickup) |
 | **Kurir 3** | `kurir.fajar@gmail.com` | Fajar Motor Cargo (Motor) |
@@ -233,14 +242,15 @@ Untuk performa optimal saat presentasi, pengujian menyeluruh, atau deployment se
 ## 🧪 Menjalankan Pengujian (Testing)
 
 ```bash
-# Menjalankan seluruh unit & feature test suite (176 test:
-# fungsional, SPK, keamanan webhook, otorisasi, dan regresi UI)
+# Menjalankan seluruh unit & feature test suite (196 test:
+# fungsional, SPK, keamanan webhook & pembayaran, otorisasi
+# antar-peran, validasi GPS kurir, dan regresi UI)
 php artisan test
 ```
 
 ---
 
 ## 📜 Lisensi & Hak Cipta
-Hak Cipta &copy; 2026 Kula'an. Platform Smart Collective Procurement untuk UMKM.
+Hak Cipta &copy; 2026 Kulaan. Platform Smart Collective Procurement untuk UMKM.
 
 Proyek ini dilisensikan di bawah [MIT License](LICENSE).
