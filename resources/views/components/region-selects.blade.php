@@ -18,7 +18,7 @@
      Alpine evaluates x-data. A deferred Vite module races Alpine's start
      and intermittently leaves the fields unrendered. --}}
 @once
-    <script src="{{ asset('js/region-cascade.js') }}"></script>
+    <script src="{{ asset('js/region-cascade.js') }}?v=2"></script>
 @endonce
 
 <div
@@ -62,7 +62,8 @@
             <div
                 x-show="open[level]"
                 x-cloak
-                class="absolute z-30 left-0 right-0 mt-1.5 bg-white border border-line rounded-2xl shadow-xl max-h-60 overflow-auto py-1.5"
+                style="max-height: 15rem"
+                class="absolute z-30 left-0 right-0 mt-1.5 bg-white border border-line rounded-2xl shadow-xl overflow-auto py-1.5"
             >
                 <p x-show="loading[level]" class="px-4 py-2.5 text-xs text-muted">Memuat daftar wilayah…</p>
                 <template x-for="opt in filteredOptions(level)" :key="opt.id">
@@ -75,6 +76,7 @@
                     ></button>
                 </template>
                 <p x-show="!loading[level] && filteredOptions(level).length === 0" x-cloak class="px-4 py-2.5 text-xs text-muted">Tidak ada wilayah yang cocok dengan ketikanmu.</p>
+                <p x-show="!loading[level] && hasMore(level)" x-cloak class="px-4 py-2 text-xs text-muted border-t border-line">Menampilkan 10 dari <span x-text="filteredCount(level)"></span> wilayah — ketik untuk mempersempit.</p>
             </div>
 
             <p x-show="failed[level]" x-cloak class="text-xs text-danger font-semibold mt-1.5">

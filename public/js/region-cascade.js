@@ -7,6 +7,7 @@
 // name picked from the dataset, and the server re-validates the whole chain,
 // so junk addresses cannot get through.
 window.regionCascade = function (config) {
+    const LIMIT = 10;
     const CHILD = { province: 'city', city: 'district', district: 'village' };
     const PARENT = { city: 'province', district: 'city', village: 'district' };
     const ENDPOINT_SEGMENT = { province: 'provinces', city: 'regencies', district: 'districts', village: 'villages' };
@@ -166,11 +167,23 @@ window.regionCascade = function (config) {
         filteredOptions(level) {
             const q = norm(this.query[level]);
             if (!q || q === norm(this.selected[level])) {
-                return this.options[level].slice(0, 120);
+                return this.options[level].slice(0, LIMIT);
             }
             return this.options[level]
                 .filter((o) => norm(o.name).includes(q))
-                .slice(0, 120);
+                .slice(0, LIMIT);
+        },
+
+        filteredCount(level) {
+            const q = norm(this.query[level]);
+            if (!q || q === norm(this.selected[level])) {
+                return this.options[level].length;
+            }
+            return this.options[level].filter((o) => norm(o.name).includes(q)).length;
+        },
+
+        hasMore(level) {
+            return this.filteredCount(level) > LIMIT;
         },
 
         openList(level) {
