@@ -23,7 +23,7 @@ Situs demo berjalan penuh di alamat di atas dan dapat diuji langsung menggunakan
    - Penanganan deadline otomatis dengan jalur pembelian cepat (fallback) jika kuota tidak terpenuhi sebelum deadline.
 
 2. **Sistem Pendukung Keputusan (SPK):**
-   - **AHP (Analytical Hierarchy Process):** Menghitung pembobotan kriteria secara terstruktur melalui matriks perbandingan berpasangan (*pairwise comparison* Skala Saaty 1–9) dengan verifikasi konsistensi ($CR \le 0.1$).
+   - **AHP (Analytic Hierarchy Process):** Menghitung pembobotan kriteria secara terstruktur melalui matriks perbandingan berpasangan (*pairwise comparison* Skala Saaty 1–9) dengan verifikasi konsistensi ($CR \le 0.1$).
      - **Matriks Perbandingan Berpasangan Default (5 Kriteria):**
        - $C_1$ (Harga / Cost): **42.45%** (0.4245)
        - $C_2$ (Kualitas / Benefit): **27.28%** (0.2728)
@@ -65,7 +65,7 @@ Situs demo berjalan penuh di alamat di atas dan dapat diuji langsung menggunakan
    - Admin mereview (setujui/tolak beralasan); produk yang disetujui otomatis masuk katalog master beserta listing pengusul.
 
 9. **Wilayah Dinamis (Sidoarjo & Nasional):**
-   - Dataset wilayah Kemendagri dibundel di dalam aplikasi (38 provinsi, 514 kab/kota, 7.285 kecamatan, 83.762 desa/kelurahan) dan disajikan lewat endpoint internal — bukan API eksternal.
+   - Dataset wilayah Kemendagri dibundel di dalam aplikasi (38 provinsi, 514 kab/kota, 7.265 kecamatan, 83.345 desa/kelurahan) dan disajikan lewat endpoint internal — bukan API eksternal.
    - Pilihan provinsi → kota/kabupaten → kecamatan → desa bertingkat dengan kolom ketik-untuk-mencari (maksimal 10 saran ditampilkan, ketik untuk mempersempit); rantai wilayah divalidasi ulang di server. Default Jawa Timur – Sidoarjo.
    - Tersimpan di profil UMKM/distributor dan dipakai sebagai area pengiriman pengajuan.
 
@@ -182,7 +182,7 @@ php artisan migrate --seed
 
 # Bangun dataset wilayah (dropdown alamat provinsi → desa pada profil).
 # Data tidak ikut ter-commit; dibangkitkan dari data wilayah Kemendagri
-# (38 provinsi, 514 kab/kota, 7.285 kecamatan, 83.762 desa/kelurahan).
+# (38 provinsi, 514 kab/kota, 7.265 kecamatan, 83.345 desa/kelurahan).
 php artisan wilayah:build
 
 # Build asset CSS & JS
@@ -194,7 +194,7 @@ Total 10 akun dari `RoleAndUserSeeder`. Semua akun menggunakan kata sandi: `pass
 
 | Role | Email | Nama / Usaha |
 | :--- | :--- | :--- |
-| **Administrator** | `admin@kulaan.id` | Administrator Kulaan |
+| **Administrator** | `admin@kulaan.id` | Administrator Kula'an |
 | **UMKM 1** | `umkm.maju@gmail.com` | Budi Santoso — Kedai Maju Jaya |
 | **UMKM 2** | `umkm.nusantara@gmail.com` | Siti Rahma — Dapur Nusantara |
 | **UMKM 3** | `umkm.berkah@gmail.com` | Andi Pratama — Warung Berkah |
