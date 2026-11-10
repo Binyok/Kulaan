@@ -5,7 +5,7 @@
     @endphp
 
     <div x-data="{ openCreate: false, editModal: false, editData: {} }">
-        <!-- ============================ MOBILE ============================ -->
+        
         <div class="lg:hidden pb-24">
             <!-- greeting -->
             <div class="px-4 pt-2 flex items-center justify-between">
